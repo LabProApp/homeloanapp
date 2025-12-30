@@ -3,13 +3,17 @@ import 'package:property/screens/DashBoard.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  int selectedTab = 0; // 0 = Sign In, 1 = Sign Up
+  int selectedTab = 0;
   bool _isPasswordVisible = false;
+
+  final Color primaryColor = Colors.deepOrangeAccent; // Deep blue
 
   @override
   Widget build(BuildContext context) {
@@ -19,53 +23,46 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            //mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 20),
 
-              // Back button + Title (Welcome)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: const [
-                  Text(
-                    "Welcome",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                  ),
-                ],
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                ),
               ),
 
               const SizedBox(height: 30),
 
-              // Logo Circle
               CircleAvatar(
                 radius: 40,
-                backgroundColor: Colors.grey.shade200,
-                child: const Icon(Icons.home, size: 40, color: Colors.grey),
+                backgroundColor: primaryColor.withOpacity(0.12),
+                child: Icon(Icons.home, size: 40, color: Colors.deepOrange),
               ),
 
               const SizedBox(height: 15),
 
-              // App Name
               const Text(
-                "PropertyHub",
+                "AbodeOne",
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
 
               const SizedBox(height: 5),
 
               const Text(
-                "Find your perfect home",
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                "Find. Finance. Finalize.",
+                style: TextStyle(fontSize: 16, color: Colors.deepOrangeAccent),
               ),
 
               const SizedBox(height: 25),
 
-              // Tabs (Sign In / Sign Up)
+              // Tabs
               Container(
-                height: 45,
+                height: 48,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(30),
                   color: Colors.grey.shade200,
                 ),
                 child: Row(
@@ -78,65 +75,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 25),
 
-              // Email field
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Email or Mobile",
-                  style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
-                      fontWeight: FontWeight.w500),
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              TextField(
-                decoration: InputDecoration(
-                  hintText: "Enter email or mobile number",
-                  suffixIcon: const Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+              _label("Email or Mobile"),
+              _textField(
+                hint: "Enter email or mobile number",
+                icon: Icons.email_outlined,
               ),
 
               const SizedBox(height: 18),
 
-              // Password
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Password",
-                  style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
-                      fontWeight: FontWeight.w500),
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              TextField(
-                obscureText: !_isPasswordVisible,
-                decoration: InputDecoration(
-                  hintText: "Enter your password",
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible
-                          ? Icons.visibility  // 👁 Visible
-                          : Icons.visibility_off, // 🚫 Hidden
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
+              _label("Password"),
+              _passwordField(),
 
               const SizedBox(height: 10),
 
@@ -145,84 +93,85 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Text(
                   "Forgot Password?",
                   style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.blue.shade700,
-                      fontWeight: FontWeight.w600),
+                    fontSize: 14,
+                    color: primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
 
               const SizedBox(height: 25),
 
-              // Sign In button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black87,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => DashboardScreen()),
-                    );
-                  },
-                  child: const Text(
-                    "Sign In",
-                    style: TextStyle(color: Colors.white,fontSize: 16),
-                  ),
+              // 🔵 Primary Button
+              _gradientButton(
+                text: "Sign In",
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                  Colors.deepOrangeAccent, // Indigo
+                   Colors.orange, // Blue
+                  ],
                 ),
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DashboardScreen(),
+                    ),
+                  );
+                },
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 22),
 
               Row(
                 children: [
-                  Expanded(
-                    child: Divider(
-                      thickness: 1,
-                      color: Colors.grey.shade300,
-                    ),
-                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),
                     child: Text(
                       "or continue with",
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.grey),
                     ),
                   ),
-                  Expanded(
-                    child: Divider(
-                      thickness: 1,
-                      color: Colors.grey.shade300,
-                    ),
-                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
                 ],
               ),
 
               const SizedBox(height: 20),
 
               // Google Button
-              _socialButton(
-                icon: Icons.g_mobiledata,
+              _gradientButton(
                 text: "Continue with Google",
+                icon: Icons.g_mobiledata,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.red,
+                    Colors.deepOrange,
+                  ],
+                ),
               ),
 
               const SizedBox(height: 15),
 
               // Phone Button
-              _socialButton(
-                icon: Icons.phone_android,
+              _gradientButton(
                 text: "Continue with Phone",
+                icon: Icons.phone_android,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.green,
+                    Colors.greenAccent,
+                  ],
+                ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 35),
             ],
           ),
         ),
@@ -230,29 +179,26 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ===================== Helper Widgets ======================
+  // ================= Helper Widgets =================
 
   Widget _tabButton(String title, int index) {
     bool isSelected = selectedTab == index;
 
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          setState(() {
-            selectedTab = index;
-          });
-        },
+        onTap: () => setState(() => selectedTab = index),
         child: Container(
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            color: isSelected ? primaryColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(30),
           ),
           child: Text(
             title,
             style: TextStyle(
-              fontSize: 15,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              fontSize: 16,
+              color: isSelected ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -260,23 +206,103 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _socialButton({required IconData icon, required String text}) {
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(10),
+  Widget _label(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 14,
+          color: Colors.grey.shade700,
+          fontWeight: FontWeight.w500,
+        ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 28),
-          const SizedBox(width: 10),
-          Text(
-            text,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+    );
+  }
+
+  Widget _textField({required String hint, required IconData icon}) {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: hint,
+        suffixIcon: Icon(icon),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    );
+  }
+
+  Widget _passwordField() {
+    return TextField(
+      obscureText: !_isPasswordVisible,
+      decoration: InputDecoration(
+        hintText: "Enter your password",
+        suffixIcon: IconButton(
+          icon: Icon(
+            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
           ),
-        ],
+          onPressed: () {
+            setState(() {
+              _isPasswordVisible = !_isPasswordVisible;
+            });
+          },
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    );
+  }
+
+  // 🔹 Rounded Gradient Button
+  Widget _gradientButton({
+    required String text,
+    IconData? icon,
+    required Gradient gradient,
+    VoidCallback? onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(30), // ✅ ROUND
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+          onPressed: onTap,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, color: Colors.white),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
