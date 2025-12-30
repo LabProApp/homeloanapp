@@ -52,11 +52,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance),
-            label: "Loans",
+            label: "Bank Loans",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: "Account",
+            icon: Icon(Icons.document_scanner),
+            label: "Documents",
           ),
         ],
       ),
