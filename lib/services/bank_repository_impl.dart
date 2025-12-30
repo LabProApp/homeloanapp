@@ -1,4 +1,3 @@
-import 'package:property/network/service_locator.dart';
 import 'package:property/network/bases.dart';
 import 'package:property/network/error_handling_api.dart';
 import 'package:property/models/bank_model.dart';

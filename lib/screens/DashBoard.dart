@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:property/screens/profile_screen.dart';
 import 'package:property/screens/home_screen.dart';
+import 'package:property/screens/show_banks.dart';
 import 'package:property/theme/app_colors.dart';
 
 class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -13,7 +16,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   final List<Widget> _pages = [
     HomeScreen(),//Center(child: Text("Home Page", style: TextStyle(fontSize: 22)),),
-    Center(child: Text("Search Page", style: TextStyle(fontSize: 22))),
+    BankPage(),// Center(child: Text("Search Page", style: TextStyle(fontSize: 22))),
     Center(child: Text("Saved Page", style: TextStyle(fontSize: 22))),
     ProfileScreen(),
     //Center(child: Text("Account Page", style: TextStyle(fontSize: 22))),
@@ -47,16 +50,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             label: "Home",
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.account_balance),
+            label: "Avail Bank Loans",
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.business),
             label: "Projects",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance),
-            label: "Bank Loans",
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.document_scanner),
-            label: "Documents",
+            label: "Legal Documents",
           ),
         ],
       ),
