@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -13,7 +15,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => LoginScreen()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     });
   }
@@ -21,41 +23,59 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 30),
-            // Logo Circle
-            CircleAvatar(
-              radius: 40,
-              backgroundColor: Colors.grey.shade200,
-              child: const Icon(Icons.home,
-                  size: 40, color: Colors.grey),
-            ),
-
-            const SizedBox(height: 15),
-
-            // App Name
-            const Text(
-              "PropertyHub",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFFF8C00), // Deep Orange
+              Color(0xFFFFB703), // Warm Amber
+            ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo Circle
+              CircleAvatar(
+                radius: 45,
+                backgroundColor: Colors.white.withOpacity(0.95),
+                child: const Icon(
+                  Icons.home,
+                  size: 42,
+                  color: Color(0xFFFF8C00),
+                ),
               ),
-            ),
 
-            const SizedBox(height: 5),
+              const SizedBox(height: 18),
 
-            const Text(
-              "Find your perfect home",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
+              // App Name
+              const Text(
+                "AbodeOne",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1,
+                ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 6),
+
+              // Tagline
+              const Text(
+                "Find. Finance. Finalize.",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
