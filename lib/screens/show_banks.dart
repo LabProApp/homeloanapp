@@ -13,7 +13,6 @@ const Color lightBrown = Color(0xFFD7CCC8);
 
 class BankPage extends StatelessWidget {
   const BankPage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return BlocProvider(

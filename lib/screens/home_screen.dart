@@ -14,7 +14,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
-
   List<PropertyModel> _allProperties = [];
   List<PropertyModel> _filteredProperties = [];
 

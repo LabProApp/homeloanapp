@@ -14,24 +14,89 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    HomeScreen(),//Center(child: Text("Home Page", style: TextStyle(fontSize: 22)),),
-    BankPage(),// Center(child: Text("Search Page", style: TextStyle(fontSize: 22))),
-    Center(child: Text("Saved Page", style: TextStyle(fontSize: 22))),
-    ProfileScreen(),
-    //Center(child: Text("Account Page", style: TextStyle(fontSize: 22))),
+  late final List<Widget> _pages;
 
-    /*HomePage(),
-    SearchPage(),
-    SavedPage(),
-    ProfilePage(),*/
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _pages = const [
+      HomeScreen(),
+      BankPage(),
+      Center(child: Text("Projects", style: TextStyle(fontSize: 22))),
+      Center(child: Text("documents", style: TextStyle(fontSize: 22))),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      // ✅ TOP APP BAR
+      appBar: AppBar(
+        title: const Text("AdobeOne"),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+      ),
 
+      // ✅ LEFT NAVIGATION BAR (DRAWER)
+      drawer: Drawer(
+        child: Column(
+          children: [
+            // Drawer Header
+            UserAccountsDrawerHeader(
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+              ),
+              accountName: const Text("Nikhil Aggarwal"),
+              accountEmail: const Text("nikhil@email.com"),
+              currentAccountPicture: const CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, size: 40),
+              ),
+            ),
+
+            // Drawer Items
+            _drawerItem(
+              icon: Icons.home,
+              title: "Home",
+              index: 0,
+            ),
+            _drawerItem(
+              icon: Icons.account_balance,
+              title: "Bank Loans",
+              index: 1,
+            ),
+            _drawerItem(
+              icon: Icons.business,
+              title: "Projects",
+              index: 2,
+            ),
+            _drawerItem(
+              icon: Icons.document_scanner,
+              title: "Legal Documents",
+              index: 3,
+            ),
+
+            const Divider(),
+
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text("Logout"),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: logout logic
+              },
+            ),
+          ],
+        ),
+      ),
+
+      // ✅ PAGE BODY
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+
+      // ✅ BOTTOM NAVIGATION
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: AppColors.secondary,
@@ -39,9 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         type: BottomNavigationBarType.fixed,
 
         onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          setState(() => _selectedIndex = index);
         },
 
         items: const [
@@ -51,7 +114,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance),
-            label: "Avail Bank Loans",
+            label: "Loans",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.business),
@@ -59,10 +122,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.document_scanner),
-            label: "Legal Documents",
+            label: "Documents",
           ),
         ],
       ),
+    );
+  }
+
+  // 🔹 Drawer Item Builder
+  Widget _drawerItem({
+    required IconData icon,
+    required String title,
+    required int index,
+  }) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      selected: _selectedIndex == index,
+      selectedColor: AppColors.secondary,
+      onTap: () {
+        setState(() => _selectedIndex = index);
+        Navigator.pop(context); // close drawer
+      },
     );
   }
 }
