@@ -16,7 +16,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<PropertyModel> _allProperties = [];
   List<PropertyModel> _filteredProperties = [];
-
   bool _isLoading = true;
   String _error = "";
 
@@ -43,113 +42,145 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _search(String query) {
-    final result = _allProperties.where((p) {
-      return p.title.toLowerCase().contains(query.toLowerCase());
-    }).toList();
-
     setState(() {
-      _filteredProperties = result;
+      _filteredProperties = _allProperties.where((p) {
+        return p.title.toLowerCase().contains(query.toLowerCase());
+      }).toList();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        title: const Text(
-          "Property Hub",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.black),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
-      ),
+      backgroundColor: AppColors.primary,
+
+      // 🔶 BODY
       body: Column(
         children: [
+          // 🔍 SEARCH BAR + FAVORITE + FILTER
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+            padding: const EdgeInsets.fromLTRB(12, 20, 12, 8),
             child: Row(
               children: [
                 Expanded(
                   child: Container(
-                    height: 45,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    height: 46,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: TextField(
                       controller: _searchController,
                       onChanged: _search,
                       decoration: const InputDecoration(
-                        hintText: "Search properties",
+                        hintText: "Search properties...",
                         border: InputBorder.none,
                         icon: Icon(Icons.search),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Container(
-                  height: 45,
-                  width: 45,
+                  height: 46,
+                  width: 46,
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    onPressed: () {
-                      // TODO: Add property
-                    },
+                    icon: const Icon(Icons.favorite_border, color: Colors.black),
+                    onPressed: () {},
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  height: 46,
+                  width: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.filter_list, color: Colors.black),
+                    onPressed: () {},
                   ),
                 ),
               ],
             ),
           ),
 
+          // 🔶 PROPERTY LIST
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error.isNotEmpty
-                ? Center(child: Text(_error))
+                ? Center(
+              child: Text(
+                _error,
+                style: const TextStyle(color: Colors.red),
+              ),
+            )
                 : _filteredProperties.isEmpty
-                ? const Center(child: Text("No properties found"))
+                ? const Center(
+              child: Text(
+                "No properties found",
+                style: TextStyle(fontSize: 16),
+              ),
+            )
                 : ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 6),
               itemCount: _filteredProperties.length,
               itemBuilder: (context, index) {
                 final property = _filteredProperties[index];
-                return InkWell(
-                  borderRadius: BorderRadius.circular(14),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PropertyDetailScreen(
-                          property: property,
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PropertyDetailScreen(
+                            property: property,
+                          ),
                         ),
+                      );
+                    },
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: PropertyCard(
+                        property: property,
+                        showWhatsAppIcon: true,
+                        showAmenitiesExpandable: true,
                       ),
-                    );
-                  },
-                  child: PropertyCard(property: property),
+                    ),
+                  ),
                 );
               },
             ),
           ),
         ],
+      ),
+
+      // 🔶 BIGGER FLOATING ACTION BUTTON
+      floatingActionButton: SizedBox(
+        width: 70,
+        height: 70,
+        child: FloatingActionButton(
+          backgroundColor: AppColors.primary,
+          onPressed: () {
+            // TODO: Add property
+          },
+          child: const Icon(Icons.add, color: Colors.white, size: 36),
+        ),
       ),
     );
   }

@@ -19,42 +19,23 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: AppColors.scaffoldBg,
       body: CustomScrollView(
         slivers: [
           /// IMAGE SLIDER
           SliverAppBar(
-            /*expandedHeight: 280,
+            expandedHeight: 280,
             pinned: true,
-            backgroundColor: Colors.black,
+            backgroundColor: AppColors.primary,
+            elevation: 0,
             iconTheme: const IconThemeData(color: Colors.white),
-            */
-            backgroundColor: Colors.white,
-            elevation: 1,
-            pinned: true,
-            expandedHeight: 260,
-
-            /// Title appears ONLY after scroll
-            title: const Text(
-              "Property Details",
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            /// Hide title initially
-            centerTitle: false,
-            foregroundColor: Colors.black,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
                 children: [
                   PageView.builder(
                     itemCount: widget.property.images.length,
-                    onPageChanged: (i) {
-                      setState(() => currentIndex = i);
-                    },
+                    onPageChanged: (i) => setState(() => currentIndex = i),
                     itemBuilder: (_, i) {
                       return Image.network(
                         widget.property.images[i],
@@ -64,10 +45,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       );
                     },
                   ),
-
                   /// DOT INDICATOR
                   Positioned(
-                    bottom: 14,
+                    bottom: 12,
                     left: 0,
                     right: 0,
                     child: Row(
@@ -75,8 +55,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       children: List.generate(
                         widget.property.images.length,
                             (i) => Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          width: currentIndex == i ? 8 : 6,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: currentIndex == i ? 10 : 6,
                           height: 6,
                           decoration: BoxDecoration(
                             color: currentIndex == i
@@ -100,31 +80,29 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// PRICE
+                  /// PRICE & TITLE
                   Text(
                     widget.property.price,
-                    style: const TextStyle(
-                      fontSize: 26,
+                    style: TextStyle(
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
                     ),
                   ),
-
                   const SizedBox(height: 6),
-
-                  /// ADDRESS
                   Text(
                     widget.property.title,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     widget.property.subtitle,
-                    style: TextStyle(color: Colors.grey.shade600),
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   /// FEATURES
                   _featureRow(),
@@ -134,27 +112,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   /// ABOUT
                   _sectionTitle("About This Home"),
                   const SizedBox(height: 6),
-                  /*Text(
-                    'widget.property.description' ??
-                        "Beautiful modern home with premium amenities and spacious interiors.",
-                    style: TextStyle(color: Colors.grey.shade700),
-                  ),*/
                   ReadMoreText(
-                    "Beautiful modern home with premium amenities and spacious interiors. "
-                        "This stunning property offers a perfect blend of luxury and comfort. "
-                        "Featuring high-end finishes, open living spaces, natural lighting, "
-                        "and a thoughtfully designed layout ideal for family living."
-                        "Beautiful modern home with premium amenities and spacious interiors. "
-                        "This stunning property offers a perfect blend of luxury and comfort. "
-                        "Featuring high-end finishes, open living spaces, natural lighting, "
-                        "and a thoughtfully designed layout ideal for family living.",
+
+                        "Beautiful modern home with premium amenities and spacious interiors.",
                     trimLines: 3,
                     trimMode: TrimMode.Line,
                     trimCollapsedText: " Read More",
                     trimExpandedText: " Read Less",
-                    style: const TextStyle(fontSize: 14),
-                    moreStyle: const TextStyle(color: Colors.blue),
-                    lessStyle: const TextStyle(color: Colors.blue),
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                    moreStyle: TextStyle(color: AppColors.primary),
+                    lessStyle: TextStyle(color: AppColors.primary),
                   ),
 
                   const SizedBox(height: 24),
@@ -162,13 +129,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   /// AMENITIES
                   _sectionTitle("Amenities"),
                   const SizedBox(height: 10),
-                  /*Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: widget.property.amenities
-                        .map((e) => Chip(label: Text(e)))
-                        .toList(),
-                  ),*/
                   Wrap(
                     spacing: 20,
                     runSpacing: 16,
@@ -182,7 +142,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                             Icon(
                               AmenityIcon.getIcon(amenity),
                               size: 26,
-                              color: Colors.grey.shade700,
+                              color: AppColors.primary,
                             ),
                             const SizedBox(height: 6),
                             Text(
@@ -205,18 +165,72 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   const SizedBox(height: 10),
                   _detailsCard(),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 80), // Space for bottom bar
                 ],
               ),
             ),
           ),
         ],
       ),
+
+      /// ---------------- BOTTOM ACTION BAR ----------------
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  // TODO: WhatsApp or Contact
+                },
+                icon: const Icon(Icons.message),
+                label: const Text("Contact"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  // TODO: Apply Now action
+                },
+                child: const Text("Apply Now"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.secondary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   /// ---------------- UI HELPERS ----------------
-
   Widget _sectionTitle(String title) {
     return Text(
       title,
@@ -240,11 +254,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Column(
-        children: [
+      child: Column(
+        children: const [
           _DetailRow("Property Type", "Single Family"),
           _DetailRow("Year Built", "2018"),
           _DetailRow("Lot Size", "0.35 acres"),
@@ -258,7 +272,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 }
 
 /// ---------------- SMALL WIDGETS ----------------
-
 class _Feature extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -269,7 +282,7 @@ class _Feature extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color:AppColors.accent),
+        Icon(icon, color: AppColors.primary),
         const SizedBox(height: 4),
         Text(label, style: const TextStyle(fontSize: 12)),
       ],
@@ -290,12 +303,10 @@ class _DetailRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: TextStyle(color: Colors.grey)),
+          Text(title, style: TextStyle(color: AppColors.textSecondary)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 }
-
-

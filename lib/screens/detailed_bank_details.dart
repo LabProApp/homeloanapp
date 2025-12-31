@@ -1,20 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:property/theme/app_colors.dart';
 
-/// =======================
-/// APP COLORS (Orange + Brown)
-/// =======================
-class AppColors {
-  static const primary = Color(0xFFB45309);      // Dark Brown
-  static const secondary = Color(0xFFF59E0B);    // Orange
-  static const lightBrown = Color(0xFFFDE68A);   // Light Brown / Cream
-  static const success = Color(0xFF15803D);      // Green
-  static const danger = Color(0xFFDC2626);       // Red
-  static const background = Color(0xFFFFFBF5);   // Off white
-  static const card = Colors.white;
-  static const textDark = Color(0xFF3F2E1C);
-  static const textMuted = Color(0xFF7C6A55);
-}
+
 
 /// =======================
 /// BANK DETAIL PAGE
