@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
-import 'screens/splash_screen.dart';
-import 'network/service_locator.dart';
+import 'package:property/screens/splash_screen.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
-Future<void> main() async {
+import 'dart:io';
+
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await init(); // ✅ GetIt initialization
+  // ✅ REQUIRED for Android
+  if (Platform.isAndroid) {
+    WebViewPlatform.instance = AndroidWebViewPlatform();
+  }
 
   runApp(const MyApp());
 }
@@ -15,9 +21,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      home: const SplashScreen(),
     );
   }
 }
