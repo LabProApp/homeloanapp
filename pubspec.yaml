@@ -40,3 +40,6 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/fonts/
+    - assets/images/house1.jpg
+    - assets/images/house2.jpg
+    - assets/images/house3.jpg

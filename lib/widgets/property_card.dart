@@ -26,35 +26,34 @@ class _PropertyCardState extends State<PropertyCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image Carousel with Icons
+          // IMAGE CAROUSEL
           Stack(
             children: [
               SizedBox(
-                height: 260, // increased height
+                height: 380, // bigger height
+                width: double.infinity,
                 child: PageView.builder(
                   itemCount: widget.property.images.length,
                   onPageChanged: (i) => setState(() => currentIndex = i),
                   itemBuilder: (_, i) => ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(14)),
-                    child: FadeInImage.assetNetwork(
-                      placeholder: 'assets/images/house_placeholder.jpg',
-                      image: widget.property.images[i],
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: Image.asset(
+                      widget.property.images[i],
                       fit: BoxFit.cover,
-                      fadeInDuration: const Duration(milliseconds: 150),
-                      imageCacheWidth: 1200,
-                      imageCacheHeight: 700,
+                      width: double.infinity,
+                      height: double.infinity,
                     ),
                   ),
                 ),
               ),
-              // Page Indicators
+
+              // PAGE INDICATORS
               Positioned(
                 bottom: 8,
                 left: 0,
@@ -65,19 +64,18 @@ class _PropertyCardState extends State<PropertyCard> {
                     widget.property.images.length,
                         (i) => Container(
                       margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: currentIndex == i ? 8 : 6,
+                      width: currentIndex == i ? 10 : 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: currentIndex == i
-                            ? Colors.white
-                            : Colors.white54,
+                        color: currentIndex == i ? Colors.white : Colors.white54,
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
                   ),
                 ),
               ),
-              // Tags
+
+              // TAGS
               Positioned(
                 top: 12,
                 left: 12,
@@ -85,17 +83,19 @@ class _PropertyCardState extends State<PropertyCard> {
                   children: [
                     _tag(widget.property.postedBy),
                     const SizedBox(width: 8),
-                    _verifiedTag(),
+                    if (widget.property.verified) _verifiedTag(),
                   ],
                 ),
               ),
-              // Favorite icon
+
+              // FAVORITE ICON
               Positioned(
                 top: 12,
                 right: 12,
-                child: Icon(Icons.favorite_border, color: Colors.white),
+                child: const Icon(Icons.favorite_border, color: Colors.white),
               ),
-              // WhatsApp, Brochure, Phone icons
+
+              // WHATSAPP, BROCHURE, PHONE ICONS
               Positioned(
                 bottom: 12,
                 right: 12,
@@ -103,30 +103,35 @@ class _PropertyCardState extends State<PropertyCard> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (widget.showWhatsAppIcon)
-                      _iconCircle(Icons.message, Colors.green, () {
-                        // TODO: WhatsApp action
-                      }),
+                      _iconCircle(Icons.message, Colors.green, () {}),
                     const SizedBox(width: 8),
-                    _iconCircle(Icons.download, AppColors.secondary, () {
-                      // TODO: Brochure action
-                    }),
+                    _iconCircle(Icons.download, AppColors.secondary, () {}),
                     const SizedBox(width: 8),
-                    _iconCircle(Icons.phone, AppColors.secondary, () {
-                      // TODO: View Number action
-                    }),
+                    _iconCircle(Icons.phone, AppColors.secondary, () {}),
                   ],
                 ),
               ),
             ],
           ),
 
-          // Details
-          Padding(
+          // DETAILS WITH GRADIENT BACKGROUND
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFF5F7FA), // light greyish
+                  Color(0xFFE4E8F0), // slightly darker grey
+                ],
+              ),
+            ),
             padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title + Rent/Sale
+                // TITLE + RENT/SALE
                 Row(
                   children: [
                     Expanded(
@@ -139,8 +144,7 @@ class _PropertyCardState extends State<PropertyCard> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(20),
@@ -153,11 +157,15 @@ class _PropertyCardState extends State<PropertyCard> {
                   ],
                 ),
                 const SizedBox(height: 6),
+
+                // SUBTITLE
                 Text(
                   widget.property.subtitle,
                   style: TextStyle(color: Colors.grey.shade700),
                 ),
                 const SizedBox(height: 6),
+
+                // CITY | STATE + AREA
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -166,33 +174,24 @@ class _PropertyCardState extends State<PropertyCard> {
                         "${widget.property.city} | ${widget.property.state}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                       ),
                     ),
                     Row(
                       children: [
-                        Icon(
-                          Icons.square_foot,
-                          size: 14,
-                          color: Colors.grey.shade600,
-                        ),
+                        Icon(Icons.square_foot, size: 14, color: Colors.grey.shade600),
                         const SizedBox(width: 2),
                         Text(
                           widget.property.superArea,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade600,
-                          ),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey.shade600),
                         ),
                       ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
+
+                // CATEGORY | TYPE + PRICE
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -201,27 +200,16 @@ class _PropertyCardState extends State<PropertyCard> {
                         "${widget.property.category} | ${widget.property.type}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                       ),
                     ),
                     Row(
                       children: [
-                        Icon(
-                          Icons.currency_rupee,
-                          size: 14,
-                          color: Colors.grey.shade600,
-                        ),
+                        Icon(Icons.currency_rupee, size: 14, color: Colors.grey.shade600),
                         const SizedBox(width: 2),
                         Text(
                           widget.property.price,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
                         ),
                       ],
                     ),
@@ -230,27 +218,21 @@ class _PropertyCardState extends State<PropertyCard> {
 
                 const SizedBox(height: 10),
 
-                // Amenities expandable
+                // AMENITIES EXPANDABLE
                 if (widget.showAmenitiesExpandable)
                   Column(
                     children: [
                       GestureDetector(
-                        onTap: () =>
-                            setState(() => amenitiesExpanded = !amenitiesExpanded),
+                        onTap: () => setState(() => amenitiesExpanded = !amenitiesExpanded),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
                               amenitiesExpanded ? "Hide Amenities" : "Show Amenities",
-                              style: const TextStyle(
-                                color: AppColors.secondary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w600),
                             ),
                             Icon(
-                              amenitiesExpanded
-                                  ? Icons.keyboard_arrow_up
-                                  : Icons.keyboard_arrow_down,
+                              amenitiesExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                               color: AppColors.secondary,
                             ),
                           ],
@@ -269,11 +251,7 @@ class _PropertyCardState extends State<PropertyCard> {
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
-                                      AmenityIcon.getIcon(amenity),
-                                      size: 26,
-                                      color: Colors.grey.shade700,
-                                    ),
+                                    Icon(AmenityIcon.getIcon(amenity), size: 26, color: Colors.grey.shade700),
                                     const SizedBox(height: 6),
                                     Text(
                                       amenity,
@@ -298,6 +276,7 @@ class _PropertyCardState extends State<PropertyCard> {
     );
   }
 
+  // TAG WIDGET
   Widget _tag(String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -307,15 +286,12 @@ class _PropertyCardState extends State<PropertyCard> {
       ),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
   }
 
+  // VERIFIED TAG WIDGET
   Widget _verifiedTag() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -329,17 +305,14 @@ class _PropertyCardState extends State<PropertyCard> {
           SizedBox(width: 4),
           Text(
             "VERIFIED",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
           ),
         ],
       ),
     );
   }
 
+  // CIRCLE ICON WIDGET
   Widget _iconCircle(IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,

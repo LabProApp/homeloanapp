@@ -20,7 +20,7 @@ class LegalServiceProvider {
 final List<LegalServiceProvider> serviceProviders = [
   LegalServiceProvider(
     name: 'Sharma Legal Services',
-    city: 'Delhi',
+    city: 'Mohali',
     image: 'https://cdn-icons-png.flaticon.com/512/1995/1995574.png',
     services: [
       'Sale Deed',
@@ -30,8 +30,20 @@ final List<LegalServiceProvider> serviceProviders = [
     ],
   ),
   LegalServiceProvider(
+    name: 'SK Documents',
+    city: 'Sector 10, Panchkula',
+    image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+    services: [
+      'Home Loan Docs',
+      'Notary',
+      'Stamp Duty',
+      'Rent Agreement',
+      'EC & Title Check',
+    ],
+  ),
+  LegalServiceProvider(
     name: 'Agarwal Documentation',
-    city: 'Mumbai',
+    city: 'Chandigarh',
     image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
     services: [
       'Home Loan Docs',

@@ -16,13 +16,22 @@ class _LegalServicePageState extends State<LegalServicePage> {
   @override
   void initState() {
     super.initState();
-    _filteredProviders = serviceProviders;
+    // ✅ IMPORTANT: Make a copy, not a reference
+    _filteredProviders = List.from(serviceProviders);
   }
 
   void _filterProviders(String query) {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _filteredProviders = List.from(serviceProviders);
+      });
+      return;
+    }
+
+    final q = query.toLowerCase();
+
     setState(() {
       _filteredProviders = serviceProviders.where((provider) {
-        final q = query.toLowerCase();
         return provider.name.toLowerCase().contains(q) ||
             provider.city.toLowerCase().contains(q) ||
             provider.services.any(
@@ -36,6 +45,15 @@ class _LegalServicePageState extends State<LegalServicePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primary,
+      appBar: AppBar(
+        title: const Text(
+          "Legal & Documentation Services",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: Column(
         children: [
           /// 🔍 SEARCH BAR
@@ -49,7 +67,8 @@ class _LegalServicePageState extends State<LegalServicePage> {
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                contentPadding:
+                const EdgeInsets.symmetric(vertical: 14),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
@@ -87,7 +106,8 @@ class _LegalServicePageState extends State<LegalServicePage> {
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                        CrossAxisAlignment.start,
                         children: [
                           /// 🔹 HEADER
                           Row(
@@ -97,7 +117,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
                                 backgroundImage:
                                 NetworkImage(provider.image),
                                 backgroundColor:
-                                AppColors.textPrimary,
+                                AppColors.primary,
                               ),
                               const SizedBox(width: 14),
                               Expanded(
@@ -109,9 +129,10 @@ class _LegalServicePageState extends State<LegalServicePage> {
                                       provider.name,
                                       style: const TextStyle(
                                         fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color:
-                                        AppColors.textPrimary,
+                                        fontWeight:
+                                        FontWeight.bold,
+                                        color: AppColors
+                                            .textPrimary,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -119,8 +140,8 @@ class _LegalServicePageState extends State<LegalServicePage> {
                                       provider.city,
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color:
-                                        AppColors.textSecondary,
+                                        color: AppColors
+                                            .textSecondary,
                                       ),
                                     ),
                                   ],
@@ -158,8 +179,8 @@ class _LegalServicePageState extends State<LegalServicePage> {
                                     fontSize: 12,
                                     fontWeight:
                                     FontWeight.w500,
-                                    color:
-                                    AppColors.textPrimary,
+                                    color: AppColors
+                                        .textPrimary,
                                   ),
                                 ),
                               );

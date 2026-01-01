@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // ===== Brand / Primary =====
-  static const Color primary = Color(0xFF0D3B66);   // Deep Blue – Trust & Finance
-  static const Color secondary = Color(0xFF1D4ED8); // Professional Blue
+  static const Color primary = Color(0xFFD97706);   // Deep Blue – Trust & Finance
+  static const Color secondary = Colors.orangeAccent; // Professional Blue
   static const Color accent = Color(0xFF059669);    // Green – Growth / Approval
 
   // ===== Backgrounds =====

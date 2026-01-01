@@ -32,14 +32,14 @@ class _BankPageState extends State<BankPage> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Container(
-                  height: 48,
+                  height: 52,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
                     ],
@@ -49,14 +49,27 @@ class _BankPageState extends State<BankPage> {
                     onChanged: (value) {
                       setState(() => _query = value.toLowerCase());
                     },
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                     decoration: const InputDecoration(
-                      hintText: "Search bank...",
-                      prefixIcon: Icon(Icons.search),
+                      hintText: "Search bank",
+                      hintStyle: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        size: 22,
+                      ),
+                      contentPadding: EdgeInsets.symmetric(vertical: 14),
                       border: InputBorder.none,
                     ),
                   ),
                 ),
               ),
+
 
               /// 🔹 BANK LIST
               Expanded(
