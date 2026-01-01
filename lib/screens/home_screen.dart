@@ -4,7 +4,7 @@ import 'package:property/services/property_api_service.dart';
 import 'package:property/theme/app_colors.dart';
 import 'package:property/widgets/property_card.dart';
 import 'package:property/screens/property_detail_screen.dart';
-
+import 'package:property/screens/post_property_screen.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -175,13 +175,22 @@ class _HomeScreenState extends State<HomeScreen> {
         width: 70,
         height: 70,
         child: FloatingActionButton(
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.accent,
           onPressed: () {
-            // TODO: Add property
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const PostPropertyScreen(),
+              ),
+            );
           },
-          child: const Icon(Icons.add, color: Colors.white, size: 36),
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 36,
+          ),
         ),
-      ),
+    ),
     );
   }
 }
