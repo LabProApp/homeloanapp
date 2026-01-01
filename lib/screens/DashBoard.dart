@@ -34,7 +34,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       // ✅ TOP APP BAR
       appBar: AppBar(
-        title: const Text("AdobeOne"),
+        title: const Text("ABODE ONE",
+          style: TextStyle(
+          fontWeight: FontWeight.bold, // Makes the text bold
+          fontSize: 20, // Optional: adjust size if needed
+        ),
+        ),
+
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
