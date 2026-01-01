@@ -209,7 +209,7 @@ class _BankCard extends StatelessWidget {
                   Expanded(
                     child: _InfoChip(
                       icon: Icons.percent,
-                      label: 'Interest Rate',
+                      label: 'Starting Interest Rate',
                       value: '${bank.interestRate}%',
                       color: AppColors.primary,
                     ),
@@ -218,7 +218,7 @@ class _BankCard extends StatelessWidget {
                   Expanded(
                     child: _InfoChip(
                       icon: Icons.calendar_today,
-                      label: 'Tenure',
+                      label: 'Max Tenure',
                       value: '${bank.tenureYears} yrs',
                       color: AppColors.secondary,
                     ),

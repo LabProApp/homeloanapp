@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:property/theme/app_colors.dart';
-
-
+import 'package:property/screens/cibilrate_bank.dart';
 
 /// =======================
 /// BANK DETAIL PAGE
@@ -67,7 +66,9 @@ class BankDetailPage extends StatelessWidget {
               child: Column(
                 children: [
 
+                  /// =======================
                   /// QUICK STATS
+                  /// =======================
                   Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(
@@ -131,7 +132,54 @@ class BankDetailPage extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
+                  /// =======================
+                  /// CIBIL INTEREST RATE CARD  ✅ NEW
+                  /// =======================
+                  CibilInterestCard(
+                    baseRate: bank.interestRate ?? 8.5,
+                  ),
+                  const SizedBox(height: 16),
+
+                  /// =======================
+                  /// DOCUMENTS REQUIRED
+                  /// =======================
+                  _SectionCard(
+                    title: 'Documents Required',
+                    icon: Icons.folder,
+                    children: [
+                      _DetailRow(
+                        icon: Icons.picture_as_pdf,
+                        label: 'Identity Proof',
+                        value: bank.documents?.identityProof ?? 'PAN / Aadhaar / Passport',
+                      ),
+                      _DetailRow(
+                        icon: Icons.home,
+                        label: 'Address Proof',
+                        value: bank.documents?.addressProof ?? 'Utility Bill / Passport / Aadhaar',
+                      ),
+                      _DetailRow(
+                        icon: Icons.account_balance,
+                        label: 'Income Proof',
+                        value: bank.documents?.incomeProof ?? 'Salary Slip / ITR / Bank Statement',
+                      ),
+                      _DetailRow(
+                        icon: Icons.money,
+                        label: 'Property Documents',
+                        value: bank.documents?.propertyProof ?? 'Sale Deed / Agreement',
+                      ),
+                      _DetailRow(
+                        icon: Icons.document_scanner,
+                        label: 'Other Documents',
+                        value: bank.documents?.other ?? 'As per bank requirement',
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  /// =======================
                   /// CONTACT INFO
+                  /// =======================
                   _SectionCard(
                     title: 'Contact Information',
                     icon: Icons.contact_phone,
@@ -149,7 +197,8 @@ class BankDetailPage extends StatelessWidget {
                             ? IconButton(
                           icon: const Icon(Icons.call),
                           color: AppColors.primary,
-                          onPressed: () => _launchPhone(bank.contactNumber),
+                          onPressed: () =>
+                              _launchPhone(bank.contactNumber),
                         )
                             : null,
                       ),
@@ -173,7 +222,8 @@ class BankDetailPage extends StatelessWidget {
                             ? IconButton(
                           icon: const Icon(Icons.open_in_browser),
                           color: AppColors.primary,
-                          onPressed: () => _launchWebsite(bank.websiteUrl),
+                          onPressed: () =>
+                              _launchWebsite(bank.websiteUrl),
                         )
                             : null,
                       ),
@@ -182,7 +232,9 @@ class BankDetailPage extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
+                  /// =======================
                   /// LOAN DETAILS
+                  /// =======================
                   _SectionCard(
                     title: 'Loan Details',
                     icon: Icons.account_balance_wallet,
@@ -207,7 +259,9 @@ class BankDetailPage extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
+                  /// =======================
                   /// FEATURES
+                  /// =======================
                   _SectionCard(
                     title: 'Features & Benefits',
                     icon: Icons.star,
@@ -222,7 +276,8 @@ class BankDetailPage extends StatelessWidget {
                       ),
                       _FeatureRow(
                         label: 'Balance Transfer',
-                        isEnabled: bank.balanceTransferAvailable ?? false,
+                        isEnabled:
+                        bank.balanceTransferAvailable ?? false,
                       ),
                       _FeatureRow(
                         label: 'Insurance Bundled',
@@ -348,7 +403,9 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         children: [
           Padding(
@@ -358,10 +415,13 @@ class _SectionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary,
+                    color: AppColors.secondary.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: AppColors.primary),
+                  child: Icon(
+                    icon,
+                    color: AppColors.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -382,7 +442,6 @@ class _SectionCard extends StatelessWidget {
     );
   }
 }
-
 /// =======================
 /// DETAIL ROW
 /// =======================
@@ -411,17 +470,21 @@ class _DetailRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
-                    )),
-                Text(value,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary,
-                    )),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ],
             ),
           ),
