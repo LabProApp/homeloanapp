@@ -75,7 +75,7 @@ class LegalServicePage extends StatelessWidget {
                       children: [
                         CircleAvatar(
                           radius: 32,
-                          backgroundColor: AppColors.lightBrown,
+                          backgroundColor: AppColors.primary,
                           backgroundImage: NetworkImage(provider.image),
                         ),
                         const SizedBox(width: 14),
@@ -129,7 +129,7 @@ class LegalServicePage extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.textDark,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         );
