@@ -8,7 +8,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // ✅ Initialize GetIt
-  await init();
+  await setupServiceLocator();
 
   // ❌ DO NOT manually set WebViewPlatform anymore
   // webview_flutter auto-initializes on Android & iOS

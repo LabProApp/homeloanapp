@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:property/screens/profile_screen.dart';
-import 'package:property/screens/home_screen.dart';
-import 'package:property/screens/legalservice_providers.dart';
-import 'package:property/screens/show_banks.dart';
+import 'package:property/screens/userProfile_screen.dart';
+import 'package:property/screens/properyListing_screen.dart';
+import 'package:property/screens/legalServiceProviders_listing.dart';
+import 'package:property/screens/banksListing_screen.dart';
 import 'package:property/screens/webviewhtml.dart';
 import 'package:property/screens/emi_calculator_screen.dart';
 import 'package:property/theme/app_colors.dart';
@@ -25,9 +25,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _pages = const [
       HomeScreen(),           // 0
       BankPage(),             // 1
-      EmiCalculatorScreen(),  // 2
-      HomeScreen(),           // 3 Projects placeholder
-      LegalServicePage(),     // 4
+      HomeScreen(),           // 2 Projects placeholder
+      LegalServicePage(),     // 3 Legal & Documents
+      EmiCalculatorScreen(),  // 4 EMI Calculator (drawer only)
     ];
   }
 
@@ -71,30 +71,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // MAIN NAVIGATION
             _drawerItem(Icons.home, "Home", 0),
             _drawerItem(Icons.account_balance, "Bank Loans", 1),
-            _drawerItem(Icons.business, "Projects", 3),
-            _drawerItem(Icons.document_scanner, "Legal Documents", 4),
+            _drawerItem(Icons.business, "Projects", 2),
+            _drawerItem(Icons.document_scanner, "Legal Documents", 3),
 
             const Divider(),
 
-            // TOOLS
+            // TOOLS SECTION
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   "TOOLS",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                  style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
                 ),
               ),
             ),
+
             ListTile(
               leading: const Icon(Icons.calculate),
               title: const Text("EMI Calculator"),
-              selected: _selectedIndex == 2,
+              selected: _selectedIndex == 4,
               selectedColor: AppColors.secondary,
               onTap: () {
-                setState(() => _selectedIndex = 2);
-                Navigator.pop(context);
+                setState(() => _selectedIndex = 4); // jump to last page
+                Navigator.pop(context); // close drawer
               },
             ),
 
@@ -138,6 +140,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             const Spacer(),
 
+            // LOGOUT
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text("Logout"),
@@ -154,18 +157,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: _pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex > 2 ? _selectedIndex - 1 : _selectedIndex,
+        currentIndex: _selectedIndex >= 4 ? 3 : _selectedIndex, // cap at 3 for bottom nav
         selectedItemColor: AppColors.secondary,
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          // Map BottomNav index to _pages index
           setState(() {
-            if (index >= 2) {
-              _selectedIndex = index + 1; // skip EMI calculator in bottom nav
-            } else {
-              _selectedIndex = index;
-            }
+            _selectedIndex = index; // directly map to first 4 pages
           });
         },
         items: const [
@@ -178,6 +176,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Drawer item builder
   Widget _drawerItem(IconData icon, String title, int index) {
     return ListTile(
       leading: Icon(icon),

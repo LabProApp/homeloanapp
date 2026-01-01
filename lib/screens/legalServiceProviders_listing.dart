@@ -91,6 +91,8 @@ class _LegalServicePageState extends State<LegalServicePage> {
             )
                 : ListView.builder(
               padding: const EdgeInsets.all(16),
+              physics:
+              const BouncingScrollPhysics(), // ✅ BOUNCY SCROLL
               itemCount: _filteredProviders.length,
               itemBuilder: (context, index) {
                 final provider = _filteredProviders[index];

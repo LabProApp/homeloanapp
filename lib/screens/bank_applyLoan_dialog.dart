@@ -1,4 +1,4 @@
-// loan_apply_dialog.dart
+// bank_applyLoan_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:property/models/bank_model.dart';
 import 'package:property/theme/app_colors.dart';

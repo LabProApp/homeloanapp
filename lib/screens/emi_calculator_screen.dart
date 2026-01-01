@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/calcLoanRequest.dart';
 import '../models/calcLoanResponse.dart';
-import '../services/loan_api_service.dart';
+import '../services/emi_service.dart';
 
 class EmiCalculatorScreen extends StatefulWidget {
   const EmiCalculatorScreen({super.key});

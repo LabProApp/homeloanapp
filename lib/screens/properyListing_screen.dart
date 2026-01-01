@@ -3,8 +3,8 @@ import 'package:property/models/property_model.dart';
 import 'package:property/services/property_api_service.dart';
 import 'package:property/theme/app_colors.dart';
 import 'package:property/widgets/property_card.dart';
-import 'package:property/screens/property_detail_screen.dart';
-import 'package:property/screens/post_property_screen.dart';
+import 'package:property/screens/propertyDetail_screen.dart';
+import 'package:property/screens/propertyAdd_screen.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -138,6 +138,8 @@ class _HomeScreenState extends State<HomeScreen> {
             )
                 : ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 6),
+              physics:
+              const BouncingScrollPhysics(), // ✅ BOUNCY SCROLL
               itemCount: _filteredProperties.length,
               itemBuilder: (context, index) {
                 final property = _filteredProperties[index];

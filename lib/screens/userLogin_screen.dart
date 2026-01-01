@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:property/screens/DashBoard.dart';
 import 'package:property/theme/app_colors.dart';
-import 'home_screen.dart';
+import 'properyListing_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

@@ -29,6 +29,7 @@ class ApiUrls {
   //Document legal services URLs
   static const String getlegalVendors_list=  "$baseUrl/providers/search";
 //Bank APIs URLs
+
   static const String getBanks_list="$baseUrl/banks";
   static const String getBanksInterestRates_list="$baseUrl/banks/{bankId}/interest_rates";
   static const String applyloan=  "$baseUrl/loan_inquiries";

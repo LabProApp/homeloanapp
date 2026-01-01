@@ -16,6 +16,7 @@ class BankDetailPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(), // ✅ Bouncy scroll
         slivers: [
           SliverAppBar(
             expandedHeight: 200,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:property/models/property_model.dart';
 import 'package:property/services/property_api_service.dart';
 import 'package:property/widgets/property_card.dart';
-import 'package:property/screens/property_detail_screen.dart';
+import 'package:property/screens/propertyDetail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

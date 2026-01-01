@@ -5,7 +5,8 @@ import '../models/calcLoanResponse.dart';
 import 'package:property/utility/ApiUrls.dart';
 class LoanApiService {
 
-
+  final http.Client client;
+  LoanApiService({required this.client});
   static Future<CalcLoanResponse> calculateLoan(CalcLoanRequest request) async {
     final response = await http.post(
       Uri.parse(ApiUrls.emiCalculator),
