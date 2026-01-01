@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary Brand Colors
-  static const Color primary = Color(0xFFD78C3D);   // Rustic Orange
-  static const Color secondary = Color(0xFFB06500); // Ginger
+  static const Color primary = Color(0xFFFF8C00);   // Rustic Orange
+  static const Color secondary = Color(0xFFFFB703); // Ginger
  // static const Color accent = Color(0xFFFAB972);    // Calm Orange
-  static const Color lightBackground = Color(0xFFB06500);
+  static const Color lightBackground = Color(0xFFFDE68A);
   // Backgrounds
   static const Color scaffoldBg = Color(0xFFF5F5F5);
   static const Color cardBg = Colors.white;

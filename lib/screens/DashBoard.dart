@@ -79,15 +79,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             /// 📄 TERMS OF USE
             ListTile(
               leading: const Icon(Icons.description_outlined),
-              title: const Text("Terms of Use"),
+              title: const Text("Website"),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => const WebViewPage(
-                      title: "Terms of Use",
-                      url: "https://yourdomain.com/terms.html",
+                      title: "Website",
+                      url: "http://15.206.9.70",
                     ),
                   ),
                 );
@@ -97,15 +97,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             /// ⚠️ DISCLAIMER
             ListTile(
               leading: const Icon(Icons.warning_amber_outlined),
-              title: const Text("Disclaimer"),
+              title: const Text("Terms of Use"),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => const WebViewPage(
-                      title: "Disclaimer",
-                      url: "https://yourdomain.com/disclaimer.html",
+                      title: "Terms of Use",
+                      url: "http://15.206.9.70/terms-of-use.html",
                     ),
                   ),
                 );

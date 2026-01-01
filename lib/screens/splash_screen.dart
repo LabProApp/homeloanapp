@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
-
+import 'package:property/theme/app_colors.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -31,8 +31,8 @@ class _SplashScreenState extends State<SplashScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFFF8C00), // Deep Orange
-              Color(0xFFFFB703), // Warm Amber
+              AppColors.primary, // Deep Orange
+              AppColors.secondary, // Warm Amber
             ],
           ),
         ),
@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: const Icon(
                   Icons.home,
                   size: 42,
-                  color: Color(0xFFFF8C00),
+                  color: AppColors.primary,
                 ),
               ),
 
@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 "Find. Finance. Finalize.",
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white70,
+                  color: AppColors.cardBg,
                 ),
               ),
             ],

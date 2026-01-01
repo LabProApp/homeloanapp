@@ -1,17 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:property/screens/splash_screen.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-
 import 'dart:io';
 
-void main() {
+import 'package:flutter/material.dart';
+import 'package:property/screens/splash_screen.dart';
+import 'package:property/network/service_locator.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ REQUIRED for Android
-  if (Platform.isAndroid) {
-    WebViewPlatform.instance = AndroidWebViewPlatform();
-  }
+  // ✅ Initialize GetIt
+  await init();
+
+  // ❌ DO NOT manually set WebViewPlatform anymore
+  // webview_flutter auto-initializes on Android & iOS
 
   runApp(const MyApp());
 }
@@ -21,9 +21,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const SplashScreen(),
+      home: SplashScreen(),
     );
   }
 }
