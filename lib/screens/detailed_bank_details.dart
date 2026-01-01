@@ -358,7 +358,7 @@ class _SectionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.lightBrown,
+                    color: AppColors.secondary,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: AppColors.primary),
@@ -369,7 +369,7 @@ class _SectionCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
@@ -420,7 +420,7 @@ class _DetailRow extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textDark,
+                      color: AppColors.textPrimary,
                     )),
               ],
             ),
@@ -452,7 +452,7 @@ class _FeatureRow extends StatelessWidget {
         children: [
           Icon(
             isEnabled ? Icons.check_circle : Icons.cancel,
-            color: isEnabled ? AppColors.success : AppColors.danger,
+            color: isEnabled ? AppColors.success : AppColors.error,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -461,14 +461,14 @@ class _FeatureRow extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textDark,
+                color: AppColors.textPrimary,
               ),
             ),
           ),
           Text(
             isEnabled ? 'Yes' : 'No',
             style: TextStyle(
-              color: isEnabled ? AppColors.success : AppColors.danger,
+              color: isEnabled ? AppColors.success : AppColors.error,
               fontWeight: FontWeight.w600,
             ),
           ),

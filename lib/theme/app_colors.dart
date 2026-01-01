@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary Brand Colors
-  static const Color primary = Color(0xFFFF8C00);
-  static const Color secondary = Color(0xFFFFB703);
-  static const Color accent = Color(0xFFFAB972);
-  static const Color lightBackground = Color(0xFFFDE68A);
-  // Backgrounds
-  static const Color scaffoldBg = Color(0xFFF5F5F5);
+  // ===== Brand / Primary =====
+  static const Color primary = Color(0xFF0D3B66);   // Deep Blue – Trust & Finance
+  static const Color secondary = Color(0xFF1D4ED8); // Professional Blue
+  static const Color accent = Color(0xFF059669);    // Green – Growth / Approval
+
+  // ===== Backgrounds =====
+  static const Color scaffoldBg = Color(0xFFF8FAFC); // Clean off-white
   static const Color cardBg = Colors.white;
+  static const Color background = Color(0xFFF1F5F9); // Light slate
   static const Color white = Colors.white;
 
-  static const lightBrown = Color(0xFFFDE68A);   // Light Brown / Cream
+  // ===== Text =====
+  static const Color textPrimary = Color(0xFF0F172A); // Dark slate (headings)
+  static const Color textSecondary = Color(0xFF475569); // Body text
+  static const Color textMuted = Color(0xFF64748B); // Labels / hints
 
-  static const danger = Color(0xFFDC2626);       // Red
-  static const background = Color(0xFFFFFBF5);   // Off white
-  static const card = Colors.white;
-  static const textDark = Color(0xFF3F2E1C);
-  static const textMuted = Color(0xFF7C6A55);
-  // Text
-  static const Color textPrimary = Color(0xFF6B6B6B);
-  static const Color textSecondary = Color(0xFF6B6B6B);
+  // ===== Borders & Dividers =====
+  static const Color border = Color(0xFFE2E8F0);
 
-  // Borders & Divider
-  static const Color border = Color(0xFFE0E0E0);
+  // ===== Status Colors =====
+  static const Color success = Color(0xFF16A34A); // Loan approved / success
+  static const Color error = Color(0xFFDC2626);   // Errors
+  static const Color warning = Color(0xFFD97706); // Pending / alerts
+  static const Color info = Color(0xFF2563EB);    // Informational
 
-  // Status
-  static const Color success = Color(0xFF2E7D32);
-  static const Color error = Color(0xFFD32F2F);
+  // ===== Special UI =====
+  static const Color disabled = Color(0xFFCBD5E1);
+  static const Color overlay = Color(0x80000000);
 }

@@ -97,7 +97,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
                                 backgroundImage:
                                 NetworkImage(provider.image),
                                 backgroundColor:
-                                AppColors.lightBrown,
+                                AppColors.textPrimary,
                               ),
                               const SizedBox(width: 14),
                               Expanded(
@@ -159,7 +159,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
                                     fontWeight:
                                     FontWeight.w500,
                                     color:
-                                    AppColors.textDark,
+                                    AppColors.textPrimary,
                                   ),
                                 ),
                               );
