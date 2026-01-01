@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:property/screens/DashBoard.dart';
+import 'package:property/theme/app_colors.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -67,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Row(
                   children: [
-                    _tabButton("Sign In", 0),
+                    _tabButton("Log In", 0),
                     _tabButton("Sign Up", 1),
                   ],
                 ),
@@ -109,8 +110,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                  Colors.deepOrangeAccent, // Indigo
-                   Colors.orange, // Blue
+                  AppColors.primary, // Indigo
+                   AppColors.secondary, // Blue
                   ],
                 ),
                 onTap: () {
@@ -127,15 +128,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
               Row(
                 children: [
-                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                  Expanded(child: Divider(color: AppColors.border)),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),
                     child: Text(
                       "or continue with",
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: AppColors.textPrimary),
                     ),
                   ),
-                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                  Expanded(child: Divider(color:AppColors.border)),
                 ],
               ),
 
@@ -149,8 +150,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.red,
-                    Colors.deepOrange,
+                    AppColors.error,
+                    AppColors.primary,
                   ],
                 ),
               ),
@@ -165,8 +166,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.green,
-                    Colors.greenAccent,
+                    AppColors.primary,
+                    AppColors.secondary,
                   ],
                 ),
               ),
@@ -197,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
             title,
             style: TextStyle(
               fontSize: 16,
-              color: isSelected ? Colors.white : Colors.black87,
+              color: isSelected ? AppColors.white: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -213,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
         text,
         style: TextStyle(
           fontSize: 14,
-          color: Colors.grey.shade700,
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.w500,
         ),
       ),
