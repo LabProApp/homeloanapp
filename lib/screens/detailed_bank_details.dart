@@ -21,20 +21,24 @@ class BankDetailPage extends StatelessWidget {
             expandedHeight: 200,
             pinned: true,
             backgroundColor: AppColors.primary,
+            centerTitle: true,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 bank.bankName ?? 'Bank Details',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
+                  color: AppColors.white,
                   shadows: [
                     Shadow(
                       offset: Offset(0, 1),
                       blurRadius: 3,
-                      color: Colors.black26,
+                      color: AppColors.textPrimary,
                     ),
                   ],
+
                 ),
               ),
+              centerTitle: true,
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(

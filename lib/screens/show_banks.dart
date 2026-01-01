@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:property/services/bank_cubit.dart';
 import 'package:property/services/bank_state.dart';
 import 'package:property/screens/detailed_bank_details.dart';
+import 'package:property/screens/loan_apply_dialog.dart';
 import 'package:property/network/service_locator.dart';
 import 'package:property/theme/app_colors.dart';
 
@@ -229,24 +230,34 @@ class _BankCard extends StatelessWidget {
               const SizedBox(height: 16),
 
               /// APPLY BUTTON
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    "Apply Now",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
+        /// APPLY BUTTON
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              // CALL THE LOAN APPLY DIALOG
+              LoanApplyDialog.show(
+                context,
+                bank, // your FetchBanks instance
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
+            ),
+            child: const Text(
+              "Apply Now",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+
             ],
           ),
         ),
