@@ -9,6 +9,7 @@ class PropertyModel {
   final String city;
   final String state;
   final String type;
+  final String contactNumber;
   final String superArea;
   final List<String> images;
   final List<String> amenities;
@@ -28,6 +29,7 @@ class PropertyModel {
     required this.superArea,
     required this.images,
     required this.amenities,
+    required this.contactNumber,
     this.verified = false,
   });
   factory PropertyModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class PropertyModel {
       title: json['projectName'] ?? '',
       subtitle: json['title'] ?? '',
       postedBy: json['postedBy'] ?? '',
+      contactNumber: json['contactNumber'] ?? '',
       rentOrSale: json['rentOrSale'] ?? '',
       price: json['price'].toString() ?? '0',
       category: json['category'].toString() ?? '',

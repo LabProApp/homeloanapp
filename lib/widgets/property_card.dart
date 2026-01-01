@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:property/models/property_model.dart';
 import 'package:property/theme/app_colors.dart';
 import 'package:property/utility/amenity_icon.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PropertyCard extends StatefulWidget {
   final PropertyModel property;
@@ -29,45 +31,44 @@ class _PropertyCardState extends State<PropertyCard> {
       elevation: 6,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // IMAGE CAROUSEL
+          // ================= IMAGE CAROUSEL =================
           Stack(
             children: [
               SizedBox(
-                height: 380, // bigger height
+                height: 380,
                 width: double.infinity,
                 child: PageView.builder(
                   itemCount: widget.property.images.length,
                   onPageChanged: (i) => setState(() => currentIndex = i),
-                  itemBuilder: (_, i) => ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    child: Image.asset(
-                      widget.property.images[i],
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
+                  itemBuilder: (_, i) => Image.asset(
+                    widget.property.images[i],
+                    fit: BoxFit.cover,
+                    width: double.infinity,
                   ),
                 ),
               ),
 
-              // PAGE INDICATORS
+              // ================= INDICATORS =================
               Positioned(
-                bottom: 8,
+                bottom: 10,
                 left: 0,
                 right: 0,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
                     widget.property.images.length,
-                        (i) => Container(
+                        (i) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: currentIndex == i ? 10 : 6,
+                      width: currentIndex == i ? 12 : 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: currentIndex == i ? Colors.white : Colors.white54,
+                        color:
+                        currentIndex == i ? Colors.white : Colors.white54,
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
@@ -75,7 +76,7 @@ class _PropertyCardState extends State<PropertyCard> {
                 ),
               ),
 
-              // TAGS
+              // ================= TAGS =================
               Positioned(
                 top: 12,
                 left: 12,
@@ -88,63 +89,61 @@ class _PropertyCardState extends State<PropertyCard> {
                 ),
               ),
 
-              // FAVORITE ICON
-              Positioned(
+              // ================= FAVORITE =================
+              const Positioned(
                 top: 12,
                 right: 12,
-                child: const Icon(Icons.favorite_border, color: Colors.white),
+                child: Icon(Icons.favorite_border,
+                    color: Colors.white, size: 26),
               ),
 
-              // WHATSAPP, BROCHURE, PHONE ICONS
+              // ================= ACTION ICONS (VERTICAL) =================
               Positioned(
-                bottom: 12,
+                bottom: 16,
                 right: 12,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Column(
                   children: [
                     if (widget.showWhatsAppIcon)
-                      _iconCircle(Icons.message, Colors.green, () {}),
-                    const SizedBox(width: 8),
-                    _iconCircle(Icons.download, AppColors.secondary, () {}),
-                    const SizedBox(width: 8),
-                    _iconCircle(Icons.phone, AppColors.secondary, () {}),
+                      _iconCircle(Icons.message, _openWhatsApp),
+                    const SizedBox(height: 12),
+                    _iconCircle(Icons.share, _shareProperty),
+                    const SizedBox(height: 12),
+                    _iconCircle(Icons.phone, _callOwner),
                   ],
                 ),
               ),
             ],
           ),
 
-          // DETAILS WITH GRADIENT BACKGROUND
+          // ================= DETAILS =================
           Container(
             width: double.infinity,
+            padding: const EdgeInsets.all(14),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFF5F7FA), // light greyish
-                  Color(0xFFE4E8F0), // slightly darker grey
+                  Color(0xFFF7F8FA),
+                  Color(0xFFE6EBF3),
                 ],
               ),
             ),
-            padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // TITLE + RENT/SALE
                 Row(
                   children: [
                     Expanded(
                       child: Text(
                         widget.property.title,
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(20),
@@ -158,81 +157,71 @@ class _PropertyCardState extends State<PropertyCard> {
                 ),
                 const SizedBox(height: 6),
 
-                // SUBTITLE
-                Text(
-                  widget.property.subtitle,
-                  style: TextStyle(color: Colors.grey.shade700),
-                ),
-                const SizedBox(height: 6),
+                Text(widget.property.subtitle,
+                    style: TextStyle(color: Colors.grey.shade700)),
+                const SizedBox(height: 8),
 
-                // CITY | STATE + AREA
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Text(
                         "${widget.property.city} | ${widget.property.state}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                        style: TextStyle(color: Colors.grey.shade600),
                       ),
                     ),
-                    Row(
-                      children: [
-                        Icon(Icons.square_foot, size: 14, color: Colors.grey.shade600),
-                        const SizedBox(width: 2),
-                        Text(
-                          widget.property.superArea,
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey.shade600),
-                        ),
-                      ],
-                    ),
+                    const Icon(Icons.square_foot, size: 14),
+                    const SizedBox(width: 4),
+                    Text(widget.property.superArea,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
-                const SizedBox(height: 6),
 
-                // CATEGORY | TYPE + PRICE
+                const SizedBox(height: 8),
+
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Text(
                         "${widget.property.category} | ${widget.property.type}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                        style: TextStyle(color: Colors.grey.shade600),
                       ),
                     ),
-                    Row(
-                      children: [
-                        Icon(Icons.currency_rupee, size: 14, color: Colors.grey.shade600),
-                        const SizedBox(width: 2),
-                        Text(
-                          widget.property.price,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
-                        ),
-                      ],
+                    const Icon(Icons.currency_rupee, size: 14),
+                    Text(
+                      widget.property.price,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
-                // AMENITIES EXPANDABLE
                 if (widget.showAmenitiesExpandable)
                   Column(
                     children: [
                       GestureDetector(
-                        onTap: () => setState(() => amenitiesExpanded = !amenitiesExpanded),
+                        onTap: () => setState(
+                                () => amenitiesExpanded = !amenitiesExpanded),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              amenitiesExpanded ? "Hide Amenities" : "Show Amenities",
-                              style: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w600),
+                              amenitiesExpanded
+                                  ? "Hide Amenities"
+                                  : "Show Amenities",
+                              style: const TextStyle(
+                                  color: AppColors.secondary,
+                                  fontWeight: FontWeight.w600),
                             ),
                             Icon(
-                              amenitiesExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                              amenitiesExpanded
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
                               color: AppColors.secondary,
                             ),
                           ],
@@ -244,21 +233,25 @@ class _PropertyCardState extends State<PropertyCard> {
                           child: Wrap(
                             spacing: 20,
                             runSpacing: 16,
-                            alignment: WrapAlignment.start,
-                            children: widget.property.amenities.map((amenity) {
+                            children:
+                            widget.property.amenities.map((amenity) {
                               return SizedBox(
                                 width: 70,
                                 child: Column(
-                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(AmenityIcon.getIcon(amenity), size: 26, color: Colors.grey.shade700),
+                                    Icon(
+                                      AmenityIcon.getIcon(amenity),
+                                      size: 26,
+                                      color: Colors.grey.shade700,
+                                    ),
                                     const SizedBox(height: 6),
                                     Text(
                                       amenity,
                                       textAlign: TextAlign.center,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 12),
+                                      style:
+                                      const TextStyle(fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -276,7 +269,31 @@ class _PropertyCardState extends State<PropertyCard> {
     );
   }
 
-  // TAG WIDGET
+  // ================= ACTION METHODS =================
+
+  Future<void> _openWhatsApp() async {
+    final message =
+        "Hi, I'm interested in this property:\n${widget.property.title}\nPrice: ₹${widget.property.price}";
+    final url =
+    Uri.parse("https://wa.me/${widget.property.contactNumber}?text=${Uri.encodeComponent(message)}");
+    await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
+  void _shareProperty() {
+    Share.share(
+      "${widget.property.title}\n"
+          "${widget.property.city}, ${widget.property.state}\n"
+          "Price: ₹${widget.property.price}",
+    );
+  }
+
+  Future<void> _callOwner() async {
+    final url = Uri.parse("tel:${widget.property.contactNumber}");
+    await launchUrl(url);
+  }
+
+  // ================= SMALL WIDGETS =================
+
   Widget _tag(String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -284,42 +301,42 @@ class _PropertyCardState extends State<PropertyCard> {
         color: Colors.black87,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        text.toUpperCase(),
-        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-      ),
+      child: Text(text.toUpperCase(),
+          style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600)),
     );
   }
 
-  // VERIFIED TAG WIDGET
   Widget _verifiedTag() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.green.shade600,
+        color: Colors.green,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           Icon(Icons.verified, color: Colors.white, size: 14),
           SizedBox(width: 4),
-          Text(
-            "VERIFIED",
-            style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
-          ),
+          Text("VERIFIED",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  // CIRCLE ICON WIDGET
-  Widget _iconCircle(IconData icon, Color color, VoidCallback onTap) {
+  Widget _iconCircle(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: CircleAvatar(
-        radius: 18,
-        backgroundColor: Colors.black38,
-        child: Icon(icon, color: color, size: 20),
+        radius: 20,
+        backgroundColor: Colors.black45,
+        child: Icon(icon, color: Colors.white, size: 22),
       ),
     );
   }
