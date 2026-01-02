@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
 
-class AmenityIcon{
-  static IconData getIcon(String amenity) {
-    switch (amenity.toLowerCase()) {
-      case "parking":
-        return Icons.local_parking;
-      case "wifi":
-        return Icons.wifi;
-      case "swimming pool":
+class AmenityIcon {
+  static IconData getIcon(String amenityNumber) {
+    switch (amenityNumber) {
+      case "1":
         return Icons.pool;
-      case "gym":
-        return Icons.fitness_center;
-      case "security":
-        return Icons.security;
-        case "lift":
+      case "2":
         return Icons.elevator;
-        case "club house":
+      case "3":
+        return Icons.fitness_center;
+      case "4":
+        return Icons.fitness_center;
+      case "5":
+        return Icons.security;
+      case "6":
+        return Icons.wifi;
+      case "7":
         return Icons.groups;
       default:
         return Icons.check_circle_outline;
     }
   }
-
 }

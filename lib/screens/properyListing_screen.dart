@@ -44,8 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void _search(String query) {
     setState(() {
       _filteredProperties = _allProperties.where((p) {
-        return p.title.toLowerCase().contains(query.toLowerCase());
+        return (p.title ?? '').toLowerCase().contains(query.toLowerCase());
       }).toList();
+
     });
   }
 

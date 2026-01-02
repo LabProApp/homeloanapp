@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:property/theme/app_colors.dart';
 import '../models/calcLoanRequest.dart';
 import '../models/calcLoanResponse.dart';
 import '../services/emi_service.dart';
@@ -21,6 +22,31 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
 
   bool loading = false;
   CalcLoanResponse? response;
+
+  @override
+  void initState() {
+    super.initState();
+
+    /// ✅ Clear everything on screen load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resetForm();
+    });
+  }
+
+  void _resetForm() {
+    _formKey.currentState?.reset();
+
+    principalCtrl.clear();
+    interestCtrl.clear();
+    tenureCtrl.clear();
+    incomeCtrl.clear();
+    existingEmiCtrl.clear();
+
+    setState(() {
+      response = null;
+      loading = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -60,46 +86,86 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFFF5F7FA), // ✅ fixes black background
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "EMI Calculator",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+    return Scaffold(
+      backgroundColor: AppColors.primary,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "EMI Calculator",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
 
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  _field("Loan Amount", principalCtrl),
-                  _field("Interest Rate (%)", interestCtrl),
-                  _field("Tenure (Years)", tenureCtrl),
-                  _field("Monthly Income", incomeCtrl),
-                  _field("Existing EMI", existingEmiCtrl),
-                  const SizedBox(height: 16),
+              /// 🔳 FORM CARD
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        _field("Loan Amount", principalCtrl),
+                        _field("Interest Rate (%)", interestCtrl),
+                        _field("Tenure (Years)", tenureCtrl),
+                        _field("Monthly Income", incomeCtrl),
+                        _field("Existing EMI", existingEmiCtrl),
+                        const SizedBox(height: 20),
 
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: loading ? null : calculateEmi,
-                      child: loading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text("Calculate EMI"),
+                        /// 🤍 WHITE BUTTON
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: loading ? null : calculateEmi,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: AppColors.primary,
+                              elevation: 3,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                            child: loading
+                                ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            )
+                                : const Text(
+                              "Calculate EMI",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 24),
-            if (response != null) _resultCard(),
-          ],
+              const SizedBox(height: 24),
+
+              /// 📊 RESULT
+              if (response != null) _resultCard(),
+            ],
+          ),
         ),
       ),
     );

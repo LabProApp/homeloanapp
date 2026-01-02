@@ -25,27 +25,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _pages = const [
       HomeScreen(),           // 0
       BankPage(),             // 1
-      HomeScreen(),           // 2 Projects placeholder
-      LegalServicePage(),     // 3 Legal & Documents
+      HomeScreen(),           // 2 Projects
+      LegalServicePage(),     // 3 Documents
       EmiCalculatorScreen(),  // 4 EMI Calculator (drawer only)
     ];
+  }
+
+  /// ✅ Bottom nav index mapping
+  /// EMI Calculator (index 4) → NO bottom tab highlighted
+  int? get _bottomNavIndex {
+    if (_selectedIndex >= 4) return null;
+    return _selectedIndex;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.primary,
+
+      /// 🔷 APP BAR
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: AppColors.primary,
         title: const Text(
           "ABODE ONE",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
+            letterSpacing: 1,
           ),
         ),
-        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        elevation: 0,
       ),
+
+      /// 📂 DRAWER
       drawer: Drawer(
         child: Column(
           children: [
@@ -59,50 +72,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
               child: UserAccountsDrawerHeader(
                 decoration: const BoxDecoration(color: AppColors.primary),
-                accountName: const Text("Nikhil Aggarwal"),
+                accountName: const Text(
+                  "Nikhil Aggarwal",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 accountEmail: const Text("nikhil@email.com"),
                 currentAccountPicture: const CircleAvatar(
                   backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 40),
+                  child: Icon(Icons.person, size: 40, color: AppColors.primary),
                 ),
               ),
             ),
 
-            // MAIN NAVIGATION
-            _drawerItem(Icons.home, "Home", 0),
-            _drawerItem(Icons.account_balance, "Bank Loans", 1),
-            _drawerItem(Icons.business, "Projects", 2),
-            _drawerItem(Icons.document_scanner, "Legal Documents", 3),
+            _drawerItem(Icons.home_rounded, "Home", 0),
+            _drawerItem(Icons.account_balance_rounded, "Bank Loans", 1),
+            _drawerItem(Icons.business_rounded, "Projects", 2),
+            _drawerItem(Icons.document_scanner_rounded, "Legal Documents", 3),
 
             const Divider(),
 
-            // TOOLS SECTION
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   "TOOLS",
                   style: TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
             ),
 
+            /// ✅ EMI Calculator (drawer-only tool)
             ListTile(
               leading: const Icon(Icons.calculate),
               title: const Text("EMI Calculator"),
               selected: _selectedIndex == 4,
               selectedColor: AppColors.secondary,
               onTap: () {
-                setState(() => _selectedIndex = 4); // jump to last page
-                Navigator.pop(context); // close drawer
+                setState(() => _selectedIndex = 4);
+                Navigator.pop(context);
               },
             ),
 
             const Divider(),
 
-            // WEBSITE
             ListTile(
               leading: const Icon(Icons.language),
               title: const Text("Website"),
@@ -120,7 +137,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
             ),
 
-            // TERMS
             ListTile(
               leading: const Icon(Icons.warning_amber_outlined),
               title: const Text("Terms of Use"),
@@ -140,43 +156,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             const Spacer(),
 
-            // LOGOUT
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text("Logout"),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              onTap: () => Navigator.pop(context),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
           ],
         ),
       ),
+
+      /// 📄 PAGE STACK
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,
       ),
+
+      /// 🔻 BOTTOM NAV (NO highlight for EMI Calculator)
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex >= 4 ? 3 : _selectedIndex, // cap at 3 for bottom nav
+        currentIndex: _bottomNavIndex ?? 0,
         selectedItemColor: AppColors.secondary,
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          setState(() {
-            _selectedIndex = index; // directly map to first 4 pages
-          });
+          setState(() => _selectedIndex = index);
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.account_balance), label: "Loans"),
-          BottomNavigationBarItem(icon: Icon(Icons.business), label: "Projects"),
-          BottomNavigationBarItem(icon: Icon(Icons.document_scanner), label: "Documents"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home_rounded),
+            label: "Home",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_balance_outlined),
+            activeIcon: Icon(Icons.account_balance),
+            label: "Loans",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.business_outlined),
+            activeIcon: Icon(Icons.business),
+            label: "Projects",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.document_scanner_outlined),
+            activeIcon: Icon(Icons.document_scanner),
+            label: "Documents",
+          ),
         ],
       ),
     );
   }
 
-  // Drawer item builder
+  /// 🔹 Drawer item builder
   Widget _drawerItem(IconData icon, String title, int index) {
     return ListTile(
       leading: Icon(icon),

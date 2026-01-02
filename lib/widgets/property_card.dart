@@ -25,6 +25,32 @@ class _PropertyCardState extends State<PropertyCard> {
   int currentIndex = 0;
   bool amenitiesExpanded = false;
 
+  /// ================= GET IMAGES =================
+  List<String> get _images {
+    if (widget.property.documentList != null &&
+        widget.property.documentList!.isNotEmpty) {
+      final urls = widget.property.documentList!
+          .map((doc) => doc.docUrl)
+          .whereType<String>()
+          .toList();
+      if (urls.isNotEmpty) return urls;
+    }
+    // Fallback asset images
+    return [
+      'assets/images/house1.jpg',
+      'assets/images/house2.jpg',
+      'assets/images/house3.jpg',
+    ];
+  }
+
+  /// ================= GET AMENITIES =================
+  List<String> get _amenities {
+    return widget.property.amenitiesAsList
+        ?.map((e) => e.toString())
+        .toList() ??
+        [];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -42,13 +68,25 @@ class _PropertyCardState extends State<PropertyCard> {
                 height: 380,
                 width: double.infinity,
                 child: PageView.builder(
-                  itemCount: widget.property.images.length,
+                  itemCount: _images.length,
                   onPageChanged: (i) => setState(() => currentIndex = i),
-                  itemBuilder: (_, i) => Image.asset(
-                    widget.property.images[i],
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                  ),
+                  itemBuilder: (_, i) {
+                    final img = _images[i];
+                    if (img.startsWith('assets/')) {
+                      return Image.asset(
+                        img,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      );
+                    } else {
+                      return Image.network(
+                        img,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (_, __, ___) => _placeholderImage(),
+                      );
+                    }
+                  },
                 ),
               ),
 
@@ -60,7 +98,7 @@ class _PropertyCardState extends State<PropertyCard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
-                    widget.property.images.length,
+                    _images.length,
                         (i) => AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -82,9 +120,9 @@ class _PropertyCardState extends State<PropertyCard> {
                 left: 12,
                 child: Row(
                   children: [
-                    _tag(widget.property.postedBy),
+                    _tag(widget.property.postedBy ?? "-"),
                     const SizedBox(width: 8),
-                    if (widget.property.verified) _verifiedTag(),
+                    if (widget.property.verified ?? false) _verifiedTag(),
                   ],
                 ),
               ),
@@ -93,11 +131,10 @@ class _PropertyCardState extends State<PropertyCard> {
               const Positioned(
                 top: 12,
                 right: 12,
-                child: Icon(Icons.favorite_border,
-                    color: Colors.white, size: 26),
+                child: Icon(Icons.favorite_border, color: Colors.white, size: 26),
               ),
 
-              // ================= ACTION ICONS (VERTICAL) =================
+              // ================= ACTION ICONS =================
               Positioned(
                 bottom: 16,
                 right: 12,
@@ -132,11 +169,12 @@ class _PropertyCardState extends State<PropertyCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Title & Rent/Sale
                 Row(
                   children: [
                     Expanded(
                       child: Text(
-                        widget.property.title,
+                        widget.property.title ?? "-",
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
@@ -149,7 +187,7 @@ class _PropertyCardState extends State<PropertyCard> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        widget.property.rentOrSale,
+                        widget.property.rentOrSale ?? "-",
                         style: TextStyle(color: AppColors.cardBg),
                       ),
                     ),
@@ -157,15 +195,12 @@ class _PropertyCardState extends State<PropertyCard> {
                 ),
                 const SizedBox(height: 6),
 
-                Text(widget.property.subtitle,
-                    style: TextStyle(color: Colors.grey.shade700)),
-                const SizedBox(height: 8),
-
+                // City | State & Super Area
                 Row(
                   children: [
                     Expanded(
                       child: Text(
-                        "${widget.property.city} | ${widget.property.state}",
+                        "${widget.property.city ?? "-"} | ${widget.property.state ?? "-"}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(color: Colors.grey.shade600),
@@ -173,18 +208,22 @@ class _PropertyCardState extends State<PropertyCard> {
                     ),
                     const Icon(Icons.square_foot, size: 14),
                     const SizedBox(width: 4),
-                    Text(widget.property.superArea,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      widget.property.superArea != null
+                          ? "${widget.property.superArea!.toStringAsFixed(0)} Sqft"
+                          : "-",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
-
                 const SizedBox(height: 8),
 
+                // Category | Type & Price
                 Row(
                   children: [
                     Expanded(
                       child: Text(
-                        "${widget.property.category} | ${widget.property.type}",
+                        "${widget.property.category ?? "-"} | ${widget.property.type ?? "-"}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(color: Colors.grey.shade600),
@@ -192,28 +231,28 @@ class _PropertyCardState extends State<PropertyCard> {
                     ),
                     const Icon(Icons.currency_rupee, size: 14),
                     Text(
-                      widget.property.price,
+                      widget.property.price != null
+                          ? "₹ ${widget.property.price!.toStringAsFixed(2)}"
+                          : "-",
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 15),
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 12),
 
-                if (widget.showAmenitiesExpandable)
+                // Amenities
+                if (widget.showAmenitiesExpandable && _amenities.isNotEmpty)
                   Column(
                     children: [
                       GestureDetector(
-                        onTap: () => setState(
-                                () => amenitiesExpanded = !amenitiesExpanded),
+                        onTap: () =>
+                            setState(() => amenitiesExpanded = !amenitiesExpanded),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              amenitiesExpanded
-                                  ? "Hide Amenities"
-                                  : "Show Amenities",
+                              amenitiesExpanded ? "Hide Amenities" : "Show Amenities",
                               style: const TextStyle(
                                   color: AppColors.secondary,
                                   fontWeight: FontWeight.w600),
@@ -233,8 +272,7 @@ class _PropertyCardState extends State<PropertyCard> {
                           child: Wrap(
                             spacing: 20,
                             runSpacing: 16,
-                            children:
-                            widget.property.amenities.map((amenity) {
+                            children: _amenities.map((amenity) {
                               return SizedBox(
                                 width: 70,
                                 child: Column(
@@ -242,7 +280,7 @@ class _PropertyCardState extends State<PropertyCard> {
                                     Icon(
                                       AmenityIcon.getIcon(amenity),
                                       size: 26,
-                                      color: Colors.grey.shade700,
+                                      color: AppColors.primary,
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
@@ -250,8 +288,7 @@ class _PropertyCardState extends State<PropertyCard> {
                                       textAlign: TextAlign.center,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style:
-                                      const TextStyle(fontSize: 12),
+                                      style: const TextStyle(fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -269,21 +306,40 @@ class _PropertyCardState extends State<PropertyCard> {
     );
   }
 
-  // ================= ACTION METHODS =================
+  /// ================= PLACEHOLDER =================
+  Widget _placeholderImage() {
+    // List of local placeholder images
+    final placeholders = [
+      'assets/images/house1.jpg',
+      'assets/images/house2.jpg',
+      'assets/images/house3.jpg',
+    ];
 
+    // Pick one based on current index so it rotates with PageView
+    final img = placeholders[currentIndex % placeholders.length];
+
+    return Image.asset(
+      img,
+      fit: BoxFit.cover,
+      width: double.infinity,
+    );
+  }
+
+
+  // ================= ACTION METHODS =================
   Future<void> _openWhatsApp() async {
     final message =
-        "Hi, I'm interested in this property:\n${widget.property.title}\nPrice: ₹${widget.property.price}";
-    final url =
-    Uri.parse("https://wa.me/${widget.property.contactNumber}?text=${Uri.encodeComponent(message)}");
+        "Hi, I'm interested in this property:\n${widget.property.title ?? "-"}\nPrice: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}";
+    final url = Uri.parse(
+        "https://wa.me/${widget.property.contactNumber}?text=${Uri.encodeComponent(message)}");
     await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   void _shareProperty() {
     Share.share(
-      "${widget.property.title}\n"
-          "${widget.property.city}, ${widget.property.state}\n"
-          "Price: ₹${widget.property.price}",
+      "${widget.property.title ?? "-"}\n"
+          "${widget.property.city ?? "-"}, ${widget.property.state ?? "-"}\n"
+          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}",
     );
   }
 
@@ -293,7 +349,6 @@ class _PropertyCardState extends State<PropertyCard> {
   }
 
   // ================= SMALL WIDGETS =================
-
   Widget _tag(String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -303,9 +358,7 @@ class _PropertyCardState extends State<PropertyCard> {
       ),
       child: Text(text.toUpperCase(),
           style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w600)),
+              color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 

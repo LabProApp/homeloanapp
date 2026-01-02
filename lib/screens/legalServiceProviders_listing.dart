@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:property/theme/app_colors.dart';
 import 'package:property/models/legalservice_model.dart';
+import 'package:property/screens/legalInquiry_dialog.dart';
 
 class LegalServicePage extends StatefulWidget {
   const LegalServicePage({super.key});
@@ -16,7 +17,6 @@ class _LegalServicePageState extends State<LegalServicePage> {
   @override
   void initState() {
     super.initState();
-    // ✅ IMPORTANT: Make a copy, not a reference
     _filteredProviders = List.from(serviceProviders);
   }
 
@@ -45,15 +45,52 @@ class _LegalServicePageState extends State<LegalServicePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primary,
+
+      /// 🔷 APP BAR WITH INQUIRY BUTTON
       appBar: AppBar(
         title: const Text(
-          "Legal & Documentation Services",
+          "Legal & Documentation",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: TextButton.icon(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (_) => const InquiryDialog(),
+                );
+              },
+
+              icon: const Icon(Icons.support_agent, color: AppColors.primary),
+              label: const Text(
+                "Inquiry",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              ),
+            ),
+          ),
+        ],
       ),
+
       body: Column(
         children: [
           /// 🔍 SEARCH BAR
@@ -91,8 +128,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
             )
                 : ListView.builder(
               padding: const EdgeInsets.all(16),
-              physics:
-              const BouncingScrollPhysics(), // ✅ BOUNCY SCROLL
+              physics: const BouncingScrollPhysics(),
               itemCount: _filteredProviders.length,
               itemBuilder: (context, index) {
                 final provider = _filteredProviders[index];
@@ -133,8 +169,8 @@ class _LegalServicePageState extends State<LegalServicePage> {
                                         fontSize: 18,
                                         fontWeight:
                                         FontWeight.bold,
-                                        color: AppColors
-                                            .textPrimary,
+                                        color:
+                                        AppColors.textPrimary,
                                       ),
                                     ),
                                     const SizedBox(height: 4),

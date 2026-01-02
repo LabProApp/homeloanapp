@@ -187,9 +187,9 @@ class _BankCard extends StatelessWidget {
 
               Row(
                 children: [
-                  _info("Interest", "${bank.interestRate}%"),
+                  _info("Starting Interest", "${bank.interestRate}%"),
                   const SizedBox(width: 12),
-                  _info("Tenure", "${bank.tenureYears} yrs"),
+                  _info("Max Tenure", "${bank.tenureYears} yrs"),
                 ],
               ),
 
