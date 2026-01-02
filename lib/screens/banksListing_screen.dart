@@ -35,7 +35,6 @@ class _BankPageState extends State<BankPage> {
     super.dispose();
   }
 
-  /// ✅ SIMPLE API CALL (YOUR REQUESTED APPROACH)
   Future<void> _loadBanks() async {
     try {
       final data = await _bankService.fetchBanks();
@@ -73,10 +72,7 @@ class _BankPageState extends State<BankPage> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: _searchBar(),
             ),
-
-            Expanded(
-              child: _buildBody(),
-            ),
+            Expanded(child: _buildBody()),
           ],
         ),
       ),
@@ -93,11 +89,12 @@ class _BankPageState extends State<BankPage> {
     }
 
     if (_filteredBanks.isEmpty) {
-      return _emptyState();
+      return const Center(child: Text("No banks found"));
     }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
+      physics: const BouncingScrollPhysics(),
       itemCount: _filteredBanks.length,
       itemBuilder: (_, index) => Padding(
         padding: const EdgeInsets.only(bottom: 16),
@@ -148,12 +145,6 @@ class _BankPageState extends State<BankPage> {
       ),
     );
   }
-
-  Widget _emptyState() {
-    return const Center(
-      child: Text("No banks found"),
-    );
-  }
 }
 
 /// 🏦 BANK CARD
@@ -165,6 +156,7 @@ class _BankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -201,14 +193,56 @@ class _BankCard extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
+              /// ✅ ENHANCED APPLY NOW BUTTON
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () =>
+                height: 50,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () =>
                       LoanApplyDialog.show(context, bank),
-                  child: const Text("Apply Now"),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary,
+                          AppColors.primary.withOpacity(0.8),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.flash_on_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          "Apply Now",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -224,6 +258,7 @@ class _BankCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: const TextStyle(fontSize: 12)),
+          const SizedBox(height: 4),
           Text(
             value,
             style: const TextStyle(
