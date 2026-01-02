@@ -1,235 +1,168 @@
-import 'package:flutter/material.dart';
-import 'package:property/theme/app_colors.dart';
+import 'dart:convert';
 
-/// ---------------- MODEL ----------------
-class LegalServiceProvider {
-  final String name;
-  final String city;
-  final String image;
-  final List<String> services;
+/// ---------- Root ----------
+LegalServiceResponse legalServiceResponseFromJson(String str) =>
+    LegalServiceResponse.fromJson(json.decode(str));
 
-  LegalServiceProvider({
-    required this.name,
-    required this.city,
-    required this.image,
-    required this.services,
+class LegalServiceResponse {
+  final List<LegalService> content;
+  final Pageable pageable;
+  final int totalPages;
+  final int totalElements;
+  final bool last;
+  final int size;
+  final int number;
+  final Sort sort;
+  final int numberOfElements;
+  final bool first;
+  final bool empty;
+
+  LegalServiceResponse({
+    required this.content,
+    required this.pageable,
+    required this.totalPages,
+    required this.totalElements,
+    required this.last,
+    required this.size,
+    required this.number,
+    required this.sort,
+    required this.numberOfElements,
+    required this.first,
+    required this.empty,
   });
-}
 
-/// ---------------- DEMO DATA ----------------
-final List<LegalServiceProvider> serviceProviders = [
-  LegalServiceProvider(
-    name: 'Sharma Legal Services',
-    city: 'Mohali',
-    image: 'https://cdn-icons-png.flaticon.com/512/1995/1995574.png',
-    services: [
-      'Sale Deed',
-      'Agreement to Sell',
-      'Legal Verification',
-      'Property Registration',
-    ],
-  ),
-  LegalServiceProvider(
-    name: 'SK Documents',
-    city: 'Sector 10, Panchkula',
-    image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-    services: [
-      'Home Loan Docs',
-      'Notary',
-      'Stamp Duty',
-      'Rent Agreement',
-      'EC & Title Check',
-    ],
-  ),
-  LegalServiceProvider(
-    name: 'Agarwal Documentation',
-    city: 'Chandigarh',
-    image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-    services: [
-      'Home Loan Docs',
-      'Notary',
-      'Stamp Duty',
-      'EC & Title Check',
-    ],
-  ),
-];
-
-/// ---------------- SCREEN ----------------
-class LegalServicePage extends StatelessWidget {
-  const LegalServicePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
-
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: serviceProviders.length,
-        itemBuilder: (context, index) {
-          final provider = serviceProviders[index];
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Card(
-              elevation: 4,
-              shadowColor: Colors.black12,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    /// 🔹 HEADER
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 32,
-                          backgroundColor: AppColors.primary,
-                          backgroundImage: NetworkImage(provider.image),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                provider.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                provider.city,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    /// 🔹 SERVICES OFFERED
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: provider.services.map((service) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: AppColors.primary.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Text(
-                            service,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 18),
-                    const Divider(),
-                    const SizedBox(height: 10),
-
-                    /// 🔹 CONTACT BUTTONS
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _ActionButton(
-                            icon: Icons.call,
-                            label: 'Call',
-                            color: AppColors.success,
-                            onTap: () {
-                              // TODO: Call provider
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _ActionButton(
-                            icon: Icons.message,
-                            label: 'WhatsApp',
-                            color: AppColors.primary,
-                            onTap: () {
-                              // TODO: WhatsApp provider
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+  factory LegalServiceResponse.fromJson(Map<String, dynamic> json) {
+    return LegalServiceResponse(
+      content: List<LegalService>.from(
+        json["content"].map((x) => LegalService.fromJson(x)),
       ),
+      pageable: Pageable.fromJson(json["pageable"]),
+      totalPages: json["totalPages"],
+      totalElements: json["totalElements"],
+      last: json["last"],
+      size: json["size"],
+      number: json["number"],
+      sort: Sort.fromJson(json["sort"]),
+      numberOfElements: json["numberOfElements"],
+      first: json["first"],
+      empty: json["empty"],
     );
   }
 }
 
-/// ---------------- ACTION BUTTON ----------------
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
+/// ---------- Content ----------
+class LegalService {
+  final int id;
+  final String code;
+  final String legalName;
+  final String? contactName;
+  final String city;
+  final String state;
+  final String country;
+  final String address;
+  final String phone1;
+  final String? phone2;
+  final String email;
+  final String? planPackage;
+  final List<String> services;
+  final String status;
+  final String createdBy;
+  final String updatedBy;
+  final DateTime createdTs;
+  final DateTime lastUpdatedTs;
 
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
+  LegalService({
+    required this.id,
+    required this.code,
+    required this.legalName,
+    this.contactName,
+    required this.city,
+    required this.state,
+    required this.country,
+    required this.address,
+    required this.phone1,
+    this.phone2,
+    required this.email,
+    this.planPackage,
+    required this.services,
+    required this.status,
+    required this.createdBy,
+    required this.updatedBy,
+    required this.createdTs,
+    required this.lastUpdatedTs,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.4)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: color),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
+  factory LegalService.fromJson(Map<String, dynamic> json) {
+    return LegalService(
+      id: json["id"],
+      code: json["code"],
+      legalName: json["legalname"],
+      contactName: json["contactname"],
+      city: json["city"],
+      state: json["state"],
+      country: json["country"],
+      address: json["address"],
+      phone1: json["phone1"],
+      phone2: json["phone2"],
+      email: json["email"],
+      planPackage: json["planPackage"],
+      services: List<String>.from(json["services"]),
+      status: json["status"],
+      createdBy: json["createdBy"],
+      updatedBy: json["updatedBy"],
+      createdTs: DateTime.parse(json["createdTs"]),
+      lastUpdatedTs: DateTime.parse(json["lastUpdatedTs"]),
+    );
+  }
+}
+
+/// ---------- Pageable ----------
+class Pageable {
+  final int pageNumber;
+  final int pageSize;
+  final Sort sort;
+  final int offset;
+  final bool paged;
+  final bool unpaged;
+
+  Pageable({
+    required this.pageNumber,
+    required this.pageSize,
+    required this.sort,
+    required this.offset,
+    required this.paged,
+    required this.unpaged,
+  });
+
+  factory Pageable.fromJson(Map<String, dynamic> json) {
+    return Pageable(
+      pageNumber: json["pageNumber"],
+      pageSize: json["pageSize"],
+      sort: Sort.fromJson(json["sort"]),
+      offset: json["offset"],
+      paged: json["paged"],
+      unpaged: json["unpaged"],
+    );
+  }
+}
+
+/// ---------- Sort ----------
+class Sort {
+  final bool sorted;
+  final bool empty;
+  final bool unsorted;
+
+  Sort({
+    required this.sorted,
+    required this.empty,
+    required this.unsorted,
+  });
+
+  factory Sort.fromJson(Map<String, dynamic> json) {
+    return Sort(
+      sorted: json["sorted"],
+      empty: json["empty"],
+      unsorted: json["unsorted"],
     );
   }
 }

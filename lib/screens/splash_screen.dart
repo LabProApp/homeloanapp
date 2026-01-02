@@ -72,9 +72,9 @@ class _SplashScreenState extends State<SplashScreen> {
               const Text(
                 "Find. Finance. Finalize.",
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepOrange,
+                  color: Colors.white,
                   letterSpacing: 0.5,
                 ),
               ),

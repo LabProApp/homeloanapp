@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:property/theme/app_colors.dart';
-import 'package:property/services/legalInquiry_service.dart';
+import 'package:property/services/legal_service_api.dart';
+import 'package:property/models/inquiry_request.dart';
 
 class InquiryDialog extends StatefulWidget {
   const InquiryDialog({super.key});
@@ -16,46 +17,55 @@ class _InquiryDialogState extends State<InquiryDialog> {
   final _phoneController = TextEditingController();
   final _messageController = TextEditingController();
 
-  String _selectedService = "Property Registration";
   bool _loading = false;
 
   final List<String> _services = [
-    "Property Legal Consultation",
-    "Property Registration",
-    "Agreement to Sell(Beanna)",
-    "Rent Agreement",
-    "Loan Documentation Support",
+    "LEGAL_SERVICE",
+    "HOME_LOAN",
+    "PROPERTY_REGISTRATION",
+    "RENT_AGREEMENT",
+    "LOAN_DOCUMENTATION",
   ];
 
-  void _submit() async {
+  String _selectedService = "LEGAL_SERVICE";
+
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loading = true);
 
-    final success = await InquiryService.submitInquiry(
-      name: _nameController.text.trim(),
-      phone: _phoneController.text.trim(),
-      service: _selectedService,
-      message: _messageController.text.trim(),
-    );
+    try {
+      final inquiry = Inquiry(
+        applicantName: _nameController.text.trim(),
+        mobileNumber: _phoneController.text.trim(),
+        inquiryType: _selectedService, // 👈 STRING
+        comments: _messageController.text.trim(),
+        leadSource: "APP",
+      );
 
-    setState(() => _loading = false);
+      await LegalServiceApi.submitInquiry(inquiry);
 
-    if (!mounted) return;
+      if (!mounted) return;
+      Navigator.pop(context);
 
-    Navigator.pop(context);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor:
-        success ? AppColors.success : AppColors.error,
-        content: Text(
-          success
-              ? "Inquiry submitted successfully"
-              : "Failed to submit inquiry",
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.success,
+          content: Text("Inquiry submitted successfully"),
         ),
-      ),
-    );
+      );
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.error,
+          content: Text("Failed to submit inquiry"),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -79,10 +89,7 @@ class _InquiryDialogState extends State<InquiryDialog> {
                 children: [
                   const Text(
                     "Raise an Inquiry",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -100,7 +107,7 @@ class _InquiryDialogState extends State<InquiryDialog> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) =>
-                v!.isEmpty ? "Enter your name" : null,
+                v == null || v.isEmpty ? "Enter your name" : null,
               ),
               const SizedBox(height: 12),
 
@@ -113,7 +120,9 @@ class _InquiryDialogState extends State<InquiryDialog> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) =>
-                v!.length < 10 ? "Enter valid number" : null,
+                v == null || v.length != 10
+                    ? "Enter valid 10-digit number"
+                    : null,
               ),
               const SizedBox(height: 12),
 
@@ -124,13 +133,11 @@ class _InquiryDialogState extends State<InquiryDialog> {
                     .map(
                       (s) => DropdownMenuItem(
                     value: s,
-                    child: Text(s),
+                    child: Text(s.replaceAll("_", " ")),
                   ),
                 )
                     .toList(),
-                onChanged: (v) => setState(() {
-                  _selectedService = v!;
-                }),
+                onChanged: (v) => setState(() => _selectedService = v!),
                 decoration: const InputDecoration(
                   labelText: "Service",
                   border: OutlineInputBorder(),
@@ -152,28 +159,22 @@ class _InquiryDialogState extends State<InquiryDialog> {
               /// 🔹 SUBMIT
               SizedBox(
                 width: double.infinity,
-                height: 60,
-
+                height: 52,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12), // 👈 radius here
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    elevation: 4, // optional: nice depth
                   ),
                   onPressed: _loading ? null : _submit,
                   child: _loading
-                      ? const CircularProgressIndicator(
-                    color: Colors.white,
-
-                  )
+                      ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                     "Submit Inquiry",
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                 ),
               ),

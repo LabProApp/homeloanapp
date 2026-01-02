@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:property/theme/app_colors.dart';
 import 'package:property/models/legalservice_model.dart';
+import 'package:property/services/legal_service_api.dart';
 import 'package:property/screens/legalInquiry_dialog.dart';
+
+/// 🔥 Faster + Bouncy Scroll Behavior
+class FastScrollBehavior extends MaterialScrollBehavior {
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics(
+      parent: AlwaysScrollableScrollPhysics(),
+    );
+  }
+}
 
 class LegalServicePage extends StatefulWidget {
   const LegalServicePage({super.key});
@@ -11,50 +23,112 @@ class LegalServicePage extends StatefulWidget {
 }
 
 class _LegalServicePageState extends State<LegalServicePage> {
+  final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
-  late List<LegalServiceProvider> _filteredProviders;
+
+  List<LegalService> _providers = [];
+  bool _isLoading = false;
+  bool _isLastPage = false;
+  int _page = 0;
 
   @override
   void initState() {
     super.initState();
-    _filteredProviders = List.from(serviceProviders);
+    _fetchProviders();
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200 &&
+          !_isLoading &&
+          !_isLastPage) {
+        _fetchProviders();
+      }
+    });
   }
 
-  void _filterProviders(String query) {
-    if (query.trim().isEmpty) {
+  Future<void> _fetchProviders() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final response =
+      await LegalServiceApi.fetchProviders(page: _page);
+
       setState(() {
-        _filteredProviders = List.from(serviceProviders);
+        _page++;
+        _isLastPage = response.last;
+        _providers.addAll(response.content);
       });
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  List<LegalService> get _filteredProviders {
+    final q = _searchController.text.trim().toLowerCase();
+    if (q.isEmpty) return _providers;
+
+    return _providers.where((p) {
+      return p.legalName.toLowerCase().contains(q) ||
+          p.city.toLowerCase().contains(q) ||
+          p.services.any((s) => s.toLowerCase().contains(q));
+    }).toList();
+  }
+
+  Future<void> _call(String phone) async {
+    final cleanedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (cleanedPhone.isEmpty) {
+      debugPrint("Invalid phone number");
       return;
     }
 
-    final q = query.toLowerCase();
+    final uri = Uri.parse("tel:$cleanedPhone");
 
-    setState(() {
-      _filteredProviders = serviceProviders.where((provider) {
-        return provider.name.toLowerCase().contains(q) ||
-            provider.city.toLowerCase().contains(q) ||
-            provider.services.any(
-                  (service) => service.toLowerCase().contains(q),
-            );
-      }).toList();
-    });
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      debugPrint("Cannot make a call on this device");
+    }
   }
+
+
+  Future<void> _whatsApp(String phone) async {
+    // Remove spaces, +, -, etc.
+    final cleanedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (cleanedPhone.isEmpty) {
+      debugPrint("Invalid phone number");
+      return;
+    }
+
+    // India country code handling
+    final whatsappNumber =
+    cleanedPhone.startsWith('91') ? cleanedPhone : '91$cleanedPhone';
+
+    final uri = Uri.parse("https://wa.me/$whatsappNumber");
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      debugPrint("WhatsApp not installed or cannot launch");
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primary,
-
-      /// 🔷 APP BAR WITH INQUIRY BUTTON
       appBar: AppBar(
-        title: const Text(
-          "Legal & Documentation",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text("Legal & Documentation"),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        elevation: 0,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -64,13 +138,14 @@ class _LegalServicePageState extends State<LegalServicePage> {
                   context: context,
                   isScrollControlled: true,
                   shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   builder: (_) => const InquiryDialog(),
                 );
               },
-
-              icon: const Icon(Icons.support_agent, color: AppColors.primary),
+              icon: const Icon(Icons.support_agent,
+                  color: AppColors.primary),
               label: const Text(
                 "Inquiry",
                 style: TextStyle(
@@ -78,34 +153,24 @@ class _LegalServicePageState extends State<LegalServicePage> {
                   color: AppColors.primary,
                 ),
               ),
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              ),
+              style: TextButton.styleFrom(backgroundColor: Colors.white),
             ),
           ),
         ],
       ),
-
       body: Column(
         children: [
-          /// 🔍 SEARCH BAR
+          /// 🔍 Search
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
-              onChanged: _filterProviders,
+              onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: "Search by name, city or service",
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding:
-                const EdgeInsets.symmetric(vertical: 14),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
@@ -114,73 +179,68 @@ class _LegalServicePageState extends State<LegalServicePage> {
             ),
           ),
 
-          /// 📃 LIST
+          /// 📃 Fast + Bouncy List
           Expanded(
-            child: _filteredProviders.isEmpty
-                ? Center(
-              child: Text(
-                "No service providers found",
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 16,
+            child: ScrollConfiguration(
+              behavior: FastScrollBehavior(),
+              child: ListView.builder(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
                 ),
-              ),
-            )
-                : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              physics: const BouncingScrollPhysics(),
-              itemCount: _filteredProviders.length,
-              itemBuilder: (context, index) {
-                final provider = _filteredProviders[index];
+                padding: const EdgeInsets.all(16),
+                itemCount:
+                _filteredProviders.length + (_isLoading ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index >= _filteredProviders.length) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Card(
-                    elevation: 4,
-                    shadowColor: Colors.black12,
+                  final p = _filteredProviders[index];
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
-                        crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          /// 🔹 HEADER
                           Row(
                             children: [
                               CircleAvatar(
-                                radius: 32,
-                                backgroundImage:
-                                NetworkImage(provider.image),
-                                backgroundColor:
-                                AppColors.primary,
+                                radius: 28,
+                                backgroundColor: AppColors.primary,
+                                child: Text(
+                                  p.legalName[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(width: 14),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment:
                                   CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      provider.name,
+                                      p.legalName,
                                       style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight:
-                                        FontWeight.bold,
-                                        color:
-                                        AppColors.textPrimary,
-                                      ),
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.bold),
                                     ),
-                                    const SizedBox(height: 4),
                                     Text(
-                                      provider.city,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors
-                                            .textSecondary,
-                                      ),
+                                      "${p.city}, ${p.state}",
+                                      style:
+                                      const TextStyle(fontSize: 13),
                                     ),
                                   ],
                                 ),
@@ -188,79 +248,51 @@ class _LegalServicePageState extends State<LegalServicePage> {
                             ],
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
 
-                          /// 🔹 SERVICES
                           Wrap(
                             spacing: 8,
-                            runSpacing: 8,
-                            children:
-                            provider.services.map((service) {
-                              return Container(
-                                padding:
-                                const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary
-                                      .withOpacity(0.1),
-                                  borderRadius:
-                                  BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: AppColors.primary
-                                        .withOpacity(0.3),
-                                  ),
-                                ),
-                                child: Text(
-                                  service,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight:
-                                    FontWeight.w500,
-                                    color: AppColors
-                                        .textPrimary,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                            runSpacing: 6,
+                            children: p.services
+                                .map((s) => Chip(
+                              label: Text(
+                                s,
+                                style: const TextStyle(
+                                    fontSize: 12),
+                              ),
+                            ))
+                                .toList(),
                           ),
 
-                          const SizedBox(height: 18),
                           const Divider(),
-                          const SizedBox(height: 10),
 
-                          /// 🔹 CONTACT ACTIONS
                           Row(
                             children: [
                               Expanded(
                                 child: _ActionButton(
                                   icon: Icons.call,
-                                  label: 'Call',
+                                  label: "Call",
                                   color: AppColors.success,
-                                  onTap: () {
-                                    // TODO: Call provider
-                                  },
+                                  onTap: () => _call(p.phone1),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: _ActionButton(
                                   icon: Icons.message,
-                                  label: 'WhatsApp',
+                                  label: "WhatsApp",
                                   color: AppColors.primary,
-                                  onTap: () {
-                                    // TODO: WhatsApp provider
-                                  },
+                                  onTap: () => _whatsApp(p.phone1),
                                 ),
                               ),
                             ],
-                          ),
+                          )
                         ],
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -269,7 +301,8 @@ class _LegalServicePageState extends State<LegalServicePage> {
   }
 }
 
-/// 🔹 Action Button Widget
+/// ---------------- ACTION BUTTON ----------------
+
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -289,21 +322,24 @@ class _ActionButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: Container(
-        height: 48,
+        height: 46,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withOpacity(0.12),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.4)),
+          border: Border.all(
+            color: color.withOpacity(0.4),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(width: 6),
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
+                fontSize: 14,
                 color: color,
               ),
             ),

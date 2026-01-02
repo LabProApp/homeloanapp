@@ -14,7 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   int selectedTab = 0;
   bool _isPasswordVisible = false;
 
-  final Color primaryColor = Colors.deepOrangeAccent; // Deep blue
+  final Color primaryColor = AppColors.accent;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Tabs
               Container(
-                height: 48,
+                height: 60,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
                   color: Colors.grey.shade200,
@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   "Forgot Password?",
                   style: TextStyle(
                     fontSize: 14,
-                    color: primaryColor,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -151,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   end: Alignment.bottomRight,
                   colors: [
                     AppColors.error,
-                    AppColors.primary,
+                    AppColors.error,
                   ],
                 ),
               ),
@@ -166,8 +166,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppColors.primary,
-                    AppColors.secondary,
+                    AppColors.success,
+                    AppColors.success,
                   ],
                 ),
               ),
