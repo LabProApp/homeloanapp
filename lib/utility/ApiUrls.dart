@@ -10,7 +10,7 @@ class ApiUrls {
   static const String userSignup = "$baseUrl/user/signup";
   static const String userlogin = "$baseUrl/user/login";
   static const String userlogout = "$baseUrl/user/logout";
-
+  static const String resetPassword = "$baseUrl/user/reset-password";
   //Tools services URLs
 
   static const String emiCalculator = "$baseUrl/tools/homeloancalculator";

@@ -277,13 +277,13 @@ class _PropertyCardState extends State<PropertyCard> {
                                       child: Column(
                                         children: [
                                           Icon(
-                                            AmenityIcon.getIcon(amenity),
+                                            AmenityIcon.getAmenity(amenity).icon,
                                             size: 26,
                                             color: Colors.white,
                                           ),
                                           const SizedBox(height: 6),
                                           Text(
-                                            amenity,
+                                            AmenityIcon.getAmenity(amenity).label,
                                             textAlign: TextAlign.center,
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,

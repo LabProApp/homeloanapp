@@ -7,7 +7,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:property/commons/commonutil.dart';
 import 'package:intl/intl.dart';
 
-
 class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
 
@@ -105,7 +104,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           icon: isFavourite
                               ? Icons.favorite
                               : Icons.favorite_border,
-                          onTap: () => setState(() => isFavourite = !isFavourite),
+                          onTap: () =>
+                              setState(() => isFavourite = !isFavourite),
                         ),
                       ],
                     ),
@@ -120,7 +120,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
                         _images.length,
-                            (i) => Container(
+                        (i) => Container(
                           margin: const EdgeInsets.symmetric(horizontal: 4),
                           width: currentIndex == i ? 10 : 6,
                           height: 6,
@@ -162,7 +162,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   Text(
                     widget.property.title ?? "-",
                     style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.w600),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   if (widget.property.address != null)
                     Text(
@@ -200,13 +202,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           child: Column(
                             children: [
                               Icon(
-                                AmenityIcon.getIcon(amenity),
+                                AmenityIcon.getAmenity(amenity).icon,
                                 size: 26,
                                 color: AppColors.primary,
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                amenity,
+                                AmenityIcon.getAmenity(amenity).label,
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(fontSize: 12),
                               ),
@@ -236,16 +238,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   void _shareProperty() {
     Share.share(
       "${widget.property.title}\n"
-          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}\n"
-          "Address: ${widget.property.address ?? "-"}",
+      "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}\n"
+      "Address: ${widget.property.address ?? "-"}",
     );
   }
 
   void _shareWhatsApp() {
     Share.share(
       "Check out this property:\n"
-          "${widget.property.title}\n"
-          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}",
+      "${widget.property.title}\n"
+      "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}",
     );
   }
 
@@ -277,16 +279,14 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       'assets/images/house3.jpg',
     ][currentIndex % 3];
 
-    return Image.asset(
-      img,
-      fit: BoxFit.cover,
-      width: double.infinity,
-    );
+    return Image.asset(img, fit: BoxFit.cover, width: double.infinity);
   }
 
   Widget _sectionTitle(String title) {
-    return Text(title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    );
   }
 
   Widget _featureRow() {
@@ -295,8 +295,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       children: [
         _Feature(Icons.bed, "${widget.property.bedrooms ?? '-'} Beds"),
         _Feature(Icons.bathtub, "${widget.property.bathrooms ?? '-'} Baths"),
-        _Feature(Icons.square_foot,
-            "${widget.property.superArea?.toStringAsFixed(0) ?? '-'} Sqft"),
+        _Feature(
+          Icons.square_foot,
+          "${widget.property.superArea?.toStringAsFixed(0) ?? '-'} Sqft",
+        ),
       ],
     );
   }
@@ -312,13 +314,21 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         children: [
           _DetailRow("Type", widget.property.type ?? "-"),
 
-          _DetailRow("Construction Status", widget.property.constructionStatus ?? "-"),
-          _DetailRow("Carpet Area",widget.property.carpetArea?.toString() ?? "-"),
-          _DetailRow("Super Area", widget.property.superArea?.toString() ?? "-"),
+          _DetailRow(
+            "Construction Status",
+            widget.property.constructionStatus ?? "-",
+          ),
+          _DetailRow(
+            "Carpet Area",
+            widget.property.carpetArea?.toString() ?? "-",
+          ),
+          _DetailRow(
+            "Super Area",
+            widget.property.superArea?.toString() ?? "-",
+          ),
           _DetailRow("Posted By", widget.property.postedBy ?? "-"),
           _DetailRow("Contact", widget.property.contactNumber),
           _DetailRow("Posted On", widget.property.postDate ?? "-"),
-
         ],
       ),
     );
