@@ -1,15 +1,12 @@
 import 'package:intl/intl.dart';
 
-// Suppose widget.property.postDate is a String or DateTime
-String getFormattedDate(String? dateStr) {
-  if (dateStr == null || dateStr.isEmpty) return "-";
+String formatPostDate(String? postDate) {
+  if (postDate == null || postDate.isEmpty) return "-";
 
   try {
-    // Try parsing the string to DateTime
-    final date = DateTime.parse(dateStr);
-    // Format as: 03 Jan 2026
-    return DateFormat("dd MMM yyyy").format(date);
+    final dt = DateTime.parse(postDate); // parse string to DateTime
+    return DateFormat('dd MMM yyyy').format(dt); // format
   } catch (e) {
-    return dateStr; // fallback if parsing fails
+    return postDate; // fallback: return original string if parsing fails
   }
 }

@@ -122,7 +122,7 @@ class PropertyModel {
 
     contactNumber: (json["contactNumber"] as String?) ?? "",
 
-    postDate:  (json["postDate"] as String?) ?? "",
+    postDate:  json["postDate"] as String? ?? "",
 
 
     rentOrSale: json["rentOrSale"] as String?,

@@ -82,7 +82,7 @@ class BankCard extends StatelessWidget {
                 height: 50,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => LoanApplyDialog.show(context, bank),
+                  onTap: () => LoanApplyDialog.show(context),
                   child: Ink(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(

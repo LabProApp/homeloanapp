@@ -5,6 +5,7 @@ import 'package:property/utility/amenity_icon.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:property/commons/commonutil.dart';
+import 'package:intl/intl.dart';
 
 
 class PropertyDetailScreen extends StatefulWidget {
@@ -148,7 +149,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   /// PRICE & TITLE
                   Text(
                     widget.property.price != null
-                        ? "₹ ${widget.property.price!.toStringAsFixed(2)}"
+                        ? "₹ ${NumberFormat('#,##,###.##').format(widget.property.price)}"
                         : "-",
                     style: TextStyle(
                       fontSize: 28,
@@ -156,6 +157,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       color: AppColors.primary,
                     ),
                   ),
+
                   const SizedBox(height: 6),
                   Text(
                     widget.property.title ?? "-",
@@ -309,10 +311,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       child: Column(
         children: [
           _DetailRow("Type", widget.property.type ?? "-"),
-          _DetailRow("Status", widget.property.propertyStatus ?? "-"),
+
           _DetailRow("Construction Status", widget.property.constructionStatus ?? "-"),
-          _DetailRow("Carpet Area",widget.property.carpetArea?.toStringAsFixed(2) ?? "-"),
-          _DetailRow("Super Area", widget.property.superArea?.toStringAsFixed(2) ?? "-"),
+          _DetailRow("Carpet Area",widget.property.carpetArea?.toString() ?? "-"),
+          _DetailRow("Super Area", widget.property.superArea?.toString() ?? "-"),
           _DetailRow("Posted By", widget.property.postedBy ?? "-"),
           _DetailRow("Contact", widget.property.contactNumber),
           _DetailRow("Posted On", widget.property.postDate ?? "-"),

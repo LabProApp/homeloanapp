@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:property/models/legal_service_model.dart';
 import 'package:property/models/inquiry_request.dart';
 import 'package:property/utility/ApiUrls.dart';
-
+import 'dart:developer' as developer;
 class LegalServiceApi {
 
   /// 🔹 Fetch Legal Service Providers
@@ -30,22 +30,38 @@ class LegalServiceApi {
   static Future<bool> submitInquiry(Inquiry request) async {
     final uri = Uri.parse(ApiUrls.legalInquiry);
 
-    final response = await http
-        .post(
-      uri,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode(request.toJson()),
-    )
-        .timeout(const Duration(seconds: 15));
+    try {
+      developer.log('🔹 Submitting Inquiry to: $uri', name: 'InquiryService');
+      developer.log('🔹 Request Body: ${jsonEncode(request.toJson())}', name: 'InquiryService');
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return true;
-    } else {
-      throw Exception(
-        "Inquiry failed (${response.statusCode}): ${response.body}",
-      );
+      final response = await http
+          .post(
+        uri,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode(request.toJson()),
+      )
+          .timeout(const Duration(seconds: 15));
+
+      developer.log('🔹 Response Status: ${response.statusCode}', name: 'InquiryService');
+      developer.log('🔹 Response Body: ${response.body}', name: 'InquiryService');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        developer.log('✅ Inquiry submitted successfully', name: 'InquiryService');
+        return true;
+      } else {
+        developer.log(
+          '❌ Inquiry failed (${response.statusCode}): ${response.body}',
+          name: 'InquiryService',
+        );
+        throw Exception(
+          "Inquiry failed (${response.statusCode}): ${response.body}",
+        );
+      }
+    } catch (e, stackTrace) {
+      developer.log('⚠️ Exception submitting inquiry: $e', name: 'InquiryService', stackTrace: stackTrace);
+      rethrow;
     }
   }
 }

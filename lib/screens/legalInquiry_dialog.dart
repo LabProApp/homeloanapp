@@ -20,28 +20,27 @@ class _InquiryDialogState extends State<InquiryDialog> {
   bool _loading = false;
 
   final List<String> _services = [
-    "LEGAL_SERVICE",
-    "HOME_LOAN",
+    "DOCUMENT_SERVICES",
     "PROPERTY_REGISTRATION",
     "RENT_AGREEMENT",
-    "LOAN_DOCUMENTATION",
   ];
 
-  String _selectedService = "LEGAL_SERVICE";
+  String _selectedService = "DOCUMENT_SERVICES";
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-
     setState(() => _loading = true);
+    print("Submit called");  // 🔹 Debug log
 
     try {
       final inquiry = Inquiry(
         applicantName: _nameController.text.trim(),
         mobileNumber: _phoneController.text.trim(),
-        inquiryType: _selectedService, // 👈 STRING
+        inquiryType: _selectedService,
         comments: _messageController.text.trim(),
         leadSource: "APP",
       );
+
+      print("Inquiry object: $inquiry");  // 🔹 Debug log
 
       await LegalServiceApi.submitInquiry(inquiry);
 
@@ -54,7 +53,8 @@ class _InquiryDialogState extends State<InquiryDialog> {
           content: Text("Inquiry submitted successfully"),
         ),
       );
-    } catch (_) {
+    } catch (e, st) {
+      print("Submit error: $e"); // 🔹 Debug log
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -67,6 +67,7 @@ class _InquiryDialogState extends State<InquiryDialog> {
       if (mounted) setState(() => _loading = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

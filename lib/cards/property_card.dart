@@ -5,6 +5,7 @@ import 'package:property/theme/app_colors.dart';
 import 'package:property/utility/amenity_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
 
 class PropertyCard extends StatefulWidget {
   final PropertyModel property;
@@ -43,9 +44,7 @@ class _PropertyCardState extends State<PropertyCard> {
   }
 
   List<String> get _amenities {
-    return widget.property.amenitiesAsList
-        ?.map((e) => e.toString())
-        .toList() ??
+    return widget.property.amenitiesAsList?.map((e) => e.toString()).toList() ??
         [];
   }
 
@@ -94,7 +93,7 @@ class _PropertyCardState extends State<PropertyCard> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 _images.length,
-                    (i) => AnimatedContainer(
+                (i) => AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   width: currentIndex == i ? 12 : 6,
@@ -108,25 +107,25 @@ class _PropertyCardState extends State<PropertyCard> {
             ),
           ),
 
-          // FAVORITE BUTTON
-          const Positioned(
+          // ACTION ICONS
+          // FAVORITE + ACTION ICONS
+          Positioned(
             top: 12,
             right: 12,
-            child: Icon(Icons.favorite_border, color: Colors.white, size: 26),
-          ),
-
-          // ACTION ICONS
-          Positioned(
-            bottom: 16,
-            right: 12,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                if (widget.showWhatsAppIcon)
-                  _iconCircle(Icons.message, _openWhatsApp),
+                // WhatsApp Icon
                 const SizedBox(height: 12),
-                _iconCircle(Icons.share, _shareProperty),
+                _iconCircle(Icons.favorite_border, _openWhatsApp),
+                const SizedBox(height: 12),
+                _iconCircle(Icons.message, _openWhatsApp),
+                // Call Icon
                 const SizedBox(height: 12),
                 _iconCircle(Icons.phone, _callOwner),
+                // Share Icon
+                const SizedBox(height: 12),
+                _iconCircle(Icons.share, _shareProperty),
               ],
             ),
           ),
@@ -137,8 +136,9 @@ class _PropertyCardState extends State<PropertyCard> {
             left: 0,
             right: 0,
             child: ClipRRect(
-              borderRadius:
-              const BorderRadius.vertical(bottom: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(16),
+              ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
@@ -155,14 +155,17 @@ class _PropertyCardState extends State<PropertyCard> {
                             child: Text(
                               widget.property.title ?? "-",
                               style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primary,
                               borderRadius: BorderRadius.circular(20),
@@ -184,20 +187,23 @@ class _PropertyCardState extends State<PropertyCard> {
                               "${widget.property.city ?? "-"} | ${widget.property.state ?? "-"}",
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style:
-                              const TextStyle(color: Colors.white70),
+                              style: const TextStyle(color: Colors.white70),
                             ),
                           ),
-                          const Icon(Icons.square_foot,
-                              size: 14, color: Colors.white70),
+                          const Icon(
+                            Icons.square_foot,
+                            size: 14,
+                            color: Colors.white70,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             widget.property.superArea != null
                                 ? "${widget.property.superArea!.toStringAsFixed(0)} Sqft"
                                 : "-",
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -214,26 +220,30 @@ class _PropertyCardState extends State<PropertyCard> {
                               style: const TextStyle(color: Colors.white70),
                             ),
                           ),
+
                           Text(
                             widget.property.price != null
-                                ? "₹ ${widget.property.price!.toStringAsFixed(2)}"
+                                ? "₹ ${NumberFormat('#,##,###.##').format(widget.property.price)}"
                                 : "-",
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.white,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
 
                       // AMENITIES
-                      if (widget.showAmenitiesExpandable && _amenities.isNotEmpty)
+                      if (widget.showAmenitiesExpandable &&
+                          _amenities.isNotEmpty)
                         Column(
                           children: [
                             GestureDetector(
                               onTap: () => setState(
-                                      () => _amenitiesExpanded = !_amenitiesExpanded),
+                                () => _amenitiesExpanded = !_amenitiesExpanded,
+                              ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
@@ -242,8 +252,9 @@ class _PropertyCardState extends State<PropertyCard> {
                                         ? "Hide Amenities"
                                         : "Show Amenities",
                                     style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600),
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                   Icon(
                                     _amenitiesExpanded
@@ -277,8 +288,9 @@ class _PropertyCardState extends State<PropertyCard> {
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.white),
+                                              fontSize: 12,
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -306,26 +318,23 @@ class _PropertyCardState extends State<PropertyCard> {
       'assets/images/house3.jpg',
     ];
     final img = placeholders[currentIndex % placeholders.length];
-    return Image.asset(
-      img,
-      fit: BoxFit.cover,
-      width: double.infinity,
-    );
+    return Image.asset(img, fit: BoxFit.cover, width: double.infinity);
   }
 
   Future<void> _openWhatsApp() async {
     final message =
         "Hi, I'm interested in this property:\n${widget.property.title ?? "-"}\nPrice: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}";
     final url = Uri.parse(
-        "https://wa.me/${widget.property.contactNumber}?text=${Uri.encodeComponent(message)}");
+      "https://wa.me/${widget.property.contactNumber}?text=${Uri.encodeComponent(message)}",
+    );
     await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   void _shareProperty() {
     Share.share(
       "${widget.property.title ?? "-"}\n"
-          "${widget.property.city ?? "-"}, ${widget.property.state ?? "-"}\n"
-          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}",
+      "${widget.property.city ?? "-"}, ${widget.property.state ?? "-"}\n"
+      "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}",
     );
   }
 
