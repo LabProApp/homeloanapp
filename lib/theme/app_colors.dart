@@ -4,6 +4,7 @@ class AppColors {
   // ===== Brand / Primary =====
   static const Color primary = Color(0xFFD97706);   // Deep Blue – Trust & Finance
   static const Color secondary = Colors.orangeAccent; // Professional Blue
+  static const Color textBoxbackground = Color(0xFFFBE9E7); // Professional Blue
   static const Color accent = Color(0xFF059669);    // Green – Growth / Approval
 
   // ===== Backgrounds =====

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:property/models/property_model.dart';
+import 'package:property/services/property_api_service.dart';
 import 'package:property/theme/app_colors.dart';
 
 class PostPropertyScreen extends StatefulWidget {
@@ -18,25 +20,48 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   final superAreaController = TextEditingController();
   final cityController = TextEditingController();
   final stateController = TextEditingController();
+  final contactController = TextEditingController();
 
+  // 🔹 Chip / Dropdown values
   String rentOrSale = "Sale";
   String category = "Residential";
-  String propertyType = "Apartment";
+  String propertyType = "APARTMENT";
+  String constructionStatus = "READY";
 
   final List<String> amenities = [];
-  final List<String> images = [];
+
+  bool _loading = false;
+
+  // 🔹 Options
+  final List<String> rentSaleOptions = ["Rent", "Sale"];
+  final List<String> categoryOptions = ["Residential", "Commercial"];
+  final List<String> constructionStatusOptions = [
+    "READY_TO_MOVE",
+    "UNDER_CONSTRUCTION",
+    "NEW_LAUNCH",
+    "RESALE"
+  ];
+
+  final List<String> propertyTypes = [
+    "HOUSE",
+    "PLOT",
+    "APARTMENT",
+    "BUILDER_FLOOR",
+    "SHOP",
+    "OFFICE",
+    "SHOWROOM",
+    "PG",
+    "CO_WORKING",
+    "AGRICULTURAL",
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Post New Property",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text("Post New Property"),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        elevation: 1,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -46,13 +71,14 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _field("Title", titleController),
-              _field("Subtitle", subtitleController),
+              _field("Subtitle / Description", subtitleController),
 
-              _dropdown(
-                label: "Rent / Sale",
-                value: rentOrSale,
-                items: const ["Rent", "Sale"],
-                onChanged: (v) => setState(() => rentOrSale = v),
+              /// 🔹 RENT / SALE
+              _sectionTitle("Rent / Sale"),
+              _chipSelector(
+                options: rentSaleOptions,
+                selected: rentOrSale,
+                onSelected: (v) => setState(() => rentOrSale = v),
               ),
 
               _field(
@@ -62,18 +88,29 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                 prefix: Icons.currency_rupee,
               ),
 
-              _dropdown(
-                label: "Category",
-                value: category,
-                items: const ["Residential", "Commercial", "Land"],
-                onChanged: (v) => setState(() => category = v),
+              /// 🔹 CATEGORY
+              _sectionTitle("Category"),
+              _chipSelector(
+                options: categoryOptions,
+                selected: category,
+                onSelected: (v) => setState(() => category = v),
               ),
 
+              /// 🔹 PROPERTY TYPE (DROPDOWN)
               _dropdown(
                 label: "Property Type",
                 value: propertyType,
-                items: const ["Apartment", "Villa", "Plot", "Office"],
+                items: propertyTypes,
                 onChanged: (v) => setState(() => propertyType = v),
+              ),
+
+              /// 🔹 CONSTRUCTION STATUS (CHIPS)
+              _sectionTitle("Construction Status"),
+              _chipSelector(
+                options: constructionStatusOptions,
+                selected: constructionStatus,
+                onSelected: (v) =>
+                    setState(() => constructionStatus = v),
               ),
 
               _field(
@@ -90,38 +127,33 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                 ],
               ),
 
+              _field(
+                "Contact Number",
+                contactController,
+                keyboard: TextInputType.phone,
+                prefix: Icons.phone,
+              ),
+
               const SizedBox(height: 16),
 
+              /// 🔹 AMENITIES
               _sectionTitle("Amenities"),
               Wrap(
                 spacing: 8,
                 runSpacing: 6,
                 children: [
-                  _chip("Parking"),
-                  _chip("Lift"),
-                  _chip("Power Backup"),
-                  _chip("Security"),
-                  _chip("Gym"),
-                  _chip("Swimming Pool"),
+                  _amenityChip("Parking"),
+                  _amenityChip("Lift"),
+                  _amenityChip("Power Backup"),
+                  _amenityChip("Security"),
+                  _amenityChip("Gym"),
+                  _amenityChip("Swimming Pool"),
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-              _sectionTitle("Property Images"),
-              OutlinedButton.icon(
-                onPressed: () {
-                  // TODO: Add image picker
-                  setState(() {
-                    images.add("image_placeholder");
-                  });
-                },
-                icon: const Icon(Icons.upload),
-                label: const Text("Upload Images"),
-              ),
-
-              const SizedBox(height: 30),
-
+              /// 🔹 SUBMIT
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -132,19 +164,19 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _submit,
-                  child: const Text(
+                  onPressed: _loading ? null : _submit,
+                  child: _loading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
                     "Post Property",
                     style: TextStyle(
-                      fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                       color: Colors.white,
                     ),
                   ),
                 ),
               ),
-
-              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -154,27 +186,57 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
   // ---------------- SUBMIT ----------------
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      debugPrint({
-        "title": titleController.text,
-        "subtitle": subtitleController.text,
-        "rentOrSale": rentOrSale,
-        "price": priceController.text,
-        "category": category,
-        "type": propertyType,
-        "superArea": superAreaController.text,
-        "city": cityController.text,
-        "state": stateController.text,
-        "amenities": amenities,
-        "images": images,
-      }.toString());
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _loading = true);
+
+    final property = PropertyModel(
+      title: titleController.text.trim(),
+      description: subtitleController.text.trim(),
+      projectName: titleController.text.trim(),
+
+      address:
+      "${cityController.text.trim()}, ${stateController.text.trim()}",
+      city: cityController.text.trim(),
+      state: stateController.text.trim(),
+      location: cityController.text.trim(),
+
+      type: propertyType,
+      category: category,
+      rentOrSale: rentOrSale,
+      propertyStatus: "ACTIVE",
+      constructionStatus: constructionStatus,
+
+      price: double.tryParse(priceController.text),
+      superArea: double.tryParse(superAreaController.text),
+      carpetArea: double.tryParse(superAreaController.text),
+
+      amenities: amenities.join(","),
+
+      postedBy: "APP",
+      postedByUser: 1,
+      planPackage: "FREE",
+      verified: false,
+      postDate: DateTime.now().toIso8601String(),
+
+      contactNumber: contactController.text.trim(),
+    );
+
+    try {
+      await PropertyApiService.addProperty(property);
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Property posted successfully")),
       );
-
       Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to post property: $e")),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -192,14 +254,14 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
         controller: controller,
         keyboardType: keyboard,
         validator: (v) =>
-        v == null || v.isEmpty ? "Enter $label" : null,
+        v == null || v.trim().isEmpty ? "Enter $label" : null,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: prefix != null ? Icon(prefix) : null,
           filled: true,
-          fillColor: Colors.grey[100],
+          fillColor: AppColors.textBoxbackground,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -219,7 +281,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
         decoration: InputDecoration(
           labelText: label,
           filled: true,
-          fillColor: Colors.grey[100],
+          fillColor: AppColors.textBoxbackground,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -228,7 +290,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
             .map(
               (e) => DropdownMenuItem(
             value: e,
-            child: Text(e),
+            child: Text(e.replaceAll("_", " ")),
           ),
         )
             .toList(),
@@ -237,29 +299,54 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     );
   }
 
-  Widget _sectionTitle(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-        ),
-      ),
+  Widget _chipSelector({
+    required List<String> options,
+    required String selected,
+    required Function(String) onSelected,
+  }) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      children: options.map((o) {
+        return ChoiceChip(
+          label: Text(o.replaceAll("_", " ")),
+          selected: selected == o,
+          selectedColor: AppColors.primary.withOpacity(0.2),
+          onSelected: (_) => onSelected(o),
+        );
+      }).toList(),
     );
   }
 
-  Widget _chip(String label) {
+  Widget _amenityChip(String label) {
     final selected = amenities.contains(label);
+
     return FilterChip(
-      label: Text(label),
+      label: Text(
+        label,
+        style: TextStyle(
+          fontWeight: FontWeight.w500,
+          color: selected ? AppColors.primary : Colors.black87,
+        ),
+      ),
       selected: selected,
+      selectedColor: AppColors.primary.withOpacity(0.2),
       onSelected: (v) {
         setState(() {
           v ? amenities.add(label) : amenities.remove(label);
         });
       },
+    );
+  }
+
+
+  Widget _sectionTitle(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 6),
+      child: Text(
+        text,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      ),
     );
   }
 }
