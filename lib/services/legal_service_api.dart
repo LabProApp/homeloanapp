@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:property/models/legalservice_model.dart';
+import 'package:property/models/legal_service_model.dart';
 import 'package:property/models/inquiry_request.dart';
 import 'package:property/utility/ApiUrls.dart';
 

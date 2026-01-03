@@ -4,6 +4,8 @@ import 'package:property/theme/app_colors.dart';
 import 'package:property/utility/amenity_icon.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:property/commons/commonutil.dart';
+
 
 class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
@@ -308,17 +310,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         children: [
           _DetailRow("Type", widget.property.type ?? "-"),
           _DetailRow("Status", widget.property.propertyStatus ?? "-"),
-          _DetailRow("Carpet Area",
-              widget.property.carpetArea?.toStringAsFixed(2) ?? "-"),
-          _DetailRow("Super Area",
-              widget.property.superArea?.toStringAsFixed(2) ?? "-"),
+          _DetailRow("Construction Status", widget.property.constructionStatus ?? "-"),
+          _DetailRow("Carpet Area",widget.property.carpetArea?.toStringAsFixed(2) ?? "-"),
+          _DetailRow("Super Area", widget.property.superArea?.toStringAsFixed(2) ?? "-"),
           _DetailRow("Posted By", widget.property.postedBy ?? "-"),
           _DetailRow("Contact", widget.property.contactNumber),
-          _DetailRow(
-              "Price",
-              widget.property.price != null
-                  ? "₹ ${widget.property.price!.toStringAsFixed(2)}"
-                  : "-"),
+          _DetailRow("Posted On", widget.property.postDate ?? "-"),
+
         ],
       ),
     );

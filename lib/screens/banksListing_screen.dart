@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:property/models/bank_model.dart';
-import 'package:property/screens/bankDetails_screen.dart';
-import 'package:property/screens/bank_applyLoan_dialog.dart';
 import 'package:property/services/bank_service.dart';
 import 'package:property/theme/app_colors.dart';
+import 'package:property/cards/bank_card.dart';
 
 class BankPage extends StatefulWidget {
   const BankPage({super.key});
@@ -21,7 +20,6 @@ class _BankPageState extends State<BankPage> {
 
   bool _isLoading = true;
   String? _error;
-  String _query = '';
 
   @override
   void initState() {
@@ -53,10 +51,11 @@ class _BankPageState extends State<BankPage> {
 
   void _search(String value) {
     setState(() {
-      _query = value.toLowerCase();
       _filteredBanks = _allBanks
           .where((b) =>
-          (b.bankName ?? '').toLowerCase().contains(_query))
+          (b.bankName ?? '')
+              .toLowerCase()
+              .contains(value.toLowerCase()))
           .toList();
     });
   }
@@ -98,29 +97,41 @@ class _BankPageState extends State<BankPage> {
       itemCount: _filteredBanks.length,
       itemBuilder: (_, index) => Padding(
         padding: const EdgeInsets.only(bottom: 16),
-        child: _BankCard(bank: _filteredBanks[index]),
+        child: BankCard(bank: _filteredBanks[index]),
       ),
     );
   }
 
   Widget _searchBar() {
     return Container(
-      height: 52,
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: TextField(
         controller: _searchController,
         onChanged: _search,
+        textAlignVertical: TextAlignVertical.center, // ✅ KEY
         decoration: const InputDecoration(
           hintText: "Search bank",
-          prefixIcon: Icon(Icons.search),
           border: InputBorder.none,
+          isDense: true, // ✅ KEY
+          prefixIcon: Icon(Icons.search, size: 20),
         ),
       ),
     );
   }
+
+
 
   Widget _errorState(String message) {
     return Center(
@@ -140,130 +151,6 @@ class _BankPageState extends State<BankPage> {
               _loadBanks();
             },
             child: const Text("Retry"),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 🏦 BANK CARD
-class _BankCard extends StatelessWidget {
-  final FetchBanks bank;
-
-  const _BankCard({required this.bank});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => BankDetailPage(bank: bank),
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                bank.bankName ?? "Bank",
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  _info("Starting Interest", "${bank.interestRate}%"),
-                  const SizedBox(width: 12),
-                  _info("Max Tenure", "${bank.tenureYears} yrs"),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              /// ✅ ENHANCED APPLY NOW BUTTON
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () =>
-                      LoanApplyDialog.show(context, bank),
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary,
-                          AppColors.primary.withOpacity(0.8),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.35),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.flash_on_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          "Apply Now",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _info(String label, String value) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 12)),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
           ),
         ],
       ),

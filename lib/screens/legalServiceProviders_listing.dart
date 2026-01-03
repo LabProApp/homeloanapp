@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:property/theme/app_colors.dart';
-import 'package:property/models/legalservice_model.dart';
+import 'package:property/models/legal_service_model.dart';
 import 'package:property/services/legal_service_api.dart';
 import 'package:property/screens/legalInquiry_dialog.dart';
+import 'package:property/cards/legal_service_card.dart';
 
 /// 🔥 Faster + Bouncy Scroll Behavior
 class FastScrollBehavior extends MaterialScrollBehavior {
@@ -26,7 +27,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
-  List<LegalService> _providers = [];
+  final List<LegalService> _providers = [];
   bool _isLoading = false;
   bool _isLastPage = false;
   int _page = 0;
@@ -50,9 +51,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
     setState(() => _isLoading = true);
 
     try {
-      final response =
-      await LegalServiceApi.fetchProviders(page: _page);
-
+      final response = await LegalServiceApi.fetchProviders(page: _page);
       setState(() {
         _page++;
         _isLastPage = response.last;
@@ -78,48 +77,28 @@ class _LegalServicePageState extends State<LegalServicePage> {
 
   Future<void> _call(String phone) async {
     final cleanedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
-
-    if (cleanedPhone.isEmpty) {
-      debugPrint("Invalid phone number");
-      return;
-    }
+    if (cleanedPhone.isEmpty) return;
 
     final uri = Uri.parse("tel:$cleanedPhone");
-
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
-    } else {
-      debugPrint("Cannot make a call on this device");
     }
   }
 
-
   Future<void> _whatsApp(String phone) async {
-    // Remove spaces, +, -, etc.
     final cleanedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cleanedPhone.isEmpty) return;
 
-    if (cleanedPhone.isEmpty) {
-      debugPrint("Invalid phone number");
-      return;
-    }
-
-    // India country code handling
     final whatsappNumber =
     cleanedPhone.startsWith('91') ? cleanedPhone : '91$cleanedPhone';
 
-    final uri = Uri.parse("https://wa.me/$whatsappNumber");
+    final message = "I would like to inquire about legal services";
+    final uri = Uri.parse(
+      "https://wa.me/$whatsappNumber?text=${Uri.encodeComponent(message)}",
+    );
 
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-    } else {
-      debugPrint("WhatsApp not installed or cannot launch");
-    }
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -139,13 +118,13 @@ class _LegalServicePageState extends State<LegalServicePage> {
                   isScrollControlled: true,
                   shape: const RoundedRectangleBorder(
                     borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(20)),
+                    BorderRadius.vertical(top: Radius.circular(14)),
                   ),
                   builder: (_) => const InquiryDialog(),
                 );
               },
-              icon: const Icon(Icons.support_agent,
-                  color: AppColors.primary),
+              icon:
+              const Icon(Icons.support_agent, color: AppColors.primary),
               label: const Text(
                 "Inquiry",
                 style: TextStyle(
@@ -160,34 +139,37 @@ class _LegalServicePageState extends State<LegalServicePage> {
       ),
       body: Column(
         children: [
-          /// 🔍 Search
+          /// 🔍 SEARCH (HEIGHT = 40)
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                hintText: "Search by name, city or service",
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
+            padding: const EdgeInsets.all(8),
+            child: SizedBox(
+              height: 40,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: "Search by name, city or service",
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  isDense: true,
+                  contentPadding:
+                  const EdgeInsets.symmetric(vertical: 4),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
           ),
 
-          /// 📃 Fast + Bouncy List
+          /// 📜 LIST
           Expanded(
             child: ScrollConfiguration(
               behavior: FastScrollBehavior(),
               child: ListView.builder(
                 controller: _scrollController,
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
                 padding: const EdgeInsets.all(16),
                 itemCount:
                 _filteredProviders.length + (_isLoading ? 1 : 0),
@@ -201,150 +183,16 @@ class _LegalServicePageState extends State<LegalServicePage> {
 
                   final p = _filteredProviders[index];
 
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 28,
-                                backgroundColor: AppColors.primary,
-                                child: Text(
-                                  p.legalName[0].toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      p.legalName,
-                                      style: const TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    Text(
-                                      "${p.city}, ${p.state}",
-                                      style:
-                                      const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 6,
-                            children: p.services
-                                .map((s) => Chip(
-                              label: Text(
-                                s,
-                                style: const TextStyle(
-                                    fontSize: 12),
-                              ),
-                            ))
-                                .toList(),
-                          ),
-
-                          const Divider(),
-
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _ActionButton(
-                                  icon: Icons.call,
-                                  label: "Call",
-                                  color: AppColors.success,
-                                  onTap: () => _call(p.phone1),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _ActionButton(
-                                  icon: Icons.message,
-                                  label: "WhatsApp",
-                                  color: AppColors.primary,
-                                  onTap: () => _whatsApp(p.phone1),
-                                ),
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
+                  return LegalServiceCard(
+                    service: p,
+                    onCall: () => _call(p.phone1),
+                    onWhatsApp: () => _whatsApp(p.phone1),
                   );
                 },
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// ---------------- ACTION BUTTON ----------------
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Container(
-        height: 46,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withOpacity(0.4),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: color,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

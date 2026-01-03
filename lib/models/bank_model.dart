@@ -25,7 +25,7 @@ class FetchBanks {
   final String postalCode;
   final String country;
   final String websiteUrl;
-
+  final String bankLogoUrl;
   final double interestRate;
   final String interestType;
   final num? processingFee;
@@ -57,6 +57,7 @@ class FetchBanks {
     this.updatedBy,
     required this.id,
     required this.bankName,
+    required this.bankLogoUrl,
     required this.contactName,
     required this.contactNumber,
     required this.email,
@@ -101,6 +102,7 @@ class FetchBanks {
     id: json['id'] ?? 0,
     bankName: json['bankName'] ?? '',
     contactName: json['contactName'] ?? '',
+    bankLogoUrl: json['bankLogoUrl'] ?? '',
     contactNumber: json['contactNumber'] ?? '',
     email: json['email'] ?? '',
     branchName: json['branchName'] ?? '',

@@ -35,7 +35,7 @@ class PropertyModel {
 
   final String contactNumber; // required, non-null
 
-  final DateTime? postDate;
+  final String? postDate;
   final String? rentOrSale;
   final bool? verified;
   final List<DocumentModel>? documentList;
@@ -122,9 +122,9 @@ class PropertyModel {
 
     contactNumber: (json["contactNumber"] as String?) ?? "",
 
-    postDate: json["postDate"] != null
-        ? DateTime.parse(json["postDate"])
-        : null,
+    postDate:  (json["postDate"] as String?) ?? "",
+
+
     rentOrSale: json["rentOrSale"] as String?,
     verified: json["verified"] as bool?,
     documentList: json["documentList"] != null
@@ -168,7 +168,7 @@ class PropertyModel {
     "description": description,
     "postedByUser": postedByUser,
     "contactNumber": contactNumber,
-    "postDate": postDate?.toIso8601String(),
+    "postDate": postDate,
     "rentOrSale": rentOrSale,
     "verified": verified,
     "documentList":

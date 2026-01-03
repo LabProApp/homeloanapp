@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:property/models/property_model.dart';
 import 'package:property/services/property_api_service.dart';
 import 'package:property/theme/app_colors.dart';
-import 'package:property/widgets/property_card.dart';
+import 'package:property/cards/property_card.dart';
 import 'package:property/screens/propertyDetail_screen.dart';
 import 'package:property/screens/propertyAdd_screen.dart';
 class HomeScreen extends StatefulWidget {
@@ -60,13 +60,14 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // 🔍 SEARCH BAR + FAVORITE + FILTER
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 20, 12, 8),
+            padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
             child: Row(
               children: [
+                /// 🔍 SEARCH
                 Expanded(
                   child: Container(
-                    height: 46,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
@@ -81,43 +82,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: _search,
+                      textAlignVertical: TextAlignVertical.center, // ✅ KEY
                       decoration: const InputDecoration(
                         hintText: "Search properties...",
                         border: InputBorder.none,
-                        icon: Icon(Icons.search),
+                        isDense: true,
+                        prefixIcon: Icon(Icons.search, size: 20), // ✅ MUST use prefixIcon
                       ),
                     ),
                   ),
                 ),
+
                 const SizedBox(width: 8),
-                Container(
-                  height: 46,
-                  width: 46,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.favorite_border, color: Colors.black),
-                    onPressed: () {},
-                  ),
+
+                /// ❤️ FAVORITE
+                _actionButton(
+                  icon: Icons.favorite_border,
+                  onTap: () {},
                 ),
+
                 const SizedBox(width: 8),
-                Container(
-                  height: 46,
-                  width: 46,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.filter_list, color: Colors.black),
-                    onPressed: () {},
-                  ),
+
+                /// ⚙️ FILTER
+                _actionButton(
+                  icon: Icons.filter_list,
+                  onTap: () {},
                 ),
               ],
             ),
           ),
+
 
           // 🔶 PROPERTY LIST
           Expanded(
@@ -159,6 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     child: SizedBox(
                       width: double.infinity,
+                      height: 600,
                       child: PropertyCard(
                         property: property,
                         showWhatsAppIcon: true,
@@ -196,4 +191,29 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
     );
   }
+}
+Widget _actionButton({
+  required IconData icon,
+  required VoidCallback onTap,
+}) {
+  return Container(
+    height: 40,
+    width: 40,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 6,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    ),
+    child: IconButton(
+      padding: EdgeInsets.zero,
+      icon: Icon(icon, size: 20, color: Colors.black),
+      onPressed: onTap,
+    ),
+  );
 }
