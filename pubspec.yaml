@@ -27,6 +27,9 @@ dependencies:
   webview_flutter_wkwebview: ^3.10.0
   share_plus: ^7.2.2
   intl: ^0.18.1
+  sms_autofill: ^2.4.0
+  package_info_plus: ^8.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -44,3 +47,4 @@ flutter:
     - assets/images/house1.jpg
     - assets/images/house2.jpg
     - assets/images/house3.jpg
+    - assets/images/splash_bg.jpg

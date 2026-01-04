@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:property/models/bank_model.dart';
 import 'package:property/theme/app_colors.dart';
-
+import 'package:intl/intl.dart';
 class BankCompareDialog extends StatefulWidget {
   final List<Bank> banks;
 
@@ -37,21 +37,13 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
     setState(() {
       if (_sortBy == 'interest') {
         _banks.sort(
-              (a, b) =>
-              (a.interestRate ?? double.infinity)
-                  .compareTo(b.interestRate ?? double.infinity),
+              (a, b) => (a.interestRate ?? double.infinity)
+              .compareTo(b.interestRate ?? double.infinity),
         );
       } else if (_sortBy == 'fee') {
         _banks.sort(
-              (a, b) =>
-              (a.processingFee ?? double.infinity)
-                  .compareTo(b.processingFee ?? double.infinity),
-        );
-      } else if (_sortBy == 'amount') {
-        _banks.sort(
-              (a, b) =>
-              (b.maxLoanAmount ?? 0)
-                  .compareTo(a.maxLoanAmount ?? 0),
+              (a, b) => (a.processingFee ?? double.infinity)
+              .compareTo(b.processingFee ?? double.infinity),
         );
       }
     });
@@ -123,10 +115,6 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
                 value: 'fee',
                 child: Text("Processing Fee"),
               ),
-              DropdownMenuItem(
-                value: 'amount',
-                child: Text("Max Loan Amount"),
-              ),
             ],
             onChanged: (value) {
               if (value == null) return;
@@ -139,8 +127,25 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
     );
   }
 
-  /// 📊 Comparison Table
+  /// 📊 Comparison Table with Processing Fee + CIBIL-wise interest rates
   Widget _table() {
+    // Collect all unique CIBIL ranges
+    final cibilRanges = <String>{};
+    for (final bank in _banks) {
+      for (final rate in bank.interestRates) {
+        final range =
+            "${rate.minCibil?.toInt() ?? 0}-${rate.maxCibil?.toInt() ?? 0}";
+        cibilRanges.add(range);
+      }
+    }
+
+    final sortedRanges = cibilRanges.toList()
+      ..sort((a, b) {
+        final minA = int.parse(a.split('-')[0]);
+        final minB = int.parse(b.split('-')[0]);
+        return minA.compareTo(minB);
+      });
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SingleChildScrollView(
@@ -165,48 +170,62 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
               ),
             ),
           ],
+          // First row = Processing Fee
           rows: [
             _row(
-              "Interest Rate",
-              _banks.map(
-                    (b) => b.interestRate != null
-                    ? "${b.interestRate}%"
-                    : "--",
-              ),
-            ),
-            _row(
               "Processing Fee",
-              _banks.map(
-                    (b) => b.processingFee != null
-                    ? "₹${b.processingFee}"
-                    : "--",
-              ),
+              _banks.map((b) =>
+              b.processingFee != null ? "₹${NumberFormat('#,##,###.##').format(b.processingFee)}" : "--"),
             ),
-            _row(
-              "Max Loan Amount",
-              _banks.map(
-                    (b) => b.maxLoanAmount != null
-                    ? "₹${b.maxLoanAmount}"
-                    : "--",
-              ),
-            ),
-            _row(
-              "Tenure",
-              _banks.map(
-                    (b) => b.tenureYears != null
-                    ? "${b.tenureYears} yrs"
-                    : "--",
-              ),
-            ),
-            _row(
-              "Min CIBIL",
-              _banks.map(
-                    (b) => b.minCibilScore?.toString() ?? "--",
-              ),
-            ),
+            // Next rows = CIBIL-wise interest rates
+            ...sortedRanges.map((range) => _cibilRow(range)).toList(),
           ],
         ),
       ),
+    );
+  }
+
+  /// Generate a row for a CIBIL range with highlighting
+  DataRow _cibilRow(String range) {
+    final parts = range.split('-');
+    final min = double.tryParse(parts[0]) ?? 0;
+    final max = double.tryParse(parts[1]) ?? 0;
+
+    // Collect rates for all banks for this range
+    final rates = _banks.map((bank) {
+      final rate = bank.interestRates.firstWhere(
+            (r) => (r.minCibil ?? 0) <= max && (r.maxCibil ?? 0) >= min,
+        orElse: () => BankInterestRate(interestRate: null),
+      );
+      return rate.interestRate;
+    }).toList();
+
+    // Find the minimum rate to highlight
+    final minRate = rates.whereType<double>().fold<double>(
+        double.infinity, (prev, e) => e < prev ? e : prev);
+
+    return DataRow(
+      cells: [
+        DataCell(
+          Text(
+            range,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+        ...rates.map((rate) {
+          final text = rate != null ? "${rate.toStringAsFixed(2)}%" : "--";
+          final isBest = rate != null && rate == minRate;
+          return DataCell(
+            Text(
+              text,
+              style: TextStyle(
+                fontWeight: isBest ? FontWeight.bold : FontWeight.normal,
+                color: isBest ? Colors.green : AppColors.textPrimary,
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 

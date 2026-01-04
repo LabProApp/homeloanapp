@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:property/theme/app_colors.dart';
-import 'package:property/screens/cibilrate_bank.dart';
-
+import 'package:property/models/bank_model.dart';
+import 'package:intl/intl.dart';
 /// =======================
 /// BANK DETAIL PAGE
 /// =======================
@@ -113,7 +113,7 @@ class BankDetailPage extends StatelessWidget {
                                 child: _StatCard(
                                   icon: Icons.currency_rupee,
                                   title: 'Processing Fee',
-                                  value: '₹${_formatAmount(bank.processingFee)}',
+                                  value: '₹${NumberFormat('#,##,###.##').format(bank.processingFee)}',
                                   subtitle: 'One-time',
                                   color: AppColors.secondary,
                                 ),
@@ -140,9 +140,63 @@ class BankDetailPage extends StatelessWidget {
                   /// =======================
                   /// CIBIL INTEREST RATE CARD  ✅ NEW
                   /// =======================
-                  CibilInterestCard(
-                    baseRate: bank.interestRate ?? 8.5,
+                  _SectionCard(
+                    title: 'Interest Rate by CIBIL Score',
+                    icon: Icons.credit_score,
+                    children: [
+                      if (bank.interestRates.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            'Interest rate details not available',
+                            style: TextStyle(color: AppColors.textMuted),
+                          ),
+                        )
+                      else
+                        Table(
+                          border: TableBorder.all(
+                            color: AppColors.textMuted.withOpacity(0.2),
+                            width: 1,
+                          ),
+                          columnWidths: const {
+                            0: FlexColumnWidth(2),
+                            1: FlexColumnWidth(1),
+                          },
+                          children: [
+                            // Header row
+                            const TableRow(
+                              decoration: BoxDecoration(color: AppColors.primary),
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'CIBIL Score Range',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'Interest Rate',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // Data rows
+                            ..._buildInterestRows(bank.interestRates),
+                          ],
+                        ),
+                    ],
                   ),
+
+
                   const SizedBox(height: 16),
 
                   /// =======================
@@ -152,33 +206,42 @@ class BankDetailPage extends StatelessWidget {
                     title: 'Documents Required',
                     icon: Icons.folder,
                     children: [
-                      _DetailRow(
-                        icon: Icons.picture_as_pdf,
-                        label: 'Identity Proof',
-                        value: bank.documents?.identityProof ?? 'PAN / Aadhaar / Passport',
-                      ),
-                      _DetailRow(
-                        icon: Icons.home,
-                        label: 'Address Proof',
-                        value: bank.documents?.addressProof ?? 'Utility Bill / Passport / Aadhaar',
-                      ),
-                      _DetailRow(
-                        icon: Icons.account_balance,
-                        label: 'Income Proof',
-                        value: bank.documents?.incomeProof ?? 'Salary Slip / ITR / Bank Statement',
-                      ),
-                      _DetailRow(
-                        icon: Icons.money,
-                        label: 'Property Documents',
-                        value: bank.documents?.propertyProof ?? 'Sale Deed / Agreement',
-                      ),
-                      _DetailRow(
-                        icon: Icons.document_scanner,
-                        label: 'Other Documents',
-                        value: bank.documents?.other ?? 'As per bank requirement',
-                      ),
+                      if (bank.requiredDocuments != null && bank.requiredDocuments!.isNotEmpty)
+                        ...bank.requiredDocuments!
+                            .split(',')
+                            .map(
+                              (doc) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.circle, size: 2, color: AppColors.textMuted),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    doc.trim(),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                            .toList()
+                      else
+                        _DetailRow(
+                          icon: Icons.document_scanner,
+                          label: 'Required Documents',
+                          value: 'As per bank requirement',
+                        ),
                     ],
                   ),
+
+
+
 
                   const SizedBox(height: 16),
 
@@ -544,4 +607,46 @@ class _FeatureRow extends StatelessWidget {
       ),
     );
   }
+}
+List<TableRow> _buildInterestRows(List<BankInterestRate> rates) {
+  if (rates.isEmpty) return [];
+
+  // Sort by lowest interest
+  rates.sort((a, b) => (a.interestRate ?? double.infinity)
+      .compareTo(b.interestRate ?? double.infinity));
+
+  // Highlight the best (lowest) interest
+  final bestRate = rates.first.interestRate ?? 0;
+
+  return rates.map((rate) {
+    final isBest = (rate.interestRate ?? 0) == bestRate;
+
+    return TableRow(
+      decoration: BoxDecoration(
+        color: isBest ? AppColors.secondary.withOpacity(0.15) : Colors.transparent,
+      ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            '${rate.minCibil?.toInt() ?? '-'} - ${rate.maxCibil?.toInt() ?? '-'}',
+            style: TextStyle(
+              fontWeight: isBest ? FontWeight.bold : FontWeight.normal,
+              color: isBest ? AppColors.primary : AppColors.textPrimary,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            '${rate.interestRate?.toStringAsFixed(2) ?? '-'} %',
+            style: TextStyle(
+              fontWeight: isBest ? FontWeight.bold : FontWeight.normal,
+              color: isBest ? AppColors.primary : AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }).toList();
 }
