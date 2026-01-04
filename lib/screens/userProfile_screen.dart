@@ -120,14 +120,7 @@ class ProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  /// RECENT ACTIVITY
-                  _sectionTitle("Recent Activity"),
-                  const SizedBox(height: 8),
-                  _activityItem(
-                      Icons.favorite_border, "Liked “Modern Villa”", "2 hours ago"),
-                  const SizedBox(height: 10),
-                  _activityItem(Icons.share,
-                      "Shared “Downtown Apartment”", "1 day ago"),
+
 
                   const SizedBox(height: 30),
 
@@ -146,7 +139,8 @@ class ProfileScreen extends StatelessWidget {
                       child: const Text(
                         "Save Changes",
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                            fontSize: 16, fontWeight: FontWeight.bold,
+                           color: Colors.white),
                       ),
                     ),
                   ),

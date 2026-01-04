@@ -129,11 +129,9 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                           child: ElevatedButton(
                             onPressed: loading ? null : calculateEmi,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: AppColors.primary,
-                              elevation: 3,
+                              backgroundColor: Colors.orange.shade700,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                             child: loading
@@ -147,10 +145,9 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                             )
                                 : const Text(
                               "Calculate EMI",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                             ),
                           ),
                         ),
