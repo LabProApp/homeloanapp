@@ -9,10 +9,10 @@ abstract class BankState extends Equatable{
 class BankInitialState extends BankState {}
 class BankLoadingState extends BankState {}
 class BankLoadedState extends BankState {
- final List<FetchBanks> banks;   
-  BankLoadedState({required this.banks});
+ final List<Bank> bank;
+  BankLoadedState({required this.bank});
   @override
-  List<Object?> get props => [banks];
+  List<Object?> get props => [bank];
 }
 class BankErrorState extends BankState {
   final String message;     

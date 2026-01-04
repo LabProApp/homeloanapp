@@ -1,143 +1,162 @@
 import 'dart:convert';
 
-List<FetchBanks> fetchBanksFromJson(String str) =>
-    List<FetchBanks>.from(json.decode(str).map((x) => FetchBanks.fromJson(x)));
+/// ================================
+/// API Helpers
+/// ================================
 
-String fetchBanksToJson(List<FetchBanks> data) =>
+List<Bank> banksFromJson(String str) =>
+    List<Bank>.from(
+      json.decode(str).map((x) => Bank.fromJson(x)),
+    );
+
+String banksToJson(List<Bank> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
-class FetchBanks {
+/// ================================
+/// Bank Model (DOMAIN MODEL)
+/// ================================
+
+class Bank {
   final String? code;
   final String? createdTs;
   final String? lastUpdatedTs;
   final String? createdBy;
   final String? updatedBy;
-  final int id;
-  final String bankName;
-  final String contactName;
-  final String contactNumber;
-  final String email;
-  final String branchName;
-  final String locationAddress;
-  final String street;
-  final String city;
-  final String state;
-  final String postalCode;
-  final String country;
-  final String websiteUrl;
-  final String bankLogoUrl;
-  final double interestRate;
-  final String interestType;
-  final num? processingFee;
-  final num? tenureYears;
-  final num? maxLoanAmount;
-  final num? minLoanAmount;
-  final num? minCibilScore;
-  final num? minimumIncome;
-  final String employmentType;
-  final num? minimumAge;
-  final num? maximumAge;
-  final String nationalityRequirement;
-  final bool prepaymentAllowed;
-  final bool partPaymentAllowed;
-  final bool balanceTransferAvailable;
-  final bool insuranceBundled;
-  final String specialOffers;
-  final String requiredDocuments;
-  final String details;
-  final BankDocuments? documents;
+
+  final int? id;
+  final String? bankName;
+  final String? contactName;
+  final String? contactNumber;
+  final String? email;
+  final String? branchName;
+  final String? bankLogoUrl;
+  final String? locationAddress;
+  final String? street;
+  final String? city;
+  final String? state;
+  final String? postalCode;
+  final String? country;
+  final String? websiteUrl;
+
+  final double? interestRate;
+  final String? interestType;
+  final double? processingFee;
+  final int? tenureYears;
+  final double? maxLoanAmount;
+  final double? minLoanAmount;
+  final double? minCibilScore;
+  final double? minimumIncome;
+  final String? employmentType;
+  final int? minimumAge;
+  final int? maximumAge;
+  final String? nationalityRequirement;
+
+  final bool? prepaymentAllowed;
+  final bool? partPaymentAllowed;
+  final bool? balanceTransferAvailable;
+  final bool? insuranceBundled;
+
+  final String? specialOffers;
+  final String? requiredDocuments;
+  final String? details;
+
+  /// 🔥 Nested Interest Slabs
+  final List<BankInterestRate> interestRates;
+
   final String? createdAt;
   final String? updatedAt;
 
-  FetchBanks({
+  const Bank({
     this.code,
     this.createdTs,
     this.lastUpdatedTs,
     this.createdBy,
     this.updatedBy,
-    required this.id,
-    required this.bankName,
-    required this.bankLogoUrl,
-    required this.contactName,
-    required this.contactNumber,
-    required this.email,
-    required this.branchName,
-    required this.locationAddress,
-    required this.street,
-    required this.city,
-    required this.state,
-    required this.postalCode,
-    required this.country,
-    required this.websiteUrl,
-    required this.interestRate,
-    required this.interestType,
+    this.id,
+    this.bankName,
+    this.bankLogoUrl,
+    this.contactName,
+    this.contactNumber,
+    this.email,
+    this.branchName,
+    this.locationAddress,
+    this.street,
+    this.city,
+    this.state,
+    this.postalCode,
+    this.country,
+    this.websiteUrl,
+    this.interestRate,
+    this.interestType,
     this.processingFee,
     this.tenureYears,
     this.maxLoanAmount,
     this.minLoanAmount,
     this.minCibilScore,
     this.minimumIncome,
-    required this.employmentType,
+    this.employmentType,
     this.minimumAge,
     this.maximumAge,
-    required this.nationalityRequirement,
-    required this.prepaymentAllowed,
-    required this.partPaymentAllowed,
-    required this.balanceTransferAvailable,
-    required this.insuranceBundled,
-    required this.specialOffers,
-    required this.requiredDocuments,
-    required this.details,
-    this.documents,
+    this.nationalityRequirement,
+    this.prepaymentAllowed,
+    this.partPaymentAllowed,
+    this.balanceTransferAvailable,
+    this.insuranceBundled,
+    this.specialOffers,
+    this.requiredDocuments,
+    this.details,
+    required this.interestRates,
     this.createdAt,
     this.updatedAt,
   });
 
-  factory FetchBanks.fromJson(Map<String, dynamic> json) => FetchBanks(
-    code: json['code'] as String?,
-    createdTs: json['createdTs'] as String?,
-    lastUpdatedTs: json['lastUpdatedTs'] as String?,
-    createdBy: json['createdBy'] as String?,
-    updatedBy: json['updatedBy'] as String?,
-    id: json['id'] ?? 0,
-    bankName: json['bankName'] ?? '',
-    contactName: json['contactName'] ?? '',
-    bankLogoUrl: json['bankLogoUrl'] ?? '',
-    contactNumber: json['contactNumber'] ?? '',
-    email: json['email'] ?? '',
-    branchName: json['branchName'] ?? '',
-    locationAddress: json['locationAddress'] ?? '',
-    street: json['street'] ?? '',
-    city: json['city'] ?? '',
-    state: json['state'] ?? '',
-    postalCode: json['postalCode'] ?? '',
-    country: json['country'] ?? '',
-    websiteUrl: json['websiteUrl'] ?? '',
-    interestRate: (json['interestRate'] as num?)?.toDouble() ?? 0.0,
-    interestType: json['interestType'] ?? '',
-    processingFee: json['processingFee'] as num? ?? 0,
-    tenureYears: json['tenureYears'] as num? ?? 0,
-    maxLoanAmount: json['maxLoanAmount'] as num? ?? 0,
-    minLoanAmount: json['minLoanAmount'] as num? ?? 0,
-    minCibilScore: json['minCibilScore'] as num? ?? 0,
-    minimumIncome: json['minimumIncome'] as num? ?? 0,
-    employmentType: json['employmentType'] ?? '',
-    minimumAge: json['minimumAge'] as num? ?? 0,
-    maximumAge: json['maximumAge'] as num? ?? 0,
-    nationalityRequirement: json['nationalityRequirement'] ?? '',
-    prepaymentAllowed: json['prepaymentAllowed'] ?? false,
-    partPaymentAllowed: json['partPaymentAllowed'] ?? false,
-    balanceTransferAvailable: json['balanceTransferAvailable'] ?? false,
-    insuranceBundled: json['insuranceBundled'] ?? false,
-    specialOffers: json['specialOffers'] ?? '',
-    requiredDocuments: json['requiredDocuments'] ?? '',
-    details: json['details'] ?? '',
-    documents: json['documents'] != null
-        ? BankDocuments.fromJson(json['documents'])
-        : null, // <-- NEW
-    createdAt: json['createdAt'] as String?,
-    updatedAt: json['updatedAt'] as String?,
-  );
+  factory Bank.fromJson(Map<String, dynamic> json) {
+    return Bank(
+      code: json['code'],
+      createdTs: json['createdTs'],
+      lastUpdatedTs: json['lastUpdatedTs'],
+      createdBy: json['createdBy'],
+      updatedBy: json['updatedBy'],
+      id: json['id'],
+      bankName: json['bankName'],
+      bankLogoUrl: json['bankLogoUrl'],
+      contactName: json['contactName'],
+      contactNumber: json['contactNumber'],
+      email: json['email'],
+      branchName: json['branchName'],
+      locationAddress: json['locationAddress'],
+      street: json['street'],
+      city: json['city'],
+      state: json['state'],
+      postalCode: json['postalCode'],
+      country: json['country'],
+      websiteUrl: json['websiteUrl'],
+      interestRate: _toDouble(json['interestRate']),
+      interestType: json['interestType'],
+      processingFee: _toDouble(json['processingFee']),
+      tenureYears: json['tenureYears'],
+      maxLoanAmount: _toDouble(json['maxLoanAmount']),
+      minLoanAmount: _toDouble(json['minLoanAmount']),
+      minCibilScore: _toDouble(json['minCibilScore']),
+      minimumIncome: _toDouble(json['minimumIncome']),
+      employmentType: json['employmentType'],
+      minimumAge: json['minimumAge'],
+      maximumAge: json['maximumAge'],
+      nationalityRequirement: json['nationalityRequirement'],
+      prepaymentAllowed: json['prepaymentAllowed'],
+      partPaymentAllowed: json['partPaymentAllowed'],
+      balanceTransferAvailable: json['balanceTransferAvailable'],
+      insuranceBundled: json['insuranceBundled'],
+      specialOffers: json['specialOffers'],
+      requiredDocuments: json['requiredDocuments'],
+      details: json['details'],
+      interestRates: (json['interestRates'] as List<dynamic>? ?? [])
+          .map((e) => BankInterestRate.fromJson(e))
+          .toList(),
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'code': code,
@@ -147,6 +166,7 @@ class FetchBanks {
     'updatedBy': updatedBy,
     'id': id,
     'bankName': bankName,
+    'bankLogoUrl': bankLogoUrl,
     'contactName': contactName,
     'contactNumber': contactNumber,
     'email': email,
@@ -177,50 +197,86 @@ class FetchBanks {
     'specialOffers': specialOffers,
     'requiredDocuments': requiredDocuments,
     'details': details,
+    'interestRates': interestRates.map((e) => e.toJson()).toList(),
     'createdAt': createdAt,
     'updatedAt': updatedAt,
   };
+
+  /// 🔎 Best interest across slabs
+  double? bestInterestRate() {
+    if (interestRates.isEmpty) return interestRate;
+    return interestRates
+        .map((e) => e.interestRate)
+        .whereType<double>()
+        .reduce((a, b) => a < b ? a : b);
+  }
 }
 
-/// =======================
-/// DOCUMENTS MODEL
-/// =======================
-class BankDocuments {
-  final String identityProof;
-  final String addressProof;
-  final String incomeProof;
-  final String propertyProof;
-  final String other;
+/// ================================
+/// Interest Rate Model
+/// ================================
 
-  BankDocuments({
-    required this.identityProof,
-    required this.addressProof,
-    required this.incomeProof,
-    required this.propertyProof,
-    required this.other,
+class BankInterestRate {
+  final String? code;
+  final String? createdTs;
+  final String? lastUpdatedTs;
+  final String? createdBy;
+  final String? updatedBy;
+
+  final int? id;
+  final double? minCibil;
+  final double? maxCibil;
+  final double? interestRate;
+  final int? bankId;
+
+  const BankInterestRate({
+    this.code,
+    this.createdTs,
+    this.lastUpdatedTs,
+    this.createdBy,
+    this.updatedBy,
+    this.id,
+    this.minCibil,
+    this.maxCibil,
+    this.interestRate,
+    this.bankId,
   });
 
-  factory BankDocuments.fromJson(Map<String, dynamic> json) => BankDocuments(
-    identityProof: json['identityProof'] ?? 'PAN / Aadhaar / Passport',
-    addressProof: json['addressProof'] ?? 'Utility Bill / Passport / Aadhaar',
-    incomeProof: json['incomeProof'] ?? 'Salary Slip / ITR / Bank Statement',
-    propertyProof: json['propertyProof'] ?? 'Sale Deed / Agreement',
-    other: json['other'] ?? 'As per bank requirement',
-  );
+  factory BankInterestRate.fromJson(Map<String, dynamic> json) {
+    return BankInterestRate(
+      code: json['code'],
+      createdTs: json['createdTs'],
+      lastUpdatedTs: json['lastUpdatedTs'],
+      createdBy: json['createdBy'],
+      updatedBy: json['updatedBy'],
+      id: json['id'],
+      minCibil: _toDouble(json['minCibil']),
+      maxCibil: _toDouble(json['maxCibil']),
+      interestRate: _toDouble(json['interestRate']),
+      bankId: json['bankId'],
+    );
+  }
 
   Map<String, dynamic> toJson() => {
-    'identityProof': identityProof,
-    'addressProof': addressProof,
-    'incomeProof': incomeProof,
-    'propertyProof': propertyProof,
-    'other': other,
+    'code': code,
+    'createdTs': createdTs,
+    'lastUpdatedTs': lastUpdatedTs,
+    'createdBy': createdBy,
+    'updatedBy': updatedBy,
+    'id': id,
+    'minCibil': minCibil,
+    'maxCibil': maxCibil,
+    'interestRate': interestRate,
+    'bankId': bankId,
   };
+}
 
-  factory BankDocuments.empty() => BankDocuments(
-    identityProof: '',
-    addressProof: '',
-    incomeProof: '',
-    propertyProof: '',
-    other: '',
-  );
+/// ================================
+/// Helpers
+/// ================================
+
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
 }

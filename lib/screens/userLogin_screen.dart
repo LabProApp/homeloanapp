@@ -1,8 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:property/screens/DashBoard.dart';
 import 'package:property/theme/app_colors.dart';
-import 'package:property/screens/properyListing_screen.dart';
 import 'package:property/screens/user_forgot_password.dart';
+import 'package:property/services/user_service.dart';
+import 'package:property/screens/otp_verification_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,182 +14,188 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  int selectedTab = 0;
+  int selectedTab = 0; // 0 = Login, 1 = Signup
   bool _isPasswordVisible = false;
+
+  final TextEditingController emailOrMobileController =
+  TextEditingController();
 
   final Color primaryColor = AppColors.accent;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          /// 🔹 Background Image
+          Image.asset(
+            'assets/images/splash_bg.jpg',
+            fit: BoxFit.cover,
+          ),
 
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                ),
-              ),
+          /// 🔹 Blur + Overlay
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Container(
+              color: Colors.black.withOpacity(0.35),
+            ),
+          ),
 
-              const SizedBox(height: 30),
-
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: primaryColor.withOpacity(0.12),
-                child: Icon(Icons.home, size: 40, color: Colors.deepOrange),
-              ),
-
-              const SizedBox(height: 15),
-
-              const Text(
-                "AbodeOne",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 5),
-
-              const Text(
-                "Find. Finance. Finalize.",
-                style: TextStyle(fontSize: 16, color: Colors.deepOrangeAccent),
-              ),
-
-              const SizedBox(height: 25),
-
-              // Tabs
-              Container(
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  color: Colors.grey.shade200,
-                ),
-                child: Row(
-                  children: [
-                    _tabButton("Log In", 0),
-                    _tabButton("Sign Up", 1),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              _label("Email or Mobile"),
-              _textField(
-                hint: "Enter email or mobile number",
-                icon: Icons.email_outlined,
-              ),
-
-              const SizedBox(height: 18),
-
-              _label("Password"),
-              _passwordField(),
-
-              const SizedBox(height: 10),
-
-              Align(
-                alignment: Alignment.centerRight,
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ForgotPasswordScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Forgot Password?",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-
-
-              const SizedBox(height: 25),
-
-              // 🔵 Primary Button
-              _gradientButton(
-                text: "Sign In",
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                  AppColors.primary, // Indigo
-                   AppColors.secondary, // Blue
-                  ],
-                ),
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DashboardScreen(),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 22),
-
-              Row(
+          /// 🔹 Foreground UI
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
                 children: [
-                  Expanded(child: Divider(color: AppColors.border)),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      "or continue with",
-                      style: TextStyle(color: AppColors.textPrimary),
+                  const SizedBox(height: 50),
+
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white.withOpacity(0.9),
+                    child: const Icon(Icons.home,
+                        size: 40, color: Colors.deepOrange),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  const Text(
+                    "AbodeOne",
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  const Text(
+                    "Find. Finance. Finalize.",
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  /// Tabs
+                  Container(
+                    height: 60,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(30),
+                      color: Colors.white.withOpacity(0.15),
+                    ),
+                    child: Row(
+                      children: [
+                        _tabButton("Log In", 0),
+                        _tabButton("Sign Up", 1),
+                      ],
                     ),
                   ),
-                  Expanded(child: Divider(color:AppColors.border)),
+
+                  const SizedBox(height: 25),
+
+                  _label("Email or Mobile"),
+                  _textField(
+                    controller: emailOrMobileController,
+                    hint: "Enter email or mobile number",
+                    icon: Icons.email_outlined,
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  if (selectedTab == 0) ...[
+                    _label("Password"),
+                    _passwordField(),
+                    const SizedBox(height: 10),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                              const ForgotPasswordScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Forgot Password?",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 25),
+
+                  /// 🔵 Primary Button
+                  _gradientButton(
+                    text: selectedTab == 0 ? "Sign In" : "Sign Up",
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.primary,
+                        AppColors.secondary,
+                      ],
+                    ),
+                    onTap:
+                    selectedTab == 0 ? _handleLogin : _handleSignup,
+                  ),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-              const SizedBox(height: 20),
+  // ================= ACTIONS =================
 
-              // Google Button
-              _gradientButton(
-                text: "Continue with Google",
-                icon: Icons.g_mobiledata,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.error,
-                    AppColors.error,
-                  ],
-                ),
-              ),
+  void _handleLogin() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => DashboardScreen()),
+    );
+  }
 
-              const SizedBox(height: 15),
+  void _handleSignup() async {
+    if (emailOrMobileController.text.isEmpty) {
+      _showError("Please enter email or mobile number");
+      return;
+    }
 
-              // Phone Button
-              _gradientButton(
-                text: "Continue with Phone",
-                icon: Icons.phone_android,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.success,
-                    AppColors.success,
-                  ],
-                ),
-              ),
+    try {
+      /// 🔥 No response expected — success = no exception
+      await UserApiService
+          .resendOtp(emailOrMobileController.text.trim());
 
-              const SizedBox(height: 35),
-            ],
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OtpVerificationScreen(
+            value: emailOrMobileController.text.trim(),
           ),
         ),
+      );
+    } catch (e) {
+      _showError("Failed to send OTP. Please try again.");
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
       ),
     );
   }
@@ -203,14 +211,18 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Container(
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected ? primaryColor : Colors.transparent,
+            color: isSelected
+                ? AppColors.primary
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(30),
           ),
           child: Text(
             title,
             style: TextStyle(
               fontSize: 16,
-              color: isSelected ? AppColors.white: AppColors.textPrimary,
+              color: isSelected
+                  ? Colors.white
+                  : Colors.white70,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -224,22 +236,34 @@ class _LoginScreenState extends State<LoginScreen> {
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 14,
-          color: AppColors.textPrimary,
+          color: Colors.white70,
           fontWeight: FontWeight.w500,
         ),
       ),
     );
   }
 
-  Widget _textField({required String hint, required IconData icon}) {
+  Widget _textField({
+    required String hint,
+    required IconData icon,
+    required TextEditingController controller,
+  }) {
     return TextField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,
-        suffixIcon: Icon(icon),
-        border: OutlineInputBorder(
+        hintStyle: const TextStyle(color: Colors.white54),
+        suffixIcon: Icon(icon, color: Colors.white70),
+        enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.white38),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.white),
         ),
       ),
     );
@@ -248,11 +272,16 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _passwordField() {
     return TextField(
       obscureText: !_isPasswordVisible,
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: "Enter your password",
+        hintStyle: const TextStyle(color: Colors.white54),
         suffixIcon: IconButton(
           icon: Icon(
-            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+            _isPasswordVisible
+                ? Icons.visibility
+                : Icons.visibility_off,
+            color: Colors.white70,
           ),
           onPressed: () {
             setState(() {
@@ -260,17 +289,20 @@ class _LoginScreenState extends State<LoginScreen> {
             });
           },
         ),
-        border: OutlineInputBorder(
+        enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.white38),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.white),
         ),
       ),
     );
   }
 
-  // 🔹 Rounded Gradient Button
   Widget _gradientButton({
     required String text,
-    IconData? icon,
     required Gradient gradient,
     VoidCallback? onTap,
   }) {
@@ -280,14 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: gradient,
-          borderRadius: BorderRadius.circular(30), // ✅ ROUND
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(30),
         ),
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -298,22 +323,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           onPressed: onTap,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, color: Colors.white),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                text,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),

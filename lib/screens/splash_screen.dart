@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'userLogin_screen.dart';
 import 'package:property/theme/app_colors.dart';
@@ -24,63 +25,68 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.primary, // Deep Orange
-              AppColors.secondary, // Warm Amber
-            ],
-            stops: const [0.0, 1.0], // Optional for better gradient control
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          /// Background Image
+          Image.asset(
+            'assets/images/splash_bg.jpg',
+            fit: BoxFit.cover,
           ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo Circle
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.white.withOpacity(0.9),
-                child: const Icon(
-                  Icons.home,
-                  size: 45,
-                  color: AppColors.primary,
-                ),
-              ),
 
-              const SizedBox(height: 20),
-
-              // App Name
-              const Text(
-                "ABODE ONE",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // Tagline
-              const Text(
-                "Find. Finance. Finalize.",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
+          /// Blur Effect
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Container(
+              color: Colors.black.withOpacity(0.1), // Dark overlay
+            ),
           ),
-        ),
+
+          /// Foreground Content
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                /// Logo
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.white.withOpacity(0.9),
+                  child: const Icon(
+                    Icons.home,
+                    size: 45,
+                    color: AppColors.primary,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                /// App Name
+                const Text(
+                  "ABODE ONE",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                /// Tagline
+                const Text(
+                  "Find. Finance. Finalize.",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white70,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

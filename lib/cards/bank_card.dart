@@ -5,9 +5,20 @@ import 'package:property/screens/bank_applyLoan_dialog.dart';
 import 'package:property/theme/app_colors.dart';
 
 class BankCard extends StatelessWidget {
-  final FetchBanks bank;
+  final Bank bank;
 
-  const BankCard({super.key, required this.bank});
+  /// ✅ Compare support
+  final bool showCompareCheckbox;
+  final bool isCompared;
+  final ValueChanged<bool>? onCompareChanged;
+
+  const BankCard({
+    super.key,
+    required this.bank,
+    this.showCompareCheckbox = false,
+    this.isCompared = false,
+    this.onCompareChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +42,9 @@ class BankCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// 🏦 LOGO + NAME + ARROW
+              /// 🏦 LOGO + NAME + COMPARE
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _bankLogo(),
                   const SizedBox(width: 12),
@@ -49,11 +61,28 @@ class BankCard extends StatelessWidget {
                     ),
                   ),
 
-                  Icon(
-                    Icons.chevron_right,
-                    size: 28,
-                    color: Colors.grey.shade600,
-                  ),
+                  /// ✅ Compare Checkbox
+                  if (showCompareCheckbox)
+                    Column(
+                      children: [
+                        Checkbox(
+                          value: isCompared,
+                          activeColor: AppColors.primary,
+                          onChanged: (v) =>
+                              onCompareChanged?.call(v ?? false),
+                        ),
+                        const Text(
+                          "Compare",
+                          style: TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    )
+                  else
+                    Icon(
+                      Icons.chevron_right,
+                      size: 28,
+                      color: Colors.grey.shade600,
+                    ),
                 ],
               ),
 
