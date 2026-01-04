@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:property/screens/userProfile_screen.dart';
 import 'package:property/screens/properyListing_screen.dart';
 import 'package:property/screens/legalServiceProviders_listing.dart';
@@ -19,6 +20,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   late final List<Widget> _pages;
 
+  String _appVersion = "";
+
   @override
   void initState() {
     super.initState();
@@ -29,10 +32,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       LegalServicePage(),     // 3 Documents
       EmiCalculatorScreen(),  // 4 EMI Calculator (drawer only)
     ];
+    _loadAppVersion();
+  }
+
+  /// 🔹 Load app version from pubspec.yaml
+  Future<void> _loadAppVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _appVersion = "v${info.version} (${info.buildNumber})";
+    });
   }
 
   /// ✅ Bottom nav index mapping
-  /// EMI Calculator (index 4) → NO bottom tab highlighted
   int? get _bottomNavIndex {
     if (_selectedIndex >= 4) return null;
     return _selectedIndex;
@@ -106,7 +117,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
 
-            /// ✅ EMI Calculator (drawer-only tool)
             ListTile(
               leading: const Icon(Icons.calculate),
               title: const Text("EMI Calculator"),
@@ -156,6 +166,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             const Spacer(),
 
+            /// 🔹 APP VERSION (BOTTOM LEFT)
+            Padding(
+              padding: const EdgeInsets.only(left: 16, bottom: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _appVersion,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text("Logout"),
@@ -172,7 +197,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: _pages,
       ),
 
-      /// 🔻 BOTTOM NAV (NO highlight for EMI Calculator)
+      /// 🔻 BOTTOM NAV
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _bottomNavIndex ?? 0,
         selectedItemColor: AppColors.secondary,

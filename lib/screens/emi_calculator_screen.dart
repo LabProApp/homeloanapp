@@ -17,8 +17,8 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   final principalCtrl = TextEditingController();
   final interestCtrl = TextEditingController();
   final tenureCtrl = TextEditingController();
-  final incomeCtrl = TextEditingController();
-  final existingEmiCtrl = TextEditingController();
+//  final incomeCtrl = TextEditingController();
+ // final existingEmiCtrl = TextEditingController();
 
   bool loading = false;
   CalcLoanResponse? response;
@@ -39,8 +39,8 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     principalCtrl.clear();
     interestCtrl.clear();
     tenureCtrl.clear();
-    incomeCtrl.clear();
-    existingEmiCtrl.clear();
+  //  incomeCtrl.clear();
+   // existingEmiCtrl.clear();
 
     setState(() {
       response = null;
@@ -53,8 +53,8 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     principalCtrl.dispose();
     interestCtrl.dispose();
     tenureCtrl.dispose();
-    incomeCtrl.dispose();
-    existingEmiCtrl.dispose();
+  //  incomeCtrl.dispose();
+  //  existingEmiCtrl.dispose();
     super.dispose();
   }
 
@@ -68,8 +68,8 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
         principal: double.parse(principalCtrl.text),
         annualInterestRate: double.parse(interestCtrl.text),
         tenureYears: int.parse(tenureCtrl.text),
-        monthlyIncome: double.parse(incomeCtrl.text),
-        existingEmi: double.parse(existingEmiCtrl.text),
+       // monthlyIncome: double.parse(incomeCtrl.text),
+      //  existingEmi: double.parse(existingEmiCtrl.text),
         includeSchedule: false,
       );
 
@@ -118,8 +118,8 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                         _field("Loan Amount", principalCtrl),
                         _field("Interest Rate (%)", interestCtrl),
                         _field("Tenure (Years)", tenureCtrl),
-                        _field("Monthly Income", incomeCtrl),
-                        _field("Existing EMI", existingEmiCtrl),
+                     //   _field("Monthly Income", incomeCtrl),
+                     //   _field("Existing EMI", existingEmiCtrl),
                         const SizedBox(height: 20),
 
                         /// 🤍 WHITE BUTTON
@@ -200,8 +200,8 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
             _row("Monthly EMI", response!.monthlyPayment.toDouble()),
             _row("Total Interest", response!.totalInterest.toDouble()),
             _row("Total Payment", response!.totalPayment.toDouble()),
-            _row("Affordable EMI", response!.affordableEmi),
-            _row("Eligible Loan", response!.eligibleLoan),
+          //  _row("Affordable EMI", response!.affordableEmi),
+        //    _row("Eligible Loan", response!.eligibleLoan),
           ],
         ),
       ),

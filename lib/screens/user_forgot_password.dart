@@ -72,12 +72,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 onPressed: _loading ? null : _sendOtp,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: _loading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Send OTP"),
+                    : const Text(
+                  "Send OTP",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
+
           ],
         ),
       ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:property/screens/DashBoard.dart';
 import 'package:property/theme/app_colors.dart';
-import 'properyListing_screen.dart';
+import 'package:property/screens/properyListing_screen.dart';
+import 'package:property/screens/user_forgot_password.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -91,15 +92,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
               Align(
                 alignment: Alignment.centerRight,
-                child: Text(
-                  "Forgot Password?",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ForgotPasswordScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    "Forgot Password?",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
+
 
               const SizedBox(height: 25),
 

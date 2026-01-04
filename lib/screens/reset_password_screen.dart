@@ -34,9 +34,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     try {
       await UserApiService.resetPassword(
-        widget.value,
-        passwordController.text.trim(),
+        value: widget.value,
+        password: passwordController.text.trim(),
       );
+
 
       if (!mounted) return;
 

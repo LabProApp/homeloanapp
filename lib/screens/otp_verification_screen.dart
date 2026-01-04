@@ -3,10 +3,14 @@ import 'package:sms_autofill/sms_autofill.dart';
 import 'package:property/services/user_service.dart';
 import 'package:property/theme/app_colors.dart';
 import 'package:property/screens/reset_password_screen.dart';
-class OtpVerificationScreen extends StatefulWidget {
-  final String value;
 
-  const OtpVerificationScreen({super.key, required this.value});
+class OtpVerificationScreen extends StatefulWidget {
+  final String value; // email or mobile
+
+  const OtpVerificationScreen({
+    super.key,
+    required this.value,
+  });
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -21,7 +25,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
   @override
   void initState() {
     super.initState();
-    listenForCode();
+    listenForCode(); // 📲 Auto read OTP
   }
 
   @override
@@ -35,6 +39,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
     setState(() {
       _otpCode = code ?? "";
     });
+
+    // ✅ Auto-submit when OTP length is complete
+    if (_otpCode.length == 6) {
+      _verifyOtp();
+    }
   }
 
   Future<void> _verifyOtp() async {
@@ -59,8 +68,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+      if (!mounted) return;
+
+      final message = e.toString().replaceFirst("Exception: ", "");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -68,52 +82,100 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
 
   Future<void> _resendOtp() async {
     setState(() => _resending = true);
-    await UserApiService.resendOtp(widget.value);
-    setState(() => _resending = false);
+
+    try {
+      await UserApiService.resendOtp(widget.value);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("OTP resent successfully")),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      final message = e.toString().replaceFirst("Exception: ", "");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } finally {
+      if (mounted) setState(() => _resending = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Verify OTP")),
+      appBar: AppBar(
+        title: const Text("Verify OTP"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("OTP sent to ${widget.value}"),
+            Text(
+              "OTP sent to ${widget.value}",
+              style: const TextStyle(fontSize: 16),
+            ),
 
             const SizedBox(height: 24),
 
+            /// 🔢 OTP INPUT
             PinFieldAutoFill(
               codeLength: 6,
               currentCode: _otpCode,
               decoration: BoxLooseDecoration(
                 gapSpace: 10,
-                strokeColorBuilder: FixedColorBuilder(AppColors.primary),
+                radius: const Radius.circular(8),
+                strokeColorBuilder:
+                FixedColorBuilder(AppColors.primary),
               ),
               onCodeChanged: (code) {
-                if (code != null) setState(() => _otpCode = code);
+                if (code != null) {
+                  setState(() => _otpCode = code);
+                }
               },
             ),
 
+            const SizedBox(height: 12),
+
+            /// 🔁 RESEND OTP
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: _resending ? null : _resendOtp,
-                child: Text(_resending ? "Resending..." : "Resend OTP"),
+                child: Text(
+                  _resending ? "Resending..." : "Resend OTP",
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
 
             const SizedBox(height: 24),
 
+            /// ✅ VERIFY BUTTON
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
                 onPressed: _loading ? null : _verifyOtp,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 child: _loading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Verify OTP"),
+                    ? const CircularProgressIndicator(
+                  color: Colors.white,
+                )
+                    : const Text(
+                  "Verify OTP",
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
             ),
           ],
