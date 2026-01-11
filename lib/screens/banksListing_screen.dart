@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:property/models/bank_model.dart';
-import 'package:property/services/bank_service.dart';
-import 'package:property/theme/app_colors.dart';
-import 'package:property/cards/bank_card.dart';
-import 'package:property/screens/bank_rates_compare_dialog.dart';
+import '../models/bank_model.dart';
+import '../services/bank_service.dart';
+import '../theme/app_colors.dart';
+import '../cards/bank_card.dart';
+import '../screens/bank_rates_compare_dialog.dart';
 
 class BankPage extends StatefulWidget {
-  const BankPage({super.key});
+  final String? userId;
 
+
+  const BankPage({
+    super.key,
+    this.userId,
+  });
   @override
   State<BankPage> createState() => _BankPageState();
 }

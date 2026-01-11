@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/calcLoanRequest.dart';
 import '../models/calcLoanResponse.dart';
-import 'package:property/utility/ApiUrls.dart';
+import '../utility/ApiUrls.dart';
 class LoanApiService {
 
   final http.Client client;

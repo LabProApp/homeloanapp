@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:property/services/user_service.dart';
-import 'package:property/theme/app_colors.dart';
+import '../services/user_service.dart';
+import '../theme/app_colors.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String value;

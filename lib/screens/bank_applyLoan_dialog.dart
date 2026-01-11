@@ -1,8 +1,8 @@
 // bank_applyLoan_dialog.dart (updated for Legal Inquiry with Property Type dropdown)
 import 'package:flutter/material.dart';
-import 'package:property/services/legal_service_api.dart';
-import 'package:property/models/inquiry_request.dart';
-import 'package:property/theme/app_colors.dart';
+import '../services/legal_service_api.dart';
+import '../models/inquiry_request.dart';
+import '../theme/app_colors.dart';
 
 class LoanApplyDialog {
   static void show(BuildContext context) {

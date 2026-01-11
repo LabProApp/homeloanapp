@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:property/models/bank_model.dart';
-import 'package:property/utility/ApiUrls.dart';
+import '../models/bank_model.dart';
+import '../utility/ApiUrls.dart';
 
 class BankApiService {
 

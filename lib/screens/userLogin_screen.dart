@@ -1,26 +1,25 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:property/screens/DashBoard.dart';
-import 'package:property/theme/app_colors.dart';
-import 'package:property/screens/user_forgot_password.dart';
-import 'package:property/services/user_service.dart';
-import 'package:property/screens/otp_verification_screen.dart';
+import 'Dashboard.dart';
+import 'otp_verification_screen.dart';
+import 'user_forgot_password.dart';
+import '../services/user_service.dart';
+import '../theme/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   int selectedTab = 0; // 0 = Login, 1 = Signup
   bool _isPasswordVisible = false;
+  bool _loading = false;
 
-  final TextEditingController emailOrMobileController =
-  TextEditingController();
-
-  final Color primaryColor = AppColors.accent;
+  final TextEditingController emailOrMobileController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -28,59 +27,42 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          /// 🔹 Background Image
-          Image.asset(
-            'assets/images/splash_bg.jpg',
-            fit: BoxFit.cover,
-          ),
+          // Background
+          Image.asset('assets/images/splash_bg.jpg', fit: BoxFit.cover),
 
-          /// 🔹 Blur + Overlay
+          // Blur overlay
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-            child: Container(
-              color: Colors.black.withOpacity(0.35),
-            ),
+            child: Container(color: Colors.black.withOpacity(0.35)),
           ),
 
-          /// 🔹 Foreground UI
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
                   const SizedBox(height: 50),
-
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 40,
-                    backgroundColor: Colors.white.withOpacity(0.9),
-                    child: const Icon(Icons.home,
-                        size: 40, color: Colors.deepOrange),
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.home, size: 40, color: Colors.deepOrange),
                   ),
-
                   const SizedBox(height: 15),
-
                   const Text(
-                    "AbodeOne",
+                    "ProFinDo",
                     style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
+                        fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
-
                   const SizedBox(height: 5),
-
                   const Text(
                     "Find. Finance. Finalize.",
-                    style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70),
+                    style: TextStyle(fontSize: 16, color: Colors.white70),
                   ),
+                  const SizedBox(height: 30),
 
-                  const SizedBox(height: 25),
-
-                  /// Tabs
+                  // Tabs
                   Container(
-                    height: 60,
+                    height: 55,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
                       color: Colors.white.withOpacity(0.15),
@@ -92,62 +74,45 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 25),
 
                   _label("Email or Mobile"),
                   _textField(
                     controller: emailOrMobileController,
-                    hint: "Enter email or mobile number",
+                    hint: "Enter email or mobile",
                     icon: Icons.email_outlined,
                   ),
-
                   const SizedBox(height: 18),
 
                   if (selectedTab == 0) ...[
                     _label("Password"),
                     _passwordField(),
                     const SizedBox(height: 10),
-
                     Align(
                       alignment: Alignment.centerRight,
                       child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                              const ForgotPasswordScreen(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ForgotPasswordScreen(),
+                          ),
+                        ),
                         child: const Text(
                           "Forgot Password?",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
                   ],
 
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 30),
 
-                  /// 🔵 Primary Button
+                  // Button
                   _gradientButton(
                     text: selectedTab == 0 ? "Sign In" : "Sign Up",
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.primary,
-                        AppColors.secondary,
-                      ],
-                    ),
-                    onTap:
-                    selectedTab == 0 ? _handleLogin : _handleSignup,
+                    onTap: _loading
+                        ? null
+                        : (selectedTab == 0 ? _login : _signup),
                   ),
                 ],
               ),
@@ -160,23 +125,48 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // ================= ACTIONS =================
 
-  void _handleLogin() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => DashboardScreen()),
-    );
-  }
-
-  void _handleSignup() async {
-    if (emailOrMobileController.text.isEmpty) {
-      _showError("Please enter email or mobile number");
+  Future<void> _login() async {
+    if (emailOrMobileController.text.isEmpty || passwordController.text.isEmpty) {
+      _showError("Please enter credentials");
       return;
     }
 
+    setState(() => _loading = true);
+
     try {
-      /// 🔥 No response expected — success = no exception
-      await UserApiService
-          .resendOtp(emailOrMobileController.text.trim());
+      // ✅ UserApiService returns LoginResponse directly
+      final LoginResponse response = await UserApiService.login(
+        emailOrMobileController.text.trim(),
+        passwordController.text.trim(),
+      );
+
+      if (response.userId.isEmpty) {
+        _showError("User ID not found in response");
+        return;
+      }
+
+      // Navigate to Dashboard with userId
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => DashboardScreen(userId: response.userId)),
+      );
+    } catch (e) {
+      _showError("Invalid login credentials");
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _signup() async {
+    if (emailOrMobileController.text.isEmpty) {
+      _showError("Enter email or mobile");
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      await UserApiService.resendOtp(emailOrMobileController.text.trim());
 
       Navigator.push(
         context,
@@ -187,63 +177,49 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     } catch (e) {
-      _showError("Failed to send OTP. Please try again.");
+      _showError("Failed to send OTP");
+    } finally {
+      setState(() => _loading = false);
     }
   }
 
-  void _showError(String message) {
+  void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(backgroundColor: Colors.red, content: Text(msg)),
     );
   }
 
-  // ================= Helper Widgets =================
+  // ================= UI HELPERS =================
 
   Widget _tabButton(String title, int index) {
-    bool isSelected = selectedTab == index;
-
+    final isSelected = selectedTab == index;
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => selectedTab = index),
         child: Container(
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary
-                : Colors.transparent,
+            color: isSelected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(30),
           ),
           child: Text(
             title,
             style: TextStyle(
-              fontSize: 16,
-              color: isSelected
-                  ? Colors.white
-                  : Colors.white70,
-              fontWeight: FontWeight.w600,
-            ),
+                color: isSelected ? Colors.white : Colors.white70,
+                fontWeight: FontWeight.w600),
           ),
         ),
       ),
     );
   }
 
-  Widget _label(String text) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          color: Colors.white70,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
+  Widget _label(String text) => Align(
+    alignment: Alignment.centerLeft,
+    child: Text(
+      text,
+      style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
+    ),
+  );
 
   Widget _textField({
     required String hint,
@@ -257,80 +233,58 @@ class _LoginScreenState extends State<LoginScreen> {
         hintText: hint,
         hintStyle: const TextStyle(color: Colors.white54),
         suffixIcon: Icon(icon, color: Colors.white70),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.white38),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.white),
-        ),
+        enabledBorder: _border(),
+        focusedBorder: _border(focus: true),
       ),
     );
   }
 
   Widget _passwordField() {
     return TextField(
+      controller: passwordController,
       obscureText: !_isPasswordVisible,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
-        hintText: "Enter your password",
+        hintText: "Enter password",
         hintStyle: const TextStyle(color: Colors.white54),
         suffixIcon: IconButton(
           icon: Icon(
-            _isPasswordVisible
-                ? Icons.visibility
-                : Icons.visibility_off,
+            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
             color: Colors.white70,
           ),
-          onPressed: () {
-            setState(() {
-              _isPasswordVisible = !_isPasswordVisible;
-            });
-          },
+          onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.white38),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.white),
-        ),
+        enabledBorder: _border(),
+        focusedBorder: _border(focus: true),
       ),
     );
   }
 
-  Widget _gradientButton({
-    required String text,
-    required Gradient gradient,
-    VoidCallback? onTap,
-  }) {
+  OutlineInputBorder _border({bool focus = false}) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(14),
+    borderSide: BorderSide(color: focus ? Colors.white : Colors.white38),
+  );
+
+  Widget _gradientButton({required String text, VoidCallback? onTap}) {
     return SizedBox(
       width: double.infinity,
       height: 54,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: gradient,
+          gradient: const LinearGradient(
+            colors: [AppColors.primary, AppColors.secondary],
+          ),
           borderRadius: BorderRadius.circular(30),
         ),
         child: ElevatedButton(
+          onPressed: onTap,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
           ),
-          onPressed: onTap,
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          child: _loading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
         ),
       ),
     );

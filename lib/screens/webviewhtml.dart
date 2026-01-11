@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:property/theme/app_colors.dart';
+import '../theme/app_colors.dart';
 
 class WebViewPage extends StatefulWidget {
   final String title;

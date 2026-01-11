@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:property/theme/app_colors.dart';
+import '../theme/app_colors.dart';
 import '../models/calcLoanRequest.dart';
 import '../models/calcLoanResponse.dart';
 import '../services/emi_service.dart';

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:property/theme/app_colors.dart';
-import 'package:property/models/legal_service_model.dart';
-import 'package:property/services/legal_service_api.dart';
-import 'package:property/screens/legalInquiry_dialog.dart';
-import 'package:property/cards/legal_service_card.dart';
+import '../theme/app_colors.dart';
+import '../models/legal_service_model.dart';
+import '../services/legal_service_api.dart';
+import '../screens/legalInquiry_dialog.dart';
+import '../cards/legal_service_card.dart';
 
 /// 🔥 Faster + Bouncy Scroll Behavior
 class FastScrollBehavior extends MaterialScrollBehavior {
@@ -17,7 +17,13 @@ class FastScrollBehavior extends MaterialScrollBehavior {
 }
 
 class LegalServicePage extends StatefulWidget {
-  const LegalServicePage({super.key});
+
+  final String? userId;
+
+  const LegalServicePage({
+    super.key,
+    this.userId,
+  });
 
   @override
   State<LegalServicePage> createState() => _LegalServicePageState();

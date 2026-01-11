@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:property/models/amortization_entry.dart';
+import '../models/amortization_entry.dart';
 
 class CalcLoanResponse {
   /// Monthly EMI amount

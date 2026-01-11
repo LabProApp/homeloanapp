@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="property"
-        android:name="${applicationName}"
+        android:name="ProFinDo"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
         <activity

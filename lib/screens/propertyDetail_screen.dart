@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:property/models/property_model.dart';
-import 'package:property/theme/app_colors.dart';
-import 'package:property/utility/amenity_icon.dart';
+import '../models/property_model.dart';
+import '../theme/app_colors.dart';
+import '../utility/amenity_icon.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:property/commons/commonutil.dart';
+import '../commons/commonutil.dart';
 import 'package:intl/intl.dart';
 
 class PropertyDetailScreen extends StatefulWidget {

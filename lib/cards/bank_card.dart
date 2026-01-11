@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:property/models/bank_model.dart';
-import 'package:property/screens/bankDetails_screen.dart';
-import 'package:property/screens/bank_applyLoan_dialog.dart';
-import 'package:property/theme/app_colors.dart';
+import '../models/bank_model.dart';
+import '../screens/bankDetails_screen.dart';
+import '../screens/bank_applyLoan_dialog.dart';
+import '../theme/app_colors.dart';
 
 class BankCard extends StatelessWidget {
   final Bank bank;
 
-  /// ✅ Compare support
+  /// Compare support
   final bool showCompareCheckbox;
   final bool isCompared;
   final ValueChanged<bool>? onCompareChanged;
@@ -23,9 +23,13 @@ class BankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      elevation: 0.5, // 🔽 minimal elevation
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: Colors.grey.shade200, // subtle iOS border
+        ),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -42,7 +46,7 @@ class BankCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// 🏦 LOGO + NAME + COMPARE
+              /// LOGO + NAME + COMPARE
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -55,13 +59,12 @@ class BankCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
 
-                  /// ✅ Compare Checkbox
                   if (showCompareCheckbox)
                     Column(
                       children: [
@@ -80,35 +83,35 @@ class BankCard extends StatelessWidget {
                   else
                     Icon(
                       Icons.chevron_right,
-                      size: 28,
-                      color: Colors.grey.shade600,
+                      size: 26,
+                      color: Colors.grey.shade500,
                     ),
                 ],
               ),
 
               const SizedBox(height: 14),
 
-              /// 📊 INFO ROW
+              /// INFO
               Row(
                 children: [
                   _info(
-                    "Starting Interest",
+                    "Interest",
                     "${bank.interestRate ?? '-'}%",
                   ),
                   const SizedBox(width: 12),
                   _info(
-                    "Max Tenure",
+                    "Tenure",
                     "${bank.tenureYears ?? '-'} yrs",
                   ),
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-              /// ⚡ APPLY NOW BUTTON
+              /// APPLY BUTTON (FLAT iOS GRADIENT)
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 48,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
                   onTap: () => LoanApplyDialog.show(context),
@@ -117,19 +120,10 @@ class BankCard extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           AppColors.primary,
-                          AppColors.primary.withOpacity(0.85),
+                          AppColors.primary.withOpacity(0.9),
                         ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.35),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -137,16 +131,15 @@ class BankCard extends StatelessWidget {
                         Icon(
                           Icons.flash_on_rounded,
                           color: Colors.white,
-                          size: 20,
+                          size: 18,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: 6),
                         Text(
                           "Apply Now",
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 15,
+                            fontSize: 14.5,
                             fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
@@ -161,7 +154,7 @@ class BankCard extends StatelessWidget {
     );
   }
 
-  /// 🖼️ BANK LOGO WITH PLACEHOLDER
+  /// BANK LOGO
   Widget _bankLogo() {
     final logoUrl = bank.bankLogoUrl;
 
@@ -189,7 +182,7 @@ class BankCard extends StatelessWidget {
   Widget _logoPlaceholder() {
     return Icon(
       Icons.account_balance,
-      size: 28,
+      size: 26,
       color: Colors.grey.shade500,
     );
   }
@@ -199,11 +192,19 @@ class BankCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),

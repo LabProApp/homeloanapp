@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:property/theme/app_colors.dart';
-import 'package:property/services/legal_service_api.dart';
-import 'package:property/models/inquiry_request.dart';
+import '../theme/app_colors.dart';
+import '../services/legal_service_api.dart';
+import '../models/inquiry_request.dart';
 
 class InquiryDialog extends StatefulWidget {
   const InquiryDialog({super.key});

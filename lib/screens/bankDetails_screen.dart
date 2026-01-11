@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:property/theme/app_colors.dart';
-import 'package:property/models/bank_model.dart';
+import '../theme/app_colors.dart';
+import '../models/bank_model.dart';
 import 'package:intl/intl.dart';
 /// =======================
 /// BANK DETAIL PAGE

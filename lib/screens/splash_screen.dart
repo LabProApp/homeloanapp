@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'userLogin_screen.dart';
-import 'package:property/theme/app_colors.dart';
+import '../theme/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -62,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
                 /// App Name
                 const Text(
-                  "ABODE ONE",
+                  "ProFinDo",
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,

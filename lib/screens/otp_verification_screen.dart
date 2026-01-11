@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sms_autofill/sms_autofill.dart';
-import 'package:property/services/user_service.dart';
-import 'package:property/theme/app_colors.dart';
-import 'package:property/screens/reset_password_screen.dart';
+import '../services/user_service.dart';
+import '../theme/app_colors.dart';
+import '../screens/reset_password_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String value; // email or mobile

@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:property/screens/userProfile_screen.dart';
-import 'package:property/screens/properyListing_screen.dart';
-import 'package:property/screens/legalServiceProviders_listing.dart';
-import 'package:property/screens/banksListing_screen.dart';
-import 'package:property/screens/webviewhtml.dart';
-import 'package:property/screens/emi_calculator_screen.dart';
-import 'package:property/theme/app_colors.dart';
+
+import 'userProfile_screen.dart';
+import 'properyListing_screen.dart';
+import 'legalServiceProviders_listing.dart';
+import 'banksListing_screen.dart';
+import 'emi_calculator_screen.dart';
+import 'webviewhtml.dart';
+
+import '../theme/app_colors.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final String userId; // ✅ Logged-in User ID
+
+  const DashboardScreen({
+    super.key,
+    required this.userId,
+  });
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -17,25 +24,26 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
+  String _appVersion = "";
 
   late final List<Widget> _pages;
-
-  String _appVersion = "";
 
   @override
   void initState() {
     super.initState();
-    _pages = const [
-      HomeScreen(),           // 0
-      BankPage(),             // 1
-      HomeScreen(),           // 2 Projects
-      LegalServicePage(),     // 3 Documents
-      EmiCalculatorScreen(),  // 4 EMI Calculator (drawer only)
+
+    /// ✅ Pass userId to all required pages
+    _pages = [
+      PropertyListingScreen(),          // 0 Home
+      BankPage(userId: widget.userId),            // 1 Bank Loans
+      PropertyListingScreen(),          // 2 Projects
+      LegalServicePage(userId: widget.userId),    // 3 Legal Docs
+      EmiCalculatorScreen(),                      // 4 Drawer only
     ];
+
     _loadAppVersion();
   }
 
-  /// 🔹 Load app version from pubspec.yaml
   Future<void> _loadAppVersion() async {
     final info = await PackageInfo.fromPlatform();
     setState(() {
@@ -43,7 +51,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  /// ✅ Bottom nav index mapping
   int? get _bottomNavIndex {
     if (_selectedIndex >= 4) return null;
     return _selectedIndex;
@@ -58,6 +65,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         title: const Text(
           "ABODE ONE",
           style: TextStyle(
@@ -66,7 +74,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             letterSpacing: 1,
           ),
         ),
-        foregroundColor: Colors.white,
       ),
 
       /// 📂 DRAWER
@@ -78,19 +85,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => ProfileScreen(
+                      userId: widget.userId, // ✅ pass userId
+                    ),
+                  ),
                 );
               },
-              child: UserAccountsDrawerHeader(
-                decoration: const BoxDecoration(color: AppColors.primary),
-                accountName: const Text(
+              child: const UserAccountsDrawerHeader(
+                decoration: BoxDecoration(color: AppColors.primary),
+                accountName: Text(
                   "Nikhil Aggarwal",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                accountEmail: const Text("nikhil@email.com"),
-                currentAccountPicture: const CircleAvatar(
+                accountEmail: Text("nikhil@email.com"),
+                currentAccountPicture: CircleAvatar(
                   backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 40, color: AppColors.primary),
+                  child: Icon(
+                    Icons.person,
+                    size: 40,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ),
@@ -100,8 +115,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _drawerItem(Icons.business_rounded, "Projects", 2),
             _drawerItem(Icons.document_scanner_rounded, "Legal Documents", 3),
 
+            /// ⭐ MY PROPERTY POSTINGS
+            ListTile(
+              leading: const Icon(Icons.home_work_outlined),
+              title: const Text("My Property Postings"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PropertyListingScreen(
+
+                      userId: widget.userId, // ✅ filter by user
+                    ),
+                  ),
+                );
+              },
+            ),
+
             const Divider(),
 
+            /// 🔧 TOOLS
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Align(
@@ -166,7 +200,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             const Spacer(),
 
-            /// 🔹 APP VERSION (BOTTOM LEFT)
             Padding(
               padding: const EdgeInsets.only(left: 16, bottom: 8),
               child: Align(
@@ -184,14 +217,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text("Logout"),
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: clear session & redirect to login
+              },
             ),
+
             const SizedBox(height: 12),
           ],
         ),
       ),
 
-      /// 📄 PAGE STACK
+      /// 📄 BODY
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,
@@ -232,7 +269,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// 🔹 Drawer item builder
   Widget _drawerItem(IconData icon, String title, int index) {
     return ListTile(
       leading: Icon(icon),

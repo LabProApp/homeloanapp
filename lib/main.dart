@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:property/screens/splash_screen.dart';
-import 'package:property/network/service_locator.dart';
+import '../screens/splash_screen.dart';
+import '../network/service_locator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

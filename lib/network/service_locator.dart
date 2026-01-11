@@ -1,6 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
-import 'package:property/services/emi_service.dart';
+import '../services/emi_service.dart';
 
 final GetIt sl = GetIt.instance;
 

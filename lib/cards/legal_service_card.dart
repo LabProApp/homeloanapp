@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:property/theme/app_colors.dart';
-import 'package:property/models/legal_service_model.dart';
+import '../theme/app_colors.dart';
+import '../models/legal_service_model.dart';
 
 class LegalServiceCard extends StatelessWidget {
   final LegalService service;
@@ -18,10 +17,13 @@ class LegalServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      elevation: 0.5, // 🔽 minimal
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: Colors.grey.shade200, // subtle border
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -31,19 +33,9 @@ class LegalServiceCard extends StatelessWidget {
             /// HEADER
             Row(
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: AppColors.primary,
-                  child: Text(
-                    service.legalName[0].toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                _Avatar(letter: service.legalName),
                 const SizedBox(width: 12),
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,13 +43,17 @@ class LegalServiceCard extends StatelessWidget {
                       Text(
                         service.legalName,
                         style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         "${service.city}, ${service.state}",
-                        style: const TextStyle(fontSize: 13),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     ],
                   ),
@@ -67,7 +63,7 @@ class LegalServiceCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            /// SERVICES
+            /// SERVICES (FLAT CHIPS)
             Wrap(
               spacing: 8,
               runSpacing: 6,
@@ -78,12 +74,19 @@ class LegalServiceCard extends StatelessWidget {
                     s,
                     style: const TextStyle(fontSize: 12),
                   ),
+                  backgroundColor: Colors.grey.shade100,
+                  side: BorderSide(color: Colors.grey.shade300),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               )
                   .toList(),
             ),
 
-            const Divider(),
+            const SizedBox(height: 12),
+            Divider(height: 1, color: Colors.grey.shade300),
+            const SizedBox(height: 14),
 
             /// ACTIONS
             Row(
@@ -114,6 +117,39 @@ class LegalServiceCard extends StatelessWidget {
   }
 }
 
+/// ---------------- AVATAR ----------------
+
+class _Avatar extends StatelessWidget {
+  final String letter;
+
+  const _Avatar({required this.letter});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.primary.withOpacity(0.3),
+        ),
+      ),
+      child: Center(
+        child: Text(
+          letter[0].toUpperCase(),
+          style: TextStyle(
+            color: AppColors.primary,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// ---------------- ACTION BUTTON ----------------
 
 class _ActionButton extends StatelessWidget {
@@ -135,17 +171,19 @@ class _ActionButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: Container(
-        height: 46,
+        height: 44,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withOpacity(0.08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.4)),
+          border: Border.all(
+            color: color.withOpacity(0.35),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 18, color: color),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:property/models/property_model.dart';
-import 'package:property/services/property_api_service.dart';
-import 'package:property/theme/app_colors.dart';
+import '../models/property_model.dart';
+import '../services/property_api_service.dart';
+import '../theme/app_colors.dart';
 
 class PostPropertyScreen extends StatefulWidget {
-  const PostPropertyScreen({super.key});
+  final String? userId;
+  const PostPropertyScreen({
+    super.key,
+    this.userId,
+  });
 
   @override
   State<PostPropertyScreen> createState() => _PostPropertyScreenState();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:property/models/bank_model.dart';
-import 'package:property/theme/app_colors.dart';
+import '../models/bank_model.dart';
+import '../theme/app_colors.dart';
 import 'package:intl/intl.dart';
 class BankCompareDialog extends StatefulWidget {
   final List<Bank> banks;

@@ -1,21 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:property/models/property_model.dart';
-import 'package:property/services/property_api_service.dart';
-import 'package:property/theme/app_colors.dart';
-import 'package:property/cards/property_card.dart';
-import 'package:property/screens/propertyDetail_screen.dart';
-import 'package:property/screens/propertyAdd_screen.dart';
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+import '../models/property_model.dart';
+import '../services/property_api_service.dart';
+import '../theme/app_colors.dart';
+import '../cards/property_card.dart';
+import '../screens/propertyDetail_screen.dart';
+import '../screens/propertyAdd_screen.dart';
+
+class PropertyListingScreen extends StatefulWidget {
+  final String? userId; // ✅ OPTIONAL userId
+
+  const PropertyListingScreen({
+    super.key,
+    this.userId,
+  });
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<PropertyListingScreen> createState() => _PropertyListingScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _PropertyListingScreenState extends State<PropertyListingScreen> {
   final TextEditingController _searchController = TextEditingController();
+
   List<PropertyModel> _allProperties = [];
   List<PropertyModel> _filteredProperties = [];
+
   bool _isLoading = true;
   String _error = "";
 
@@ -25,9 +33,15 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadProperties();
   }
 
+  /// 🔄 LOAD PROPERTIES (ALL or USER-SPECIFIC)
   Future<void> _loadProperties() async {
     try {
-      final data = await PropertyApiService().fetchProperties();
+      final service = PropertyApiService();
+
+      final data = widget.userId != null
+          ? await service.fetchProperties( userId: widget.userId,)
+          : await service.fetchProperties();
+
       setState(() {
         _allProperties = data;
         _filteredProperties = data;
@@ -41,12 +55,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// 🔍 SEARCH FILTER
   void _search(String query) {
     setState(() {
       _filteredProperties = _allProperties.where((p) {
-        return (p.title ?? '').toLowerCase().contains(query.toLowerCase());
+        return (p.title ?? '')
+            .toLowerCase()
+            .contains(query.toLowerCase());
       }).toList();
-
     });
   }
 
@@ -55,10 +71,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.primary,
 
-      // 🔶 BODY
+      /// 🔶 BODY
       body: Column(
         children: [
-          // 🔍 SEARCH BAR + FAVORITE + FILTER
+          /// 🔍 SEARCH BAR + ACTIONS
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
             child: Row(
@@ -82,12 +98,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: _search,
-                      textAlignVertical: TextAlignVertical.center, // ✅ KEY
+                      textAlignVertical: TextAlignVertical.center,
                       decoration: const InputDecoration(
                         hintText: "Search properties...",
                         border: InputBorder.none,
                         isDense: true,
-                        prefixIcon: Icon(Icons.search, size: 20), // ✅ MUST use prefixIcon
+                        prefixIcon: Icon(Icons.search, size: 20),
                       ),
                     ),
                   ),
@@ -95,7 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(width: 8),
 
-                /// ❤️ FAVORITE
                 _actionButton(
                   icon: Icons.favorite_border,
                   onTap: () {},
@@ -103,7 +118,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(width: 8),
 
-                /// ⚙️ FILTER
                 _actionButton(
                   icon: Icons.filter_list,
                   onTap: () {},
@@ -112,8 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-
-          // 🔶 PROPERTY LIST
+          /// 🔶 PROPERTY LIST
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -132,22 +145,27 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             )
                 : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding:
+              const EdgeInsets.symmetric(vertical: 6),
               physics:
-              const BouncingScrollPhysics(), // ✅ BOUNCY SCROLL
+              const BouncingScrollPhysics(),
               itemCount: _filteredProperties.length,
               itemBuilder: (context, index) {
-                final property = _filteredProperties[index];
+                final property =
+                _filteredProperties[index];
+
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding:
+                  const EdgeInsets.only(bottom: 8),
                   child: InkWell(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => PropertyDetailScreen(
-                            property: property,
-                          ),
+                          builder: (_) =>
+                              PropertyDetailScreen(
+                                property: property,
+                              ),
                         ),
                       );
                     },
@@ -168,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      // 🔶 BIGGER FLOATING ACTION BUTTON
+      /// ➕ ADD PROPERTY BUTTON
       floatingActionButton: SizedBox(
         width: 70,
         height: 70,
@@ -178,7 +196,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const PostPropertyScreen(),
+                builder: (_) => PostPropertyScreen(
+                  userId: widget.userId, // ✅ pass userId
+                ),
               ),
             );
           },
@@ -188,10 +208,12 @@ class _HomeScreenState extends State<HomeScreen> {
             size: 36,
           ),
         ),
-    ),
+      ),
     );
   }
 }
+
+/// 🔘 COMMON ACTION BUTTON
 Widget _actionButton({
   required IconData icon,
   required VoidCallback onTap,

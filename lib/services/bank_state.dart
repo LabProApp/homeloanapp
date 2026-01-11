@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:property/models/bank_model.dart';
+import '../models/bank_model.dart';
 
 abstract class BankState extends Equatable{
   @override

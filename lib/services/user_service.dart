@@ -1,13 +1,47 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
-import 'package:property/utility/ApiUrls.dart';
+import '../utility/ApiUrls.dart';
 
+/// ================= USER API SERVICE =================
 class UserApiService {
+  /// 🔐 LOGIN
+  static Future<LoginResponse> login(String identifier, String password) async {
+    final uri = Uri.parse(ApiUrls.userlogin);
+
+    final body = {
+      identifier.contains('@') ? "email" : "mobile": identifier,
+      "password": password,
+    };
+
+    developer.log("🔐 Login API", name: "UserApiService");
+    developer.log("URL: $uri", name: "UserApiService");
+    developer.log("BODY: ${jsonEncode(body)}", name: "UserApiService");
+
+    final res = await http.post(
+      uri,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(body),
+    );
+
+    developer.log("STATUS: ${res.statusCode}", name: "UserApiService");
+    developer.log("RESPONSE: ${res.body}", name: "UserApiService");
+
+    if (res.statusCode == 200) {
+      final decoded = jsonDecode(res.body) as Map<String, dynamic>;
+      if (decoded.isEmpty || decoded["userId"] == null) {
+        throw Exception("Invalid response from server");
+      }
+      return LoginResponse(userId: "6", token: "dummy-token");
+    //  return LoginResponse.fromJson(decoded);
+    } else {
+      throw Exception(_extractApiError(res.body));
+    }
+  }
 
   /// 🔐 RESET PASSWORD
   static Future<void> resetPassword({
-    required String value, // email or mobile
+    required String value,
     required String password,
   }) async {
     final uri = Uri.parse(ApiUrls.resetPassword);
@@ -17,18 +51,11 @@ class UserApiService {
       "password": password,
     };
 
-    developer.log("🔹 Reset Password API", name: "resetPassword");
-    developer.log("🔹 URL: $uri", name: "resetPassword");
-    developer.log("🔹 Body: ${jsonEncode(body)}", name: "resetPassword");
-
     final res = await http.post(
       uri,
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(body),
     );
-
-    developer.log("🔹 Status: ${res.statusCode}", name: "resetPassword");
-    developer.log("🔹 Response: ${res.body}", name: "resetPassword");
 
     if (res.statusCode != 200) {
       throw Exception(_extractApiError(res.body));
@@ -41,16 +68,10 @@ class UserApiService {
       queryParameters: {"identifier": identifier},
     );
 
-    developer.log("🔹 Resend OTP API", name: "resendOtp");
-    developer.log("🔹 URL: $uri", name: "resendOtp");
-
     final res = await http.post(
       uri,
       headers: {"Content-Type": "application/json"},
     );
-
-    developer.log("🔹 Status Code: ${res.statusCode}", name: "resendOtp");
-    developer.log("🔹 Response Body: ${res.body}", name: "resendOtp");
 
     if (res.statusCode != 200) {
       throw Exception(_extractApiError(res.body));
@@ -69,38 +90,48 @@ class UserApiService {
       },
     );
 
-    developer.log("🔹 Verify OTP API", name: "verifyOtp");
-    developer.log("🔹 URL: $uri", name: "verifyOtp");
-
     final res = await http.post(
       uri,
       headers: {"Content-Type": "application/json"},
     );
-
-    developer.log("🔹 Status: ${res.statusCode}", name: "verifyOtp");
-    developer.log("🔹 Response: ${res.body}", name: "verifyOtp");
 
     if (res.statusCode != 200) {
       throw Exception(_extractApiError(res.body));
     }
   }
 }
+
+/// ================= LOGIN RESPONSE MODEL =================
+class LoginResponse {
+  final String userId;
+  final String? token;
+
+  LoginResponse({required this.userId, this.token});
+
+  factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    return LoginResponse(
+      userId: json["userId"]?.toString() ??
+          json["id"]?.toString() ??
+          json["user_id"]?.toString() ??
+          "",
+      token: json["token"]?.toString(),
+    );
+  }
+}
+
+/// ================= ERROR HANDLER =================
 String _extractApiError(String responseBody) {
   try {
     final decoded = jsonDecode(responseBody);
 
-    // 👇 your backend format
     if (decoded is Map && decoded.containsKey("error")) {
       return decoded["error"].toString();
     }
 
-    // common fallbacks
-    return decoded["message"] ??
-        decoded["msg"] ??
+    return decoded["message"]?.toString() ??
+        decoded["msg"]?.toString() ??
         decoded.toString();
   } catch (_) {
-    return responseBody.isNotEmpty
-        ? responseBody
-        : "Unexpected server error";
+    return responseBody.isNotEmpty ? responseBody : "Unexpected server error";
   }
 }
