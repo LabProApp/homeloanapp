@@ -1,5 +1,11 @@
 import 'dart:ui';
+import 'dart:async';
+import 'dart:io';
+import 'dart:developer' as dev;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
 import 'Dashboard.dart';
 import 'otp_verification_screen.dart';
 import 'user_forgot_password.dart';
@@ -27,10 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background
           Image.asset('assets/images/splash_bg.jpg', fit: BoxFit.cover),
 
-          // Blur overlay
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
             child: Container(color: Colors.black.withOpacity(0.35)),
@@ -51,12 +55,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text(
                     "ProFinDo",
                     style: TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                   const SizedBox(height: 5),
                   const Text(
                     "Find. Finance. Finalize.",
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                    style: TextStyle(fontSize: 16, color: Colors.deepOrange),
                   ),
                   const SizedBox(height: 30),
 
@@ -64,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     height: 55,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(12),
                       color: Colors.white.withOpacity(0.15),
                     ),
                     child: Row(
@@ -99,7 +105,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: const Text(
                           "Forgot Password?",
-                          style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -107,7 +115,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 30),
 
-                  // Button
                   _gradientButton(
                     text: selectedTab == 0 ? "Sign In" : "Sign Up",
                     onTap: _loading
@@ -126,7 +133,8 @@ class _LoginScreenState extends State<LoginScreen> {
   // ================= ACTIONS =================
 
   Future<void> _login() async {
-    if (emailOrMobileController.text.isEmpty || passwordController.text.isEmpty) {
+    if (emailOrMobileController.text.isEmpty ||
+        passwordController.text.isEmpty) {
       _showError("Please enter credentials");
       return;
     }
@@ -134,26 +142,40 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
 
     try {
-      // ✅ UserApiService returns LoginResponse directly
       final LoginResponse response = await UserApiService.login(
         emailOrMobileController.text.trim(),
         passwordController.text.trim(),
       );
 
       if (response.userId.isEmpty) {
-        _showError("User ID not found in response");
+        _showError("Login failed. User ID missing.");
         return;
       }
 
-      // Navigate to Dashboard with userId
+      if (!mounted) return;
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => DashboardScreen(userId: response.userId)),
+        MaterialPageRoute(
+          builder: (_) => DashboardScreen(userId: response.userId),
+        ),
       );
-    } catch (e) {
+    } on SocketException catch (e, s) {
+      _logError("No internet connection", e, s);
+      _showError("No internet connection");
+    } on TimeoutException catch (e, s) {
+      _logError("Request timeout", e, s);
+      _showError("Request timed out. Try again.");
+    } on FormatException catch (e, s) {
+      _logError("Invalid response format", e, s);
+      _showError("Invalid server response");
+    } catch (e, s) {
+      _logError("Unknown login error", e, s);
       _showError("Invalid login credentials");
     } finally {
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -176,10 +198,25 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       );
-    } catch (e) {
+    } catch (e, s) {
+      _logError("OTP send failed", e, s);
       _showError("Failed to send OTP");
     } finally {
       setState(() => _loading = false);
+    }
+  }
+
+  // ================= LOGGING =================
+
+  void _logError(String message, Object error, StackTrace stackTrace) {
+    if (kDebugMode) {
+      dev.log(
+        message,
+        name: 'LoginScreen',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      debugPrint('ERROR: $error');
     }
   }
 
@@ -200,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             title,
@@ -217,7 +254,8 @@ class _LoginScreenState extends State<LoginScreen> {
     alignment: Alignment.centerLeft,
     child: Text(
       text,
-      style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
+      style: const TextStyle(
+          color: Colors.white70, fontWeight: FontWeight.w500),
     ),
   );
 
@@ -249,10 +287,13 @@ class _LoginScreenState extends State<LoginScreen> {
         hintStyle: const TextStyle(color: Colors.white54),
         suffixIcon: IconButton(
           icon: Icon(
-            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+            _isPasswordVisible
+                ? Icons.visibility
+                : Icons.visibility_off,
             color: Colors.white70,
           ),
-          onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+          onPressed: () =>
+              setState(() => _isPasswordVisible = !_isPasswordVisible),
         ),
         enabledBorder: _border(),
         focusedBorder: _border(focus: true),
@@ -261,8 +302,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   OutlineInputBorder _border({bool focus = false}) => OutlineInputBorder(
-    borderRadius: BorderRadius.circular(14),
-    borderSide: BorderSide(color: focus ? Colors.white : Colors.white38),
+    borderRadius: BorderRadius.circular(12),
+    borderSide:
+    BorderSide(color: focus ? Colors.white : Colors.white38),
   );
 
   Widget _gradientButton({required String text, VoidCallback? onTap}) {
@@ -274,7 +316,7 @@ class _LoginScreenState extends State<LoginScreen> {
           gradient: const LinearGradient(
             colors: [AppColors.primary, AppColors.secondary],
           ),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: ElevatedButton(
           onPressed: onTap,
@@ -284,7 +326,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           child: _loading
               ? const CircularProgressIndicator(color: Colors.white)
-              : Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+              : Text(text,
+              style: const TextStyle(fontWeight: FontWeight.w600)),
         ),
       ),
     );

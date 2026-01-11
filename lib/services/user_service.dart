@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../utility/ApiUrls.dart';
-
+import 'dart:async';
+import 'dart:io';
 /// ================= USER API SERVICE =================
 class UserApiService {
   /// 🔐 LOGIN
@@ -18,26 +19,49 @@ class UserApiService {
     developer.log("URL: $uri", name: "UserApiService");
     developer.log("BODY: ${jsonEncode(body)}", name: "UserApiService");
 
-    final res = await http.post(
-      uri,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(body),
-    );
+    http.Response res;
+
+    try {
+      res = await http
+          .post(
+        uri,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      )
+          .timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      throw Exception("Login request timed out");
+    } on SocketException {
+      throw Exception("No internet connection");
+    }
 
     developer.log("STATUS: ${res.statusCode}", name: "UserApiService");
     developer.log("RESPONSE: ${res.body}", name: "UserApiService");
 
-    if (res.statusCode == 200) {
-      final decoded = jsonDecode(res.body) as Map<String, dynamic>;
-      if (decoded.isEmpty || decoded["userId"] == null) {
-        throw Exception("Invalid response from server");
-      }
-      return LoginResponse(userId: "6", token: "dummy-token");
-    //  return LoginResponse.fromJson(decoded);
-    } else {
+    if (res.statusCode != 200) {
       throw Exception(_extractApiError(res.body));
     }
+
+    final Map<String, dynamic> decoded;
+
+    try {
+      decoded = jsonDecode(res.body) as Map<String, dynamic>;
+    } catch (_) {
+      throw Exception("Invalid JSON received from server");
+    }
+
+    // 🔴 Validate response structure
+    if (decoded["id"] == null) {
+      throw Exception("User ID missing in response");
+    }
+
+    // ✅ Build LoginResponse safely
+    return LoginResponse(
+      userId: decoded["id"].toString(),
+      token: decoded["token"]?.toString(), // future-proof
+    );
   }
+
 
   /// 🔐 RESET PASSWORD
   static Future<void> resetPassword({
