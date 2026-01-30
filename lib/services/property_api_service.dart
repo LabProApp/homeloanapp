@@ -7,46 +7,84 @@ import '../utility/ApiUrls.dart';
 class PropertyApiService {
 
   /// 🔹 Fetch Properties (ALL or USER-SPECIFIC)
-  Future<List<PropertyModel>> fetchProperties({String? userId}) async {
+  Future<List<PropertyModel>> fetchProperties({
+    String? userId,
+    String? title,
+    String? address,
+    String? city,
+    String? type,
+    String? category,
+    String? postedBy,
+    String? constructionStatus,
+    String? currency,
+    String? location,
+    double? minPrice,
+    double? maxPrice,
+    int? minBedrooms,
+    int? maxBedrooms,
+    int? minBathrooms,
+    int? maxBathrooms,
+    double? minArea,
+    double? maxArea,
+    String? amenity,
+    String? rentOrSale,
+    String? postDate,
+    String? postedByUser,
+  }) async {
     try {
-      final Uri uri;
+      final Map<String, String> queryParams = {};
 
-      if (userId != null && userId.isNotEmpty) {
-        /// ✅ user-specific properties
-        uri = Uri.parse(
-          "${ApiUrls.propertySearch}?userId=$userId",
-        );
-      } else {
-        /// ✅ all properties
-        uri = Uri.parse(ApiUrls.propertySearch);
+      void addParam(String key, dynamic value) {
+        if (value != null && value.toString().isNotEmpty) {
+          queryParams[key] = value.toString();
+        }
       }
+
+      addParam("userId", userId);
+      addParam("title", title);
+      addParam("address", address);
+      addParam("city", city);
+      addParam("type", type);
+      addParam("category", category);
+      addParam("postedBy", postedBy);
+      addParam("constructionStatus", constructionStatus);
+      addParam("currency", currency);
+      addParam("location", location);
+      addParam("minPrice", minPrice);
+      addParam("maxPrice", maxPrice);
+      addParam("minBedrooms", minBedrooms);
+      addParam("maxBedrooms", maxBedrooms);
+      addParam("minBathrooms", minBathrooms);
+      addParam("maxBathrooms", maxBathrooms);
+      addParam("minArea", minArea);
+      addParam("maxArea", maxArea);
+      addParam("amenity", amenity);
+      addParam("rentOrSale", rentOrSale);
+      addParam("postDate", postDate);
+      addParam("postedByUser", postedByUser);
+
+      final uri = Uri.parse("${ApiUrls.propertySearch}")
+          .replace(queryParameters: queryParams.isEmpty ? null : queryParams);
 
       developer.log("📤 FETCH PROPERTIES: $uri");
 
       final response = await http.get(uri);
 
-      developer.log(
-        "📥 FETCH PROPERTIES STATUS: ${response.statusCode}",
-      );
-      developer.log(
-        "📥 FETCH PROPERTIES BODY: ${response.body}",
-      );
+      developer.log("📥 FETCH PROPERTIES STATUS: ${response.statusCode}");
+      developer.log("📥 FETCH PROPERTIES BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
-        return data
-            .map((e) => PropertyModel.fromJson(e))
-            .toList();
+        return data.map((e) => PropertyModel.fromJson(e)).toList();
       } else {
-        throw Exception(
-          "Failed to load properties (${response.statusCode})",
-        );
+        throw Exception("Failed to load properties (${response.statusCode})");
       }
     } catch (e) {
       developer.log("❌ FETCH PROPERTIES ERROR: $e");
       rethrow;
     }
   }
+
 
   /// 🔹 Add Property
   static Future<bool> addProperty(PropertyModel property) async {

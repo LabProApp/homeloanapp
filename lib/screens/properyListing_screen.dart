@@ -5,9 +5,10 @@ import '../theme/app_colors.dart';
 import '../cards/property_card.dart';
 import '../screens/propertyDetail_screen.dart';
 import '../screens/propertyAdd_screen.dart';
+import '../screens/property_filter_dialog.dart';
 
 class PropertyListingScreen extends StatefulWidget {
-  final String? userId; // ✅ OPTIONAL userId
+  final String? userId;
 
   const PropertyListingScreen({
     super.key,
@@ -21,30 +22,70 @@ class PropertyListingScreen extends StatefulWidget {
 class _PropertyListingScreenState extends State<PropertyListingScreen> {
   final TextEditingController _searchController = TextEditingController();
 
-  List<PropertyModel> _allProperties = [];
-  List<PropertyModel> _filteredProperties = [];
+  List<PropertyModel> _properties = [];
 
   bool _isLoading = true;
   String _error = "";
 
+  /// 🔁 TOGGLES
+  bool isResidential = true;
+  bool isBuy = true;
+
+  /// 🔎 ADVANCED FILTERS
+  String? city;
+  String? category;
+  int? minBedrooms;
+  int? minBathrooms;
+  double? minPrice;
+  double? maxPrice;
+
   @override
   void initState() {
     super.initState();
-    _loadProperties();
+    _refreshFromApi();
   }
 
-  /// 🔄 LOAD PROPERTIES (ALL or USER-SPECIFIC)
-  Future<void> _loadProperties() async {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  /// 🔄 LOAD PROPERTIES FROM API USING FILTERS
+  Future<void> _loadProperties({
+    String? search,
+    String? type,
+    String? listingType,
+    String? city,
+    String? category,
+    int? minBedrooms,
+    int? minBathrooms,
+    double? minPrice,
+    double? maxPrice,
+  }) async {
     try {
+      setState(() {
+        _isLoading = true;
+        _error = "";
+      });
+
       final service = PropertyApiService();
 
-      final data = widget.userId != null
-          ? await service.fetchProperties( userId: widget.userId,)
-          : await service.fetchProperties();
+      final data = await service.fetchProperties(
+        title: search,
+        type: type,
+        rentOrSale: listingType,
+        city: city,
+        category: category,
+        minBedrooms: minBedrooms,
+        minBathrooms: minBathrooms,
+        minPrice: minPrice,
+        maxPrice: maxPrice,
+        postedByUser: widget.userId,
+      );
 
       setState(() {
-        _allProperties = data;
-        _filteredProperties = data;
+        _properties = data;
         _isLoading = false;
       });
     } catch (e) {
@@ -55,31 +96,34 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     }
   }
 
-  /// 🔍 SEARCH FILTER
-  void _search(String query) {
-    setState(() {
-      _filteredProperties = _allProperties.where((p) {
-        return (p.title ?? '')
-            .toLowerCase()
-            .contains(query.toLowerCase());
-      }).toList();
-    });
+  /// 📡 CALL API WITH CURRENT FILTER VALUES
+  void _refreshFromApi() {
+    _loadProperties(
+      search: _searchController.text.trim().isEmpty
+          ? null
+          : _searchController.text.trim(),
+      type: isResidential ? "residential" : "commercial",
+      listingType: isBuy ? "buy" : "rent",
+      city: city,
+      category: category,
+      minBedrooms: minBedrooms,
+      minBathrooms: minBathrooms,
+      minPrice: minPrice,
+      maxPrice: maxPrice,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primary,
-
-      /// 🔶 BODY
       body: Column(
         children: [
-          /// 🔍 SEARCH BAR + ACTIONS
+          /// 🔍 SEARCH BAR
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
             child: Row(
               children: [
-                /// 🔍 SEARCH
                 Expanded(
                   child: Container(
                     height: 40,
@@ -87,46 +131,42 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
                     ),
                     child: TextField(
                       controller: _searchController,
-                      onChanged: _search,
-                      textAlignVertical: TextAlignVertical.center,
+                      onSubmitted: (_) => _refreshFromApi(),
                       decoration: const InputDecoration(
                         hintText: "Search properties...",
                         border: InputBorder.none,
-                        isDense: true,
                         prefixIcon: Icon(Icons.search, size: 20),
                       ),
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 8),
-
-                _actionButton(
-                  icon: Icons.favorite_border,
-                  onTap: () {},
-                ),
-
+                _actionButton(icon: Icons.favorite_border, onTap: () {}),
                 const SizedBox(width: 8),
-
                 _actionButton(
                   icon: Icons.filter_list,
-                  onTap: () {},
+                  onTap: _openFilterDialog,
                 ),
               ],
             ),
           ),
 
-          /// 🔶 PROPERTY LIST
+          /// 🔁 TOGGLES
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _propertyTypeToggle(),
+                _buyRentToggle(),
+              ],
+            ),
+          ),
+
+          /// 🏠 PROPERTY LIST
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -137,7 +177,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                 style: const TextStyle(color: Colors.red),
               ),
             )
-                : _filteredProperties.isEmpty
+                : _properties.isEmpty
                 ? const Center(
               child: Text(
                 "No properties found",
@@ -147,12 +187,10 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                 : ListView.builder(
               padding:
               const EdgeInsets.symmetric(vertical: 6),
-              physics:
-              const BouncingScrollPhysics(),
-              itemCount: _filteredProperties.length,
+              physics: const BouncingScrollPhysics(),
+              itemCount: _properties.length,
               itemBuilder: (context, index) {
-                final property =
-                _filteredProperties[index];
+                final property = _properties[index];
 
                 return Padding(
                   padding:
@@ -170,7 +208,6 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                       );
                     },
                     child: SizedBox(
-                      width: double.infinity,
                       height: 600,
                       child: PropertyCard(
                         property: property,
@@ -186,7 +223,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
         ],
       ),
 
-      /// ➕ ADD PROPERTY BUTTON
+      /// ➕ ADD PROPERTY
       floatingActionButton: SizedBox(
         width: 70,
         height: 70,
@@ -197,17 +234,77 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => PostPropertyScreen(
-                  userId: widget.userId, // ✅ pass userId
+                  userId: widget.userId,
                 ),
               ),
             );
           },
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 36,
-          ),
+          child: const Icon(Icons.add, size: 36),
         ),
+      ),
+    );
+  }
+
+  // ================= TOGGLES =================
+
+  Widget _propertyTypeToggle() {
+    return ToggleButtons(
+      isSelected: [isResidential, !isResidential],
+      borderRadius: BorderRadius.circular(12),
+      constraints: const BoxConstraints(minHeight: 34, minWidth: 90),
+      selectedColor: Colors.white,
+      fillColor: AppColors.secondary,
+      color: Colors.black87,
+      onPressed: (index) {
+        setState(() {
+          isResidential = index == 0;
+        });
+        _refreshFromApi();
+      },
+      children: const [
+        Text("Residential", style: TextStyle(fontSize: 12)),
+        Text("Commercial", style: TextStyle(fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buyRentToggle() {
+    return ToggleButtons(
+      isSelected: [isBuy, !isBuy],
+      borderRadius: BorderRadius.circular(12),
+      constraints: const BoxConstraints(minHeight: 34, minWidth: 70),
+      selectedColor: Colors.white,
+      fillColor: AppColors.secondary,
+      color: Colors.black87,
+      onPressed: (index) {
+        setState(() {
+          isBuy = index == 0;
+        });
+        _refreshFromApi();
+      },
+      children: const [
+        Text("Buy", style: TextStyle(fontSize: 12)),
+        Text("Rent", style: TextStyle(fontSize: 12)),
+      ],
+    );
+  }
+
+  // ================= FILTER DIALOG =================
+
+  void _openFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => PropertyFilterDialog(
+        onApply: (Map<String, dynamic> filters) {
+          city = filters["city"] as String?;
+          category = filters["category"] as String?;
+          minBedrooms = filters["minBedrooms"] as int?;
+          minBathrooms = filters["minBathrooms"] as int?;
+          minPrice = filters["minPrice"] as double?;
+          maxPrice = filters["maxPrice"] as double?;
+
+          _refreshFromApi();
+        },
       ),
     );
   }
@@ -224,17 +321,9 @@ Widget _actionButton({
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(14),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 6,
-          offset: const Offset(0, 3),
-        ),
-      ],
     ),
     child: IconButton(
-      padding: EdgeInsets.zero,
-      icon: Icon(icon, size: 20, color: Colors.black),
+      icon: Icon(icon, size: 20),
       onPressed: onTap,
     ),
   );

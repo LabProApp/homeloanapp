@@ -5,6 +5,7 @@ import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Dashboard.dart';
 import 'otp_verification_screen.dart';
@@ -20,12 +21,34 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  int selectedTab = 0; // 0 = Login, 1 = Signup
+  int selectedTab = 0;
   bool _isPasswordVisible = false;
   bool _loading = false;
 
   final TextEditingController emailOrMobileController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfLoggedIn();
+  }
+
+  /// 🔐 AUTO LOGIN CHECK
+  Future<void> _checkIfLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString("user_id");
+
+    if (userId != null && userId.isNotEmpty) {
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DashboardScreen(userId: userId),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,14 +69,16 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 50),
+
                   const CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.home, size: 40, color: Colors.deepOrange),
+                    radius: 50,
+                    backgroundImage:
+                    AssetImage('assets/images/ic_launcher.png'),
                   ),
+
                   const SizedBox(height: 15),
                   const Text(
-                    "ProFinDo",
+                    "KeyBricks",
                     style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -62,11 +87,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 5),
                   const Text(
                     "Find. Finance. Finalize.",
-                    style: TextStyle(fontSize: 16, color: Colors.deepOrange),
+                    style:
+                    TextStyle(fontSize: 16, color: Colors.deepOrange),
                   ),
+
                   const SizedBox(height: 30),
 
-                  // Tabs
+                  /// TABS
                   Container(
                     height: 55,
                     decoration: BoxDecoration(
@@ -80,6 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 25),
 
                   _label("Email or Mobile"),
@@ -88,6 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     hint: "Enter email or mobile",
                     icon: Icons.email_outlined,
                   ),
+
                   const SizedBox(height: 18),
 
                   if (selectedTab == 0) ...[
@@ -117,9 +146,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   _gradientButton(
                     text: selectedTab == 0 ? "Sign In" : "Sign Up",
-                    onTap: _loading
-                        ? null
-                        : (selectedTab == 0 ? _login : _signup),
+                    onTap:
+                    _loading ? null : (selectedTab == 0 ? _login : _signup),
                   ),
                 ],
               ),
@@ -152,6 +180,10 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
+      /// ✅ SAVE LOGIN
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("user_id", response.userId);
+
       if (!mounted) return;
 
       Navigator.pushReplacement(
@@ -173,9 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _logError("Unknown login error", e, s);
       _showError("Invalid login credentials");
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -206,17 +236,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ================= LOGGING =================
+  // ================= HELPERS =================
 
   void _logError(String message, Object error, StackTrace stackTrace) {
     if (kDebugMode) {
-      dev.log(
-        message,
-        name: 'LoginScreen',
-        error: error,
-        stackTrace: stackTrace,
-      );
-      debugPrint('ERROR: $error');
+      dev.log(message,
+          name: 'LoginScreen', error: error, stackTrace: stackTrace);
     }
   }
 
@@ -225,8 +250,6 @@ class _LoginScreenState extends State<LoginScreen> {
       SnackBar(backgroundColor: Colors.red, content: Text(msg)),
     );
   }
-
-  // ================= UI HELPERS =================
 
   Widget _tabButton(String title, int index) {
     final isSelected = selectedTab == index;
@@ -252,11 +275,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _label(String text) => Align(
     alignment: Alignment.centerLeft,
-    child: Text(
-      text,
-      style: const TextStyle(
-          color: Colors.white70, fontWeight: FontWeight.w500),
-    ),
+    child: Text(text,
+        style: const TextStyle(
+            color: Colors.white70, fontWeight: FontWeight.w500)),
   );
 
   Widget _textField({
@@ -313,9 +334,8 @@ class _LoginScreenState extends State<LoginScreen> {
       height: 54,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primary, AppColors.secondary],
-          ),
+          gradient:
+          const LinearGradient(colors: [AppColors.primary, AppColors.secondary]),
           borderRadius: BorderRadius.circular(12),
         ),
         child: ElevatedButton(

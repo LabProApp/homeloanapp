@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'userLogin_screen.dart';
 import 'userProfile_screen.dart';
 import 'properyListing_screen.dart';
 import 'legalServiceProviders_listing.dart';
@@ -11,7 +13,7 @@ import 'webviewhtml.dart';
 import '../theme/app_colors.dart';
 
 class DashboardScreen extends StatefulWidget {
-  final String userId; // ✅ Logged-in User ID
+  final String userId;
 
   const DashboardScreen({
     super.key,
@@ -26,28 +28,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
   String _appVersion = "";
 
+  String _userName = "User";
+  String _userEmail = "";
+
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
 
-    /// ✅ Pass userId to all required pages
     _pages = [
-      PropertyListingScreen(),          // 0 Home
-      BankPage(userId: widget.userId),            // 1 Bank Loans
-      PropertyListingScreen(),          // 2 Projects
-      LegalServicePage(userId: widget.userId),    // 3 Legal Docs
-      EmiCalculatorScreen(),                      // 4 Drawer only
+      const PropertyListingScreen(),                // Home
+      BankPage(userId: widget.userId),              // Loans
+      const PropertyListingScreen(),                // Projects
+      LegalServicePage(userId: widget.userId),      // Legal
+      const EmiCalculatorScreen(),                  // Drawer only
     ];
 
     _loadAppVersion();
+    _loadUserInfo();
   }
 
   Future<void> _loadAppVersion() async {
     final info = await PackageInfo.fromPlatform();
     setState(() {
       _appVersion = "v${info.version} (${info.buildNumber})";
+    });
+  }
+
+  Future<void> _loadUserInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString("userName") ?? "User";
+      _userEmail = prefs.getString("userEmail") ?? "";
     });
   }
 
@@ -67,7 +80,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         title: const Text(
-          "ABODE ONE",
+          "KeyBricks",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -86,20 +99,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ProfileScreen(
-                      userId: widget.userId, // ✅ pass userId
-                    ),
+                    builder: (_) => ProfileScreen(userId: widget.userId),
                   ),
                 );
               },
-              child: const UserAccountsDrawerHeader(
-                decoration: BoxDecoration(color: AppColors.primary),
+              child: UserAccountsDrawerHeader(
+                decoration: const BoxDecoration(color: AppColors.primary),
                 accountName: Text(
-                  "Nikhil Aggarwal",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  _userName,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                accountEmail: Text("nikhil@email.com"),
-                currentAccountPicture: CircleAvatar(
+                accountEmail: Text(_userEmail),
+                currentAccountPicture: const CircleAvatar(
                   backgroundColor: Colors.white,
                   child: Icon(
                     Icons.person,
@@ -125,8 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => PropertyListingScreen(
-
-                      userId: widget.userId, // ✅ filter by user
+                      userId: widget.userId,
                     ),
                   ),
                 );
@@ -206,21 +216,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   _appVersion,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ),
             ),
 
+            /// 🔐 LOGOUT
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text("Logout"),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: clear session & redirect to login
-              },
+              onTap: () => _showLogoutDialog(),
             ),
 
             const SizedBox(height: 12),
@@ -279,6 +284,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() => _selectedIndex = index);
         Navigator.pop(context);
       },
+    );
+  }
+
+  /// 🔐 LOGOUT CONFIRMATION
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context);
+              await _logout();
+            },
+            child: const Text("Logout"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
     );
   }
 }

@@ -9,6 +9,7 @@ class Assets {
   static const String imagesHouse1 = 'assets/images/house1.jpg';
   static const String imagesHouse2 = 'assets/images/house2.jpg';
   static const String imagesHouse3 = 'assets/images/house3.jpg';
+  static const String imagesIcLauncher = 'assets/images/ic_launcher.png';
   static const String imagesSplashBg = 'assets/images/splash_bg.jpg';
 
 }

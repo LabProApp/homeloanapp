@@ -47,22 +47,19 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                /// Logo
+                // Logo as circular launcher/icon
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.white.withOpacity(0.9),
-                  child: const Icon(
-                    Icons.home,
-                    size: 45,
-                    color: AppColors.primary,
-                  ),
+
+                  backgroundImage: AssetImage('assets/images/ic_launcher.png'),
                 ),
+
 
                 const SizedBox(height: 20),
 
                 /// App Name
                 const Text(
-                  "ProFinDo",
+                  "KeyBricks",
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
