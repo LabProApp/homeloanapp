@@ -22,17 +22,21 @@ class BankCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
-      elevation: 0.5, // 🔽 minimal elevation
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      color: AppColors.primary.withOpacity(0.08),
+      elevation: 0.8,
+      shadowColor: Colors.black.withOpacity(0.08),
+      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         side: BorderSide(
-          color: Colors.grey.shade200, // subtle iOS border
+          color: Colors.grey.shade200,
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         onTap: () {
           Navigator.push(
             context,
@@ -46,7 +50,7 @@ class BankCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// LOGO + NAME + COMPARE
+              /// HEADER ROW
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -58,9 +62,8 @@ class BankCard extends StatelessWidget {
                       bank.bankName ?? "Bank",
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -76,13 +79,13 @@ class BankCard extends StatelessWidget {
                         ),
                         const Text(
                           "Compare",
-                          style: TextStyle(fontSize: 10),
+                          style: TextStyle(fontSize: 11),
                         ),
                       ],
                     )
                   else
                     Icon(
-                      Icons.chevron_right,
+                      Icons.chevron_right_rounded,
                       size: 26,
                       color: Colors.grey.shade500,
                     ),
@@ -91,58 +94,47 @@ class BankCard extends StatelessWidget {
 
               const SizedBox(height: 14),
 
-              /// INFO
+              /// INFO ROW
               Row(
                 children: [
-                  _info(
-                    "Interest",
-                    "${bank.interestRate ?? '-'}%",
-                  ),
+                  _info("Interest Rate",
+                      "${bank.interestRate ?? '-'}%"),
                   const SizedBox(width: 12),
-                  _info(
-                    "Tenure",
-                    "${bank.tenureYears ?? '-'} yrs",
-                  ),
+                  _info("Tenure",
+                      "${bank.tenureYears ?? '-'} yrs"),
                 ],
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
-              /// APPLY BUTTON (FLAT iOS GRADIENT)
+              Divider(color: Colors.grey.shade200),
+
+              const SizedBox(height: 12),
+
+              /// APPLY BUTTON
               SizedBox(
                 width: double.infinity,
-                height: 48,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => LoanApplyDialog.show(context),
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary,
-                          AppColors.primary.withOpacity(0.9),
-                        ],
-                      ),
+                height: 46,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.flash_on_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          "Apply Now",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                  ),
+                  onPressed: () => LoanApplyDialog.show(context),
+                  icon: const Icon(
+                    Icons.flash_on_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    "Apply Now",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -159,8 +151,8 @@ class BankCard extends StatelessWidget {
     final logoUrl = bank.bankLogoUrl;
 
     return Container(
-      width: 48,
-      height: 48,
+      width: 50,
+      height: 50,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: Colors.grey.shade100,
@@ -181,7 +173,7 @@ class BankCard extends StatelessWidget {
 
   Widget _logoPlaceholder() {
     return Icon(
-      Icons.account_balance,
+      Icons.account_balance_rounded,
       size: 26,
       color: Colors.grey.shade500,
     );
@@ -204,6 +196,7 @@ class BankCard extends StatelessWidget {
             value,
             style: const TextStyle(
               fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
         ],

@@ -44,12 +44,14 @@ class _PropertyCardState extends State<PropertyCard> {
   }
 
   List<String> get _amenities {
-    return widget.property.amenitiesAsList?.map((e) => e.toString()).toList() ??
-        [];
+    return widget.property.amenitiesAsList?.map((e) => e.toString()).toList() ?? [];
   }
 
   @override
   Widget build(BuildContext context) {
+    final status = widget.property.constructionStatus ??
+        widget.property.propertyStatus ??
+        ".";
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -57,9 +59,9 @@ class _PropertyCardState extends State<PropertyCard> {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // IMAGE CAROUSEL (Taller)
+          // IMAGE CAROUSEL
           SizedBox(
-            height: 480, // increased height for bigger card
+            height: 480,
             width: double.infinity,
             child: PageView.builder(
               itemCount: _images.length,
@@ -67,11 +69,8 @@ class _PropertyCardState extends State<PropertyCard> {
               itemBuilder: (_, i) {
                 final img = _images[i];
                 if (img.startsWith('assets/')) {
-                  return Image.asset(
-                    img,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                  );
+                  return Image.asset(img,
+                      fit: BoxFit.cover, width: double.infinity);
                 } else {
                   return Image.network(
                     img,
@@ -81,6 +80,27 @@ class _PropertyCardState extends State<PropertyCard> {
                   );
                 }
               },
+            ),
+          ),
+
+          // STATUS BADGE
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.75),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                status,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
 
@@ -108,47 +128,46 @@ class _PropertyCardState extends State<PropertyCard> {
           ),
 
           // ACTION ICONS
-          // FAVORITE + ACTION ICONS
           Positioned(
             top: 12,
             right: 12,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // WhatsApp Icon
                 const SizedBox(height: 12),
-                _iconCircle(Icons.favorite_border, _openWhatsApp),
+
+                _iconCircle(Icons.favorite_border, _toggleFavorite),
                 const SizedBox(height: 12),
-                _iconCircle(Icons.message, _openWhatsApp),
-                // Call Icon
+
+                if (widget.showWhatsAppIcon)
+                  _iconCircle(Icons.message, _openWhatsApp),
                 const SizedBox(height: 12),
+
                 _iconCircle(Icons.phone, _callOwner),
-                // Share Icon
                 const SizedBox(height: 12),
+
                 _iconCircle(Icons.share, _shareProperty),
               ],
             ),
           ),
 
-          // BLUR OVERLAY WITH DETAILS & AMENITIES
+
+          // BLUR DETAILS
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(16),
-              ),
+              borderRadius:
+              const BorderRadius.vertical(bottom: Radius.circular(16)),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
-                  color: Colors.black.withOpacity(0.4), // darker for contrast
+                  color: Colors.black.withOpacity(0.4),
                   padding: const EdgeInsets.all(14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // TITLE + RENT/SALE
                       Row(
                         children: [
                           Expanded(
@@ -163,9 +182,7 @@ class _PropertyCardState extends State<PropertyCard> {
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
+                                horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: AppColors.primary,
                               borderRadius: BorderRadius.circular(20),
@@ -173,6 +190,42 @@ class _PropertyCardState extends State<PropertyCard> {
                             child: Text(
                               widget.property.rentOrSale ?? "-",
                               style: TextStyle(color: AppColors.cardBg),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+
+                      // LOCATION
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              "${widget.property.location ?? "-"}",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+
+                      // POSTED BY
+                      Row(
+                        children: [
+                          const Icon(Icons.person, size: 14, color: Colors.white70),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              "Posted by: ${widget.property.postedBy ?? "Owner"}",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
@@ -190,11 +243,8 @@ class _PropertyCardState extends State<PropertyCard> {
                               style: const TextStyle(color: Colors.white70),
                             ),
                           ),
-                          const Icon(
-                            Icons.square_foot,
-                            size: 14,
-                            color: Colors.white70,
-                          ),
+                          const Icon(Icons.square_foot,
+                              size: 14, color: Colors.white70),
                           const SizedBox(width: 4),
                           Text(
                             widget.property.superArea != null
@@ -220,10 +270,9 @@ class _PropertyCardState extends State<PropertyCard> {
                               style: const TextStyle(color: Colors.white70),
                             ),
                           ),
-
                           Text(
                             widget.property.price != null
-                                ? "₹ ${NumberFormat('#,##,###.##').format(widget.property.price)}"
+                                ? "₹ ${NumberFormat('#,##,###').format(widget.property.price)}"
                                 : "-",
                             style: TextStyle(
                               fontSize: 16,
@@ -241,9 +290,8 @@ class _PropertyCardState extends State<PropertyCard> {
                         Column(
                           children: [
                             GestureDetector(
-                              onTap: () => setState(
-                                    () => _amenitiesExpanded = !_amenitiesExpanded,
-                              ),
+                              onTap: () => setState(() =>
+                              _amenitiesExpanded = !_amenitiesExpanded),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
@@ -320,29 +368,80 @@ class _PropertyCardState extends State<PropertyCard> {
     final img = placeholders[currentIndex % placeholders.length];
     return Image.asset(img, fit: BoxFit.cover, width: double.infinity);
   }
-
   Future<void> _openWhatsApp() async {
-    final message =
-        "Hi, I'm interested in this property:\n${widget.property.title ?? "-"}\nPrice: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}";
+    if (widget.property.contactNumber == null) return;
+
+    String phone = widget.property.contactNumber!;
+    if (!phone.startsWith("91")) phone = "91$phone";
+
+    final title = widget.property.title ?? "-";
+    final location = widget.property.location;
+
+    final message = StringBuffer()
+      ..writeln("Hello, I hope you are doing well.\n")
+      ..writeln("I am interested in the following property and would like more details:")
+      ..writeln(title);
+
+    if (location != null && location.trim().isNotEmpty) {
+      message.writeln("Location: $location");
+    }
+
+    message
+      ..writeln("\nKindly let me know the availability and whether a site visit can be arranged at your convenience.")
+      ..writeln("\nThank you.");
+
     final url = Uri.parse(
-      "https://wa.me/${widget.property.contactNumber}?text=${Uri.encodeComponent(message)}",
+      "https://wa.me/$phone?text=${Uri.encodeComponent(message.toString())}",
     );
-    await launchUrl(url, mode: LaunchMode.externalApplication);
+
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      debugPrint("Could not open WhatsApp");
+    }
   }
+
+
 
   void _shareProperty() {
-    Share.share(
-      "${widget.property.title ?? "-"}\n"
-          "${widget.property.city ?? "-"}, ${widget.property.state ?? "-"}\n"
-          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}",
-    );
+    final title = widget.property.title;
+    final city = widget.property.city;
+    final location = widget.property.location;
+    final price = widget.property.price;
+
+    final message = StringBuffer()
+      ..writeln("You may be interested in this :")
+      ..writeln(title ?? "Property");
+
+    if (location != null && location.isNotEmpty) {
+      message.writeln(location);
+    }
+
+    if (city != null && city.isNotEmpty) {
+      message.writeln(city);
+    }
+
+    if (price != null) {
+      message.writeln("Price: ₹${price.toStringAsFixed(0)}");
+    }
+
+    message.writeln("\nPlease check this property and let me know your thoughts.");
+
+    Share.share(message.toString());
   }
+
 
   Future<void> _callOwner() async {
+    if (widget.property.contactNumber == null) return;
+
     final url = Uri.parse("tel:${widget.property.contactNumber}");
-    await launchUrl(url);
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    }
   }
 
+  void _toggleFavorite() {
+    // TODO: save property to favorites
+  }
   Widget _iconCircle(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,

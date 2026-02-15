@@ -17,7 +17,9 @@ class LegalServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0.5, // 🔽 minimal
+      color: AppColors.primary.withOpacity(0.08),
+      elevation: 0.8,
+      shadowColor: Colors.black.withOpacity(0.08),
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),

@@ -1,5 +1,5 @@
-name: ProFinDo
-description: "ProFinDo"
+name: KeyBricks
+description: "KeyBricks"
 
 publish_to: 'none'
 
@@ -31,6 +31,8 @@ dependencies:
   package_info_plus: ^8.0.0
   flutter_native_splash: ^2.4.0
   shared_preferences: ^2.2.2
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -53,8 +55,10 @@ flutter:
 
 flutter_native_splash:
   color: "#FFFFFF"   # background color only
+  image: assets/images/splash_bg.jpg   # 👈 SHOW THIS INSTEAD OF ICON
   android: true
   ios: true
 
   android_12:
     color: "#FFFFFF"
+

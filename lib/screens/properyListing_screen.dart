@@ -62,14 +62,17 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
 
       final service = PropertyApiService();
 
+      final searchText = _searchController.text.trim();
+
       final data = await service.fetchProperties(
-        title: _searchController.text.trim().isEmpty
-            ? null
-            : _searchController.text.trim(),
+        /// 🔍 One search box → used for multiple fields
+
+        city: searchText.isEmpty ? _filters["city"] : searchText,
+        location: searchText.isEmpty ? null : searchText,
+
         category: isResidential ? "Residential" : "Commercial",
         rentOrSale: isBuy ? "SALE" : "RENT",
 
-        city: _filters["city"],
         type: _filters["type"],
 
         minBedrooms: _toInt(_filters["bedrooms"]),
@@ -94,12 +97,13 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     }
   }
 
+
   void _refreshFromApi() => _loadProperties();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.listingbackground,
       body: Column(
         children: [
           _buildSearchBar(),
@@ -108,7 +112,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accent,
+        backgroundColor: AppColors.primary,
         onPressed: () {
           Navigator.push(
             context,
@@ -118,6 +122,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
           );
         },
         child: const Icon(Icons.add),
+        foregroundColor: AppColors.white,
       ),
     );
   }
@@ -161,20 +166,25 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _toggle(["Residential", "Commercial"], isResidential, (val) {
-            setState(() => isResidential = val);
-            _refreshFromApi();
-          }),
-          _toggle(["Buy", "Rent"], isBuy, (val) {
-            setState(() => isBuy = val);
-            _refreshFromApi();
-          }),
+          Expanded(
+            child: _toggle(["Residential", "Commercial"], isResidential, (val) {
+              setState(() => isResidential = val);
+              _refreshFromApi();
+            }),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _toggle(["Buy", "Rent"], isBuy, (val) {
+              setState(() => isBuy = val);
+              _refreshFromApi();
+            }),
+          ),
         ],
       ),
     );
   }
+
 
   Widget _buildList() {
     return Expanded(
@@ -270,7 +280,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     return ToggleButtons(
       isSelected: [firstSelected, !firstSelected],
       borderRadius: BorderRadius.circular(12),
-      constraints: const BoxConstraints(minHeight: 34, minWidth: 90),
+      constraints: const BoxConstraints(minHeight: 34, minWidth: 70),
       selectedColor: Colors.white,
       fillColor: AppColors.secondary,
       onPressed: (i) => onTap(i == 0),

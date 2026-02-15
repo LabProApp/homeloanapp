@@ -6,11 +6,11 @@ class AppColors {
   static const Color secondary = Colors.orangeAccent; // Professional Blue
   static const Color textBoxbackground = Color(0xFFFBE9E7); // Professional Blue
   static const Color accent = Color(0xFF059669);    // Green – Growth / Approval
-
+  static const Color listingbackground = Color(0xFFFFF3E0); // Professional Blue
   // ===== Backgrounds =====
-  static const Color scaffoldBg = Color(0xFFF8FAFC); // Clean off-white
+  static const Color scaffoldBg = Color(0xFFFFF3E0); // Clean off-white
   static const Color cardBg = Colors.white;
-  static const Color background = Color(0xFFF1F5F9); // Light slate
+  static const Color background = Color(0xFFFFF3E0); // Light slate
   static const Color white = Colors.white;
 
   // ===== Text =====

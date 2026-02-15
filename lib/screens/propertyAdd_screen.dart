@@ -30,7 +30,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   String rentOrSale = "Sale";
   String category = "Residential";
   String propertyType = "APARTMENT";
-  String constructionStatus = "READY";
+  String constructionStatus = "READY_TO_MOVE"; // ✅ fixed
 
   final List<String> amenities = [];
 
@@ -60,6 +60,18 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   ];
 
   @override
+  void dispose() {
+    titleController.dispose();
+    subtitleController.dispose();
+    priceController.dispose();
+    superAreaController.dispose();
+    cityController.dispose();
+    stateController.dispose();
+    contactController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -77,7 +89,6 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
               _field("Title", titleController),
               _field("Subtitle / Description", subtitleController),
 
-              /// 🔹 RENT / SALE
               _sectionTitle("Rent / Sale"),
               _chipSelector(
                 options: rentSaleOptions,
@@ -88,11 +99,11 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
               _field(
                 "Price",
                 priceController,
-                keyboard: TextInputType.number,
+                keyboard:
+                const TextInputType.numberWithOptions(decimal: true),
                 prefix: Icons.currency_rupee,
               ),
 
-              /// 🔹 CATEGORY
               _sectionTitle("Category"),
               _chipSelector(
                 options: categoryOptions,
@@ -100,7 +111,6 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                 onSelected: (v) => setState(() => category = v),
               ),
 
-              /// 🔹 PROPERTY TYPE (DROPDOWN)
               _dropdown(
                 label: "Property Type",
                 value: propertyType,
@@ -108,7 +118,6 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                 onChanged: (v) => setState(() => propertyType = v),
               ),
 
-              /// 🔹 CONSTRUCTION STATUS (CHIPS)
               _sectionTitle("Construction Status"),
               _chipSelector(
                 options: constructionStatusOptions,
@@ -120,7 +129,8 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
               _field(
                 "Super Area (sqft)",
                 superAreaController,
-                keyboard: TextInputType.number,
+                keyboard:
+                const TextInputType.numberWithOptions(decimal: true),
               ),
 
               Row(
@@ -140,7 +150,6 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
               const SizedBox(height: 16),
 
-              /// 🔹 AMENITIES
               _sectionTitle("Amenities"),
               Wrap(
                 spacing: 8,
@@ -157,7 +166,6 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
               const SizedBox(height: 24),
 
-              /// 🔹 SUBMIT
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -188,8 +196,6 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     );
   }
 
-  // ---------------- SUBMIT ----------------
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -199,31 +205,24 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       title: titleController.text.trim(),
       description: subtitleController.text.trim(),
       projectName: titleController.text.trim(),
-
       address:
       "${cityController.text.trim()}, ${stateController.text.trim()}",
       city: cityController.text.trim(),
       state: stateController.text.trim(),
       location: cityController.text.trim(),
-
       type: propertyType,
       category: category,
-      rentOrSale: rentOrSale,
+      rentOrSale: rentOrSale.toUpperCase(), // ✅ API safe
       propertyStatus: "ACTIVE",
       constructionStatus: constructionStatus,
-
       price: double.tryParse(priceController.text),
       superArea: double.tryParse(superAreaController.text),
       carpetArea: double.tryParse(superAreaController.text),
-
       amenities: amenities.join(","),
-
       postedBy: "APP",
-      postedByUser: 1,
-      planPackage: "FREE",
+      postedByUser: int.tryParse(widget.userId ?? "0"), // ✅ fixed
       verified: false,
       postDate: DateTime.now().toIso8601String(),
-
       contactNumber: contactController.text.trim(),
     );
 
@@ -243,8 +242,6 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       if (mounted) setState(() => _loading = false);
     }
   }
-
-  // ---------------- HELPERS ----------------
 
   Widget _field(
       String label,
@@ -337,12 +334,12 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       selectedColor: AppColors.primary.withOpacity(0.2),
       onSelected: (v) {
         setState(() {
-          v ? amenities.add(label) : amenities.remove(label);
+          if (v && !amenities.contains(label)) amenities.add(label);
+          if (!v) amenities.remove(label);
         });
       },
     );
   }
-
 
   Widget _sectionTitle(String text) {
     return Padding(

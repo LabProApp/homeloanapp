@@ -72,13 +72,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.listingbackground,
 
       /// 🔷 APP BAR
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.listingbackground,
+        foregroundColor: AppColors.primary,
         title: const Text(
           "KeyBricks",
           style: TextStyle(

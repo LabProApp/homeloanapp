@@ -76,7 +76,7 @@ class _BankPageState extends State<BankPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.listingbackground,
       body: SafeArea(
         child: Column(
           children: [
@@ -104,7 +104,7 @@ class _BankPageState extends State<BankPage> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: AppColors.textPrimary,
             ),
           ),
 

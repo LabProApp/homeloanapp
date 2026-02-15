@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ProFinDo/theme/app_colors.dart';
+import '../theme/app_colors.dart';
 
 class PropertyFilterDialog extends StatefulWidget {
   final Function(Map<String, dynamic>) onApply;

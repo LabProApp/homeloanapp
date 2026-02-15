@@ -109,7 +109,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.listingbackground,
       appBar: AppBar(
         title: const Text("Legal & Documentation"),
         backgroundColor: AppColors.primary,
