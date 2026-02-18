@@ -8,9 +8,9 @@ import '../screens/propertyAdd_screen.dart';
 import '../screens/property_filter_dialog.dart';
 
 class PropertyListingScreen extends StatefulWidget {
-  final String? userId;
+  final String userId;
 
-  const PropertyListingScreen({super.key, this.userId});
+  const PropertyListingScreen({super.key,required  this.userId});
 
   @override
   State<PropertyListingScreen> createState() => _PropertyListingScreenState();
@@ -35,6 +35,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint("✅ PropertyListing received userId: ${widget.userId}");
     _refreshFromApi();
   }
 

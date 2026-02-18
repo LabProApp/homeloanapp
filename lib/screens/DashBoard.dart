@@ -36,14 +36,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-
+    debugPrint("✅ DashboardScreen received userId: ${widget.userId}");
     _pages = [
-      const PropertyListingScreen(),                // Home
+      PropertyListingScreen(userId: widget.userId), // Home ✅
       BankPage(userId: widget.userId),              // Loans
-      const PropertyListingScreen(),                // Projects
+      PropertyListingScreen(userId: widget.userId), // Projects ✅
       LegalServicePage(userId: widget.userId),      // Legal
       const EmiCalculatorScreen(),                  // Drawer only
     ];
+
 
     _loadAppVersion();
     _loadUserInfo();

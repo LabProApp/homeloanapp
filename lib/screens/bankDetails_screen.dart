@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../theme/app_colors.dart';
 import '../models/bank_model.dart';
 import 'package:intl/intl.dart';
+import '../screens/emi_calculator_screen.dart';
+import '../screens/bank_applyLoan_dialog.dart';
+import '../theme/app_colors.dart';
+
 /// =======================
 /// BANK DETAIL PAGE
 /// =======================
@@ -11,52 +13,73 @@ class BankDetailPage extends StatelessWidget {
 
   const BankDetailPage({super.key, required this.bank});
 
+  static const double sectionGap = 16;
+
   @override
   Widget build(BuildContext context) {
+    final List<BankInterestRate> interestRates =
+        bank.interestRates ?? [];
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xffFFF7F0),
+
+      /// FIXED BOTTOM BUTTON
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              elevation: 0,
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () => LoanApplyDialog.show(context),
+            icon: const Icon(
+              Icons.flash_on_rounded,
+              size: 18,
+              color: Colors.white,
+            ),
+            label: const Text(
+              "Apply Now",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+
       body: CustomScrollView(
-        physics: const BouncingScrollPhysics(), // ✅ Bouncy scroll
+        physics: const BouncingScrollPhysics(),
         slivers: [
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
             backgroundColor: AppColors.primary,
-            centerTitle: true,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 bank.bankName ?? 'Bank Details',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.white,
+                  color: Colors.white,
                   shadows: [
-                    Shadow(
-                      offset: Offset(0, 1),
-                      blurRadius: 3,
-                      color: AppColors.textPrimary,
-                    ),
+                    Shadow(offset: Offset(0, 1), blurRadius: 3),
                   ],
-
                 ),
               ),
-              centerTitle: true,
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      AppColors.secondary,
-                      AppColors.primary,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                    colors: [Colors.deepOrange, Colors.orange],
                   ),
                 ),
                 child: const Center(
-                  child: Icon(
-                    Icons.account_balance,
-                    size: 80,
-                    color: Colors.white70,
-                  ),
+                  child: Icon(Icons.account_balance,
+                      size: 80, color: Colors.white70),
                 ),
               ),
             ),
@@ -71,290 +94,183 @@ class BankDetailPage extends StatelessWidget {
               child: Column(
                 children: [
 
-                  /// =======================
                   /// QUICK STATS
-                  /// =======================
-                  Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _StatCard(
-                                  icon: Icons.percent,
-                                  title: 'Starting Interest Rate',
-                                  value: '${bank.interestRate}%',
-                                  subtitle: bank.interestType ?? 'Floating',
-                                  color: AppColors.secondary,
-                                ),
+                  _sectionWrapper(
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.percent,
+                                title: 'Interest Rate',
+                                value: '${bank.interestRate ?? '-'}%',
+                                subtitle:
+                                bank.interestType ?? 'Floating',
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _StatCard(
-                                  icon: Icons.calendar_today,
-                                  title: 'Max Tenure',
-                                  value: '${bank.tenureYears}',
-                                  subtitle: 'Years',
-                                  color: AppColors.primary,
-                                ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.calendar_today,
+                                title: 'Tenure',
+                                value: '${bank.tenureYears ?? '-'}',
+                                subtitle: 'Years',
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _StatCard(
-                                  icon: Icons.currency_rupee,
-                                  title: 'Processing Fee',
-                                  value: '₹${NumberFormat('#,##,###.##').format(bank.processingFee)}',
-                                  subtitle: 'One-time',
-                                  color: AppColors.secondary,
-                                ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.currency_rupee,
+                                title: 'Processing Fee',
+                                value:
+                                '₹${NumberFormat('#,##,###').format(bank.processingFee ?? 0)}',
+                                subtitle: 'One-time',
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _StatCard(
-                                  icon: Icons.credit_score,
-                                  title: 'Min CIBIL',
-                                  value: '${bank.minCibilScore}',
-                                  subtitle: 'Required',
-                                  color: AppColors.primary,
-                                ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.credit_score,
+                                title: 'Min Cibil Score',
+                                value:
+                                '${bank.minCibilScore ?? '-'}',
+                                subtitle: 'Required',
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: sectionGap),
 
-                  /// =======================
-                  /// CIBIL INTEREST RATE CARD  ✅ NEW
-                  /// =======================
+                  /// INTEREST RATE TABLE
                   _SectionCard(
-                    title: 'Interest Rate by CIBIL Score',
-                    icon: Icons.credit_score,
+                    title: 'Interest Rate by Cibil Score',
+
                     children: [
-                      if (bank.interestRates.isEmpty)
+                      if (interestRates.isEmpty)
                         const Padding(
                           padding: EdgeInsets.all(16),
-                          child: Text(
-                            'Interest rate details not available',
-                            style: TextStyle(color: AppColors.textMuted),
-                          ),
+                          child: Text('No data available'),
                         )
                       else
                         Table(
                           border: TableBorder.all(
-                            color: AppColors.textMuted.withOpacity(0.2),
-                            width: 1,
-                          ),
-                          columnWidths: const {
-                            0: FlexColumnWidth(2),
-                            1: FlexColumnWidth(1),
-                          },
+                              color: Colors.orange.shade200),
                           children: [
-                            // Header row
                             const TableRow(
-                              decoration: BoxDecoration(color: AppColors.primary),
+                              decoration: BoxDecoration(
+                                  color: Colors.orange),
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Text(
-                                    'CIBIL Score Range',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  padding: EdgeInsets.all(8),
+                                  child: Text('Cibil Score Range',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight:
+                                          FontWeight.bold)),
                                 ),
                                 Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Text(
-                                    'Interest Rate',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  padding: EdgeInsets.all(8),
+                                  child: Text('Rate',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight:
+                                          FontWeight.bold)),
                                 ),
                               ],
                             ),
-                            // Data rows
-                            ..._buildInterestRows(bank.interestRates),
+                            ..._buildInterestRows(interestRates),
                           ],
                         ),
                     ],
                   ),
 
+                  const SizedBox(height: sectionGap),
 
-                  const SizedBox(height: 16),
-
-                  /// =======================
-                  /// DOCUMENTS REQUIRED
-                  /// =======================
+                  /// DOCUMENTS
                   _SectionCard(
                     title: 'Documents Required',
-                    icon: Icons.folder,
                     children: [
-                      if (bank.requiredDocuments != null && bank.requiredDocuments!.isNotEmpty)
+                      if (bank.requiredDocuments != null &&
+                          bank.requiredDocuments!.isNotEmpty)
                         ...bank.requiredDocuments!
                             .split(',')
                             .map(
-                              (doc) => Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(Icons.circle, size: 2, color: AppColors.textMuted),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    doc.trim(),
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                              (doc) => _DetailRow(
+                            icon: Icons.circle,
+                            label: '',
+                            value: doc.trim(),
                           ),
                         )
-                            .toList()
                       else
-                        _DetailRow(
+                        const _DetailRow(
                           icon: Icons.document_scanner,
-                          label: 'Required Documents',
+                          label: '',
                           value: 'As per bank requirement',
                         ),
                     ],
                   ),
 
+                  const SizedBox(height: sectionGap),
 
-
-
-                  const SizedBox(height: 16),
-
-                  /// =======================
-                  /// CONTACT INFO
-                  /// =======================
+                  /// EMI CALCULATOR LINK
                   _SectionCard(
-                    title: 'Contact Information',
-                    icon: Icons.contact_phone,
+                    title: 'Tools',
                     children: [
-                      _DetailRow(
-                        icon: Icons.person,
-                        label: 'Contact Person',
-                        value: bank.contactName ?? 'N/A',
-                      ),
-                      _DetailRow(
-                        icon: Icons.phone,
-                        label: 'Phone',
-                        value: bank.contactNumber ?? 'N/A',
-                        trailing: bank.contactNumber != null
-                            ? IconButton(
-                          icon: const Icon(Icons.call),
-                          color: AppColors.primary,
-                          onPressed: () =>
-                              _launchPhone(bank.contactNumber),
-                        )
-                            : null,
-                      ),
-                      _DetailRow(
-                        icon: Icons.email,
-                        label: 'Email',
-                        value: bank.email ?? 'N/A',
-                        trailing: bank.email != null
-                            ? IconButton(
-                          icon: const Icon(Icons.email),
-                          color: AppColors.primary,
-                          onPressed: () => _launchEmail(bank.email),
-                        )
-                            : null,
-                      ),
-                      _DetailRow(
-                        icon: Icons.language,
-                        label: 'Website',
-                        value: bank.websiteUrl ?? 'N/A',
-                        trailing: bank.websiteUrl != null
-                            ? IconButton(
-                          icon: const Icon(Icons.open_in_browser),
-                          color: AppColors.primary,
-                          onPressed: () =>
-                              _launchWebsite(bank.websiteUrl),
-                        )
-                            : null,
+                      ListTile(
+                        leading:
+                        const Icon(Icons.calculate, color: AppColors.listingbackground),
+                        title: const Text("EMI Calculator"),
+                        trailing:
+                        const Icon(Icons.arrow_forward_ios),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                              const EmiCalculatorScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: sectionGap),
 
-                  /// =======================
-                  /// LOAN DETAILS
-                  /// =======================
-                  _SectionCard(
-                    title: 'Loan Details',
-                    icon: Icons.account_balance_wallet,
-                    children: [
-                      _DetailRow(
-                        icon: Icons.arrow_upward,
-                        label: 'Max Loan Amount',
-                        value: '₹${_formatAmount(bank.maxLoanAmount)}',
-                      ),
-                      _DetailRow(
-                        icon: Icons.arrow_downward,
-                        label: 'Min Loan Amount',
-                        value: '₹${_formatAmount(bank.minLoanAmount)}',
-                      ),
-                      _DetailRow(
-                        icon: Icons.work,
-                        label: 'Employment Type',
-                        value: bank.employmentType ?? 'N/A',
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  /// =======================
                   /// FEATURES
-                  /// =======================
                   _SectionCard(
                     title: 'Features & Benefits',
-                    icon: Icons.star,
                     children: [
                       _FeatureRow(
-                        label: 'Prepayment Allowed',
-                        isEnabled: bank.prepaymentAllowed ?? false,
-                      ),
+                          label: 'Prepayment Allowed',
+                          isEnabled:
+                          bank.prepaymentAllowed ?? false),
                       _FeatureRow(
-                        label: 'Part Payment Allowed',
-                        isEnabled: bank.partPaymentAllowed ?? false,
-                      ),
+                          label: 'Part Payment Allowed',
+                          isEnabled:
+                          bank.partPaymentAllowed ?? false),
                       _FeatureRow(
-                        label: 'Balance Transfer',
-                        isEnabled:
-                        bank.balanceTransferAvailable ?? false,
-                      ),
+                          label: 'Balance Transfer',
+                          isEnabled:
+                          bank.balanceTransferAvailable ??
+                              false),
                       _FeatureRow(
-                        label: 'Insurance Bundled',
-                        isEnabled: bank.insuranceBundled ?? false,
-                      ),
+                          label: 'Insurance Bundled',
+                          isEnabled:
+                          bank.insuranceBundled ?? false),
                     ],
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
@@ -364,142 +280,115 @@ class BankDetailPage extends StatelessWidget {
     );
   }
 
-  /// =======================
-  /// HELPERS
-  /// =======================
-  static String _formatAmount(double? amount) {
-    if (amount == null) return 'N/A';
-    if (amount >= 10000000) {
-      return '${(amount / 10000000).toStringAsFixed(2)} Cr';
-    } else if (amount >= 100000) {
-      return '${(amount / 100000).toStringAsFixed(2)} L';
-    }
-    return amount.toStringAsFixed(0);
-  }
+  static List<TableRow> _buildInterestRows(
+      List<BankInterestRate> rates) {
+    rates.sort((a, b) =>
+        (a.interestRate ?? double.infinity)
+            .compareTo(b.interestRate ?? double.infinity));
 
-  static void _launchPhone(String phone) async {
-    final uri = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
+    final best = rates.first.interestRate;
 
-  static void _launchEmail(String email) async {
-    final uri = Uri.parse('mailto:$email');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
+    return rates.map((rate) {
+      final isBest = rate.interestRate == best;
 
-  static void _launchWebsite(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+      return TableRow(
+        decoration: BoxDecoration(
+          color:
+          isBest ? Colors.orange.shade50 : Colors.transparent,
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Text(
+                '${rate.minCibil ?? '-'} - ${rate.maxCibil ?? '-'}'),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Text('${rate.interestRate ?? '-'} %'),
+          ),
+        ],
+      );
+    }).toList();
   }
 }
 
 /// =======================
-/// STAT CARD
+/// COMMON UI
 /// =======================
+
+Widget _sectionWrapper({required Widget child}) {
+  return Card(
+    shape:
+    RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: child,
+    ),
+  );
+}
+
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String value;
   final String subtitle;
-  final Color color;
 
-  const _StatCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.subtitle,
-    required this.color,
-  });
+  const _StatCard(
+      {required this.icon,
+        required this.title,
+        required this.value,
+        required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: Colors.orange.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border:
+        Border.all(color: Colors.orange.shade200),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color),
+          Icon(icon, color: Colors.orange),
           const SizedBox(height: 6),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-            textAlign: TextAlign.center,
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
-          ),
+          Text(title, textAlign: TextAlign.center),
+          Text(value,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold)),
+          Text(subtitle,
+              style: const TextStyle(fontSize: 11)),
         ],
       ),
     );
   }
 }
 
-/// =======================
-/// SECTION CARD
-/// =======================
 class _SectionCard extends StatelessWidget {
   final String title;
-  final IconData icon;
   final List<Widget> children;
 
-  const _SectionCard({
-    required this.title,
-    required this.icon,
-    required this.children,
-  });
+  const _SectionCard(
+      {required this.title, required this.children});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape:
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
+                const Icon(Icons.star, color: Colors.orange),
+                const SizedBox(width: 8),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -510,143 +399,54 @@ class _SectionCard extends StatelessWidget {
     );
   }
 }
-/// =======================
-/// DETAIL ROW
-/// =======================
+
 class _DetailRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  final Widget? trailing;
 
-  const _DetailRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.trailing,
-  });
+  const _DetailRow(
+      {required this.icon,
+        required this.label,
+        required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding:
+      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.textMuted),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (trailing != null) trailing!,
+          Icon(icon, size: 6, color: Colors.orange),
+          const SizedBox(width: 10),
+          Expanded(child: Text(value)),
         ],
       ),
     );
   }
 }
 
-/// =======================
-/// FEATURE ROW
-/// =======================
 class _FeatureRow extends StatelessWidget {
   final String label;
   final bool isEnabled;
 
-  const _FeatureRow({
-    required this.label,
-    required this.isEnabled,
-  });
+  const _FeatureRow(
+      {required this.label, required this.isEnabled});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding:
+      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          Icon(
-            isEnabled ? Icons.check_circle : Icons.cancel,
-            color: isEnabled ? AppColors.success : AppColors.error,
-          ),
+          Icon(isEnabled ? Icons.check_circle : Icons.cancel,
+              color: isEnabled ? Colors.green : Colors.red),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          Text(
-            isEnabled ? 'Yes' : 'No',
-            style: TextStyle(
-              color: isEnabled ? AppColors.success : AppColors.error,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Expanded(child: Text(label)),
+          Text(isEnabled ? 'Yes' : 'No'),
         ],
       ),
     );
   }
-}
-List<TableRow> _buildInterestRows(List<BankInterestRate> rates) {
-  if (rates.isEmpty) return [];
-
-  // Sort by lowest interest
-  rates.sort((a, b) => (a.interestRate ?? double.infinity)
-      .compareTo(b.interestRate ?? double.infinity));
-
-  // Highlight the best (lowest) interest
-  final bestRate = rates.first.interestRate ?? 0;
-
-  return rates.map((rate) {
-    final isBest = (rate.interestRate ?? 0) == bestRate;
-
-    return TableRow(
-      decoration: BoxDecoration(
-        color: isBest ? AppColors.secondary.withOpacity(0.15) : Colors.transparent,
-      ),
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            '${rate.minCibil?.toInt() ?? '-'} - ${rate.maxCibil?.toInt() ?? '-'}',
-            style: TextStyle(
-              fontWeight: isBest ? FontWeight.bold : FontWeight.normal,
-              color: isBest ? AppColors.primary : AppColors.textPrimary,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            '${rate.interestRate?.toStringAsFixed(2) ?? '-'} %',
-            style: TextStyle(
-              fontWeight: isBest ? FontWeight.bold : FontWeight.normal,
-              color: isBest ? AppColors.primary : AppColors.textPrimary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }).toList();
 }

@@ -15,8 +15,8 @@ class ApiUrls {
 
   static const String emiCalculator = "$baseUrl/tools/homeloancalculator";
   static const String calculateAffordability  = "$baseUrl/tools/calculateAffordability";
-
-
+  static const String state_list  = "$baseUrl/master/getMasterValues?type=STATE";
+  static const String city_list  = "$baseUrl/master/getMasterValues?type=STATE";
   //Property services URLs
 
   static const String propertySearch = "$baseUrl/property/advancedsearch";

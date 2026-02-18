@@ -1,4 +1,5 @@
-// bank_applyLoan_dialog.dart (updated for Legal Inquiry with Property Type dropdown)
+// bank_applyLoan_dialog.dart (Grey Themed)
+
 import 'package:flutter/material.dart';
 import '../services/legal_service_api.dart';
 import '../models/inquiry_request.dart';
@@ -8,28 +9,19 @@ class LoanApplyDialog {
   static void show(BuildContext context) {
     final _formKey = GlobalKey<FormState>();
 
-    // Applicant Details
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController mobileController = TextEditingController();
-    final TextEditingController emailController = TextEditingController();
-
-    final TextEditingController incomeController = TextEditingController();
-    final TextEditingController commentsController = TextEditingController();
-
-    // Loan Details
-
-    final TextEditingController loanAmountController = TextEditingController();
-    final TextEditingController tenureController = TextEditingController();
-
-    // Property Details
-    final TextEditingController propertyStateController =
-        TextEditingController();
-    final TextEditingController propertyCityController =
-        TextEditingController();
+    // Controllers
+    final nameController = TextEditingController();
+    final mobileController = TextEditingController();
+    final emailController = TextEditingController();
+    final incomeController = TextEditingController();
+    final commentsController = TextEditingController();
+    final loanAmountController = TextEditingController();
+    final tenureController = TextEditingController();
+    final propertyStateController = TextEditingController();
+    final propertyCityController = TextEditingController();
 
     bool isPropertyIdentified = false;
 
-    // Property Type Dropdown
     final List<String> propertyTypes = [
       "HOUSE",
       "PLOT",
@@ -43,12 +35,13 @@ class LoanApplyDialog {
       "AGRICULTURAL",
       "SHOWROOM",
     ];
+
     String? selectedPropertyType;
-
-    // Inquiry type
     String inquiryType = "HOME_LOAN";
-
     bool _loading = false;
+
+    const double vGap = 12;
+    const Color primaryGrey = Colors.grey;
 
     showDialog(
       context: context,
@@ -75,16 +68,16 @@ class LoanApplyDialog {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Header
+                          /// HEADER
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
                               vertical: 20,
                               horizontal: 16,
                             ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: const BorderRadius.only(
+                            decoration: const BoxDecoration(
+                              color: Colors.grey,
+                              borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(20),
                                 topRight: Radius.circular(20),
                               ),
@@ -100,23 +93,25 @@ class LoanApplyDialog {
                             ),
                           ),
 
-                          // Applicant & Loan & Property Details
                           Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
                               children: [
-                                /// 🔹 Applicant Details
                                 _buildTextField(
                                   label: "Full Name",
                                   controller: nameController,
                                   icon: Icons.person,
                                 ),
+                                const SizedBox(height: vGap),
+
                                 _buildTextField(
                                   label: "Mobile Number",
                                   controller: mobileController,
                                   icon: Icons.phone,
                                   keyboardType: TextInputType.phone,
                                 ),
+                                const SizedBox(height: vGap),
+
                                 _buildTextField(
                                   label: "Email",
                                   controller: emailController,
@@ -124,6 +119,8 @@ class LoanApplyDialog {
                                   keyboardType: TextInputType.emailAddress,
                                   optional: true,
                                 ),
+                                const SizedBox(height: vGap),
+
                                 _buildTextField(
                                   label: "Monthly Income",
                                   controller: incomeController,
@@ -131,57 +128,57 @@ class LoanApplyDialog {
                                   keyboardType: TextInputType.number,
                                   optional: true,
                                 ),
+                                const SizedBox(height: vGap),
 
-                                /// 🔹 Loan Details
                                 _buildTextField(
                                   label: "Required Loan Amount",
                                   controller: loanAmountController,
                                   icon: Icons.money,
                                   keyboardType: TextInputType.number,
                                 ),
+                                const SizedBox(height: vGap),
+
                                 _buildTextField(
                                   label: "Loan Tenure (Years)",
                                   controller: tenureController,
                                   icon: Icons.schedule,
                                   keyboardType: TextInputType.number,
                                 ),
+                                const SizedBox(height: vGap),
 
-                                /// 🔹 Property Details
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                  ),
-                                  child: DropdownButtonFormField<String>(
-                                    value: selectedPropertyType,
-                                    items: propertyTypes
-                                        .map(
-                                          (type) => DropdownMenuItem(
-                                            value: type,
-                                            child: Text(
-                                              type.replaceAll("_", " "),
-                                            ),
+                                /// PROPERTY TYPE DROPDOWN
+                                DropdownButtonFormField<String>(
+                                  value: selectedPropertyType,
+                                  items: propertyTypes
+                                      .map(
+                                        (type) => DropdownMenuItem(
+                                          value: type,
+                                          child: Text(
+                                            type.replaceAll("_", " "),
                                           ),
-                                        )
-                                        .toList(),
-                                    onChanged: (val) =>
-                                        selectedPropertyType = val,
-                                    decoration: InputDecoration(
-                                      labelText: "Property Type",
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[100],
-                                    ),
-                                    validator: (_) => null, // optional field
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      selectedPropertyType = val;
+                                    });
+                                  },
+                                  decoration: _inputDecoration(
+                                    label: "Property Type",
+                                    icon: Icons.home,
                                   ),
                                 ),
+                                const SizedBox(height: vGap),
+
                                 _buildTextField(
                                   label: "Property State",
                                   controller: propertyStateController,
                                   icon: Icons.map,
                                   optional: true,
                                 ),
+                                const SizedBox(height: vGap),
+
                                 _buildTextField(
                                   label: "Property City",
                                   controller: propertyCityController,
@@ -189,9 +186,12 @@ class LoanApplyDialog {
                                   optional: true,
                                 ),
 
+                                /// CHECKBOX
                                 CheckboxListTile(
                                   title: const Text("Property Identified"),
                                   value: isPropertyIdentified,
+                                  activeColor: primaryGrey,
+                                  checkColor: Colors.white,
                                   controlAffinity:
                                       ListTileControlAffinity.leading,
                                   onChanged: (val) {
@@ -208,9 +208,10 @@ class LoanApplyDialog {
                                   maxLines: 3,
                                   optional: true,
                                 ),
+
                                 const SizedBox(height: 16),
 
-                                // Submit Button
+                                /// SUBMIT BUTTON
                                 SizedBox(
                                   width: double.infinity,
                                   height: 50,
@@ -236,7 +237,6 @@ class LoanApplyDialog {
                                                       .isEmpty
                                                   ? null
                                                   : emailController.text.trim(),
-
                                               monthlyIncome: double.tryParse(
                                                 incomeController.text.trim(),
                                               ),
@@ -248,7 +248,6 @@ class LoanApplyDialog {
                                                   ? null
                                                   : commentsController.text
                                                         .trim(),
-
                                               requiredLoanAmount:
                                                   double.tryParse(
                                                     loanAmountController.text
@@ -257,7 +256,6 @@ class LoanApplyDialog {
                                               loanTenureYears: int.tryParse(
                                                 tenureController.text.trim(),
                                               ),
-
                                               propertyType:
                                                   selectedPropertyType,
                                               propertyState:
@@ -276,7 +274,6 @@ class LoanApplyDialog {
                                                         .trim(),
                                               propertyIdentified:
                                                   isPropertyIdentified,
-
                                               leadSource: "APP",
                                             );
 
@@ -312,13 +309,15 @@ class LoanApplyDialog {
                                                 ),
                                               );
                                             } finally {
-                                              if (ctx.mounted)
+                                              if (ctx.mounted) {
                                                 setState(
                                                   () => _loading = false,
                                                 );
+                                              }
                                             }
                                           },
                                     style: ElevatedButton.styleFrom(
+                                      backgroundColor: primaryGrey,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
@@ -352,6 +351,7 @@ class LoanApplyDialog {
     );
   }
 
+  /// TEXT FIELD BUILDER (GREY THEME)
   static Widget _buildTextField({
     required String label,
     required TextEditingController controller,
@@ -360,26 +360,40 @@ class LoanApplyDialog {
     int maxLines = 1,
     bool optional = false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        validator: (val) {
-          if (!optional && (val == null || val.trim().isEmpty)) {
-            return "Please enter $label";
-          }
-          return null;
-        },
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: icon != null ? Icon(icon) : null,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          filled: true,
-          fillColor: Colors.grey[100],
-        ),
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      cursorColor: Colors.grey,
+      validator: (val) {
+        if (!optional && (val == null || val.trim().isEmpty)) {
+          return "Please enter $label";
+        }
+        return null;
+      },
+      decoration: _inputDecoration(label: label, icon: icon),
+    );
+  }
+
+  static InputDecoration _inputDecoration({
+    required String label,
+    IconData? icon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.grey),
+      prefixIcon: icon != null ? Icon(icon, color: Colors.grey) : null,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.grey),
       ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.black54, width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.grey.shade100,
     );
   }
 }

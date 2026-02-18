@@ -17,6 +17,8 @@ class PropertyFilterDialog extends StatefulWidget {
 
 class _PropertyFilterDialogState extends State<PropertyFilterDialog>
     with SingleTickerProviderStateMixin {
+  static const double vGap = 10;
+
   late AnimationController _controller;
   late Animation<double> _scale;
 
@@ -32,8 +34,26 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog>
   String? selectedType;
   String? selectedStatus;
 
-  final List<String> types = ["Apartment", "Villa", "Plot", "Office"];
-  final List<String> statusList = ["Ready", "Under Construction"];
+  final List<String> types = [
+    "HOUSE",
+    "PLOT",
+    "APARTMENT",
+    "BUILDER FLOOR",
+    "SHOP",
+    "OFFICE",
+    "SHOWROOM",
+    "PG",
+    "CO WORKING",
+    "AGRICULTURAL",
+  ];
+
+  final List<String> statusList = [
+    "Ready to Move",
+    "Under Construction",
+    "New Launch",
+    "ReSale"
+  ];
+
   final List<String> amenities = [
     "Parking",
     "Lift",
@@ -42,9 +62,9 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog>
     "Security",
     "Pool"
   ];
+
   final Set<String> selectedAmenities = {};
 
-  // ================= SAFE CONVERTER =================
   double _toDouble(dynamic v, double fallback) {
     if (v == null) return fallback;
     if (v is double) return v;
@@ -95,8 +115,6 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog>
     super.dispose();
   }
 
-  // ================= FORMATTERS =================
-
   String formatIndianNumber(num value) {
     final str = value.toInt().toString();
     if (str.length <= 3) return str;
@@ -116,8 +134,6 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog>
     }
   }
 
-  // ================= UI =================
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -127,153 +143,182 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog>
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ScaleTransition(
         scale: _scale,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Filters",
-                      style: theme.textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w600)),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  )
-                ],
-              ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Filters",
+                            style: theme.textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                          )
+                        ],
+                      ),
 
-              _textField("City", cityController),
-              _textField("Location", locationController),
-              _dropdown("Type", types, selectedType,
-                      (v) => setState(() => selectedType = v)),
+                      _textField("City", cityController),
+                      _textField("Location", locationController),
+                      _dropdown("Type", types, selectedType,
+                              (v) => setState(() => selectedType = v)),
 
-              _section("Price Range"),
-              Text(
-                "${formatPrice(priceRange.start)} - ${formatPrice(priceRange.end)}",
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              RangeSlider(
-                values: priceRange,
-                min: 0.0,
-                max: 100000000.0,
-                divisions: 1000,
-                activeColor: AppColors.primary,
-                labels: RangeLabels(
-                  formatPrice(priceRange.start),
-                  formatPrice(priceRange.end),
-                ),
-                onChanged: (v) => setState(() => priceRange = v),
-              ),
+                      _section("Price Range"),
+                      Text(
+                        "${formatPrice(priceRange.start)} - ${formatPrice(priceRange.end)}",
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: vGap),
+                      RangeSlider(
+                        values: priceRange,
+                        min: 0.0,
+                        max: 100000000.0,
+                        divisions: 1000,
+                        activeColor: AppColors.primary,
+                        labels: RangeLabels(
+                          formatPrice(priceRange.start),
+                          formatPrice(priceRange.end),
+                        ),
+                        onChanged: (v) => setState(() => priceRange = v),
+                      ),
 
-              _section("Area (sqft)"),
-              Text(
-                "${areaRange.start.toStringAsFixed(1)} - ${areaRange.end.toStringAsFixed(1)} sqft",
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              RangeSlider(
-                values: areaRange,
-                min: 0.0,
-                max: 10000.0,
-                divisions: 100,
-                activeColor: AppColors.primary,
-                labels: RangeLabels(
-                  areaRange.start.toStringAsFixed(1),
-                  areaRange.end.toStringAsFixed(1),
-                ),
-                onChanged: (v) => setState(() => areaRange = v),
-              ),
+                      _section("Area (sqft)"),
+                      Text(
+                        "${areaRange.start.toStringAsFixed(1)} - ${areaRange.end.toStringAsFixed(1)} sqft",
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: vGap),
+                      RangeSlider(
+                        values: areaRange,
+                        min: 0.0,
+                        max: 10000.0,
+                        divisions: 100,
+                        activeColor: AppColors.primary,
+                        labels: RangeLabels(
+                          areaRange.start.toStringAsFixed(1),
+                          areaRange.end.toStringAsFixed(1),
+                        ),
+                        onChanged: (v) => setState(() => areaRange = v),
+                      ),
 
-              _section("Bedrooms: ${bedrooms.toInt()}"),
-              Slider(
-                value: bedrooms,
-                min: 1.0,
-                max: 10.0,
-                divisions: 9,
-                activeColor: AppColors.primary,
-                label: bedrooms.toInt().toString(),
-                onChanged: (v) => setState(() => bedrooms = v),
-              ),
+                      _section("Bedrooms: ${bedrooms.toInt()}"),
+                      Slider(
+                        value: bedrooms,
+                        min: 1.0,
+                        max: 10.0,
+                        divisions: 9,
+                        activeColor: AppColors.primary,
+                        label: bedrooms.toInt().toString(),
+                        onChanged: (v) => setState(() => bedrooms = v),
+                      ),
 
-              _section("Bathrooms: ${bathrooms.toInt()}"),
-              Slider(
-                value: bathrooms,
-                min: 1.0,
-                max: 10.0,
-                divisions: 9,
-                activeColor: AppColors.primary,
-                label: bathrooms.toInt().toString(),
-                onChanged: (v) => setState(() => bathrooms = v),
-              ),
+                      _section("Bathrooms: ${bathrooms.toInt()}"),
+                      Slider(
+                        value: bathrooms,
+                        min: 1.0,
+                        max: 10.0,
+                        divisions: 9,
+                        activeColor: AppColors.primary,
+                        label: bathrooms.toInt().toString(),
+                        onChanged: (v) => setState(() => bathrooms = v),
+                      ),
 
-              _section("Construction Status"),
-              Wrap(
-                spacing: 8,
-                children: statusList.map((s) {
-                  final selected = selectedStatus == s;
-                  return ChoiceChip(
-                    label: Text(s),
-                    selected: selected,
-                    selectedColor: AppColors.primary,
-                    labelStyle: TextStyle(color: selected ? Colors.white : null),
-                    onSelected: (_) => setState(() => selectedStatus = s),
-                  );
-                }).toList(),
-              ),
+                      _section("Construction Status"),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: statusList.map((s) {
+                          final selected = selectedStatus == s;
+                          return ChoiceChip(
+                            label:
+                            Text(s, style: const TextStyle(fontSize: 12)),
+                            selected: selected,
+                            selectedColor:
+                            AppColors.primary.withOpacity(0.2),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                            MaterialTapTargetSize.shrinkWrap,
+                            onSelected: (_) =>
+                                setState(() => selectedStatus = s),
+                          );
+                        }).toList(),
+                      ),
 
-              _section("Amenities"),
-              Wrap(
-                spacing: 8,
-                children: amenities.map((a) {
-                  final selected = selectedAmenities.contains(a);
-                  return FilterChip(
-                    label: Text(a),
-                    selected: selected,
-                    selectedColor: AppColors.primary,
-                    labelStyle: TextStyle(color: selected ? Colors.white : null),
-                    onSelected: (v) {
-                      setState(() {
-                        v ? selectedAmenities.add(a) : selectedAmenities.remove(a);
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-
-              const SizedBox(height: 16),
-
-              Row(children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _reset,
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text("Reset"),
+                      _section("Amenities"),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: amenities.map((a) {
+                          final selected =
+                          selectedAmenities.contains(a);
+                          return FilterChip(
+                            label: Text(a,
+                                style: const TextStyle(fontSize: 12)),
+                            selected: selected,
+                            selectedColor:
+                            AppColors.primary.withOpacity(0.2),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                            MaterialTapTargetSize.shrinkWrap,
+                            onSelected: (v) {
+                              setState(() {
+                                v
+                                    ? selectedAmenities.add(a)
+                                    : selectedAmenities.remove(a);
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+              ),
+            ),
+
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _reset,
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: AppColors.secondary,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text("Reset"),
+                      ),
                     ),
-                    onPressed: _apply,
-                    child: const Text("Search"),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: _apply,
+                        child: const Text("Search"),
+                      ),
+                    ),
+                  ],
                 ),
-              ])
-            ]),
-          ),
+              ),
+            )
+          ],
         ),
       ),
     );
   }
-
-  // ================= LOGIC =================
 
   void _reset() {
     cityController.clear();
@@ -300,32 +345,35 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog>
       "maxArea": areaRange.end,
       "bedrooms": bedrooms.toInt(),
       "bathrooms": bathrooms.toInt(),
-      "amenity": selectedAmenities.isNotEmpty ? selectedAmenities.join(",") : null,
+      "amenity":
+      selectedAmenities.isNotEmpty ? selectedAmenities.join(",") : null,
     });
 
     Navigator.pop(context);
   }
 
-  // ================= HELPERS =================
-
   Widget _section(String title) => Padding(
-    padding: const EdgeInsets.only(top: 12, bottom: 6),
+    padding: const EdgeInsets.symmetric(vertical: vGap),
     child: Align(
       alignment: Alignment.centerLeft,
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      child: Text(title,
+          style: const TextStyle(fontWeight: FontWeight.w600)),
     ),
   );
 
   Widget _textField(String hint, TextEditingController c) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(vertical: vGap),
       child: TextField(
         controller: c,
         decoration: InputDecoration(
           hintText: hint,
+          isDense: true,
+          contentPadding:
+          const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           filled: true,
           fillColor: Colors.grey.shade100,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
       ),
     );
@@ -333,16 +381,22 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog>
 
   Widget _dropdown(String label, List items, value, ValueChanged onChanged) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: vGap),
       child: DropdownButtonFormField(
         value: value,
         decoration: InputDecoration(
           hintText: label,
+          isDense: true,
+          contentPadding:
+          const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           filled: true,
           fillColor: Colors.grey.shade100,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text("$e"))).toList(),
+        items: items
+            .map((e) =>
+            DropdownMenuItem(value: e, child: Text("$e")))
+            .toList(),
         onChanged: onChanged,
       ),
     );
