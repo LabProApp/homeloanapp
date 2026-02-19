@@ -163,7 +163,8 @@ class _PropertyCardState extends State<PropertyCard> {
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
                   color: Colors.black.withOpacity(0.4),
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,

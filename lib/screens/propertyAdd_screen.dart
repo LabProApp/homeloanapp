@@ -4,12 +4,15 @@ import 'package:intl/intl.dart';
 import '../models/property_model.dart';
 import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
-
+import '../services/state_api_service.dart'; // MasterService
 class PostPropertyScreen extends StatefulWidget {
   final String? userId;
+  final PropertyModel? propertyToEdit; // 👈 NEW
+
   const PostPropertyScreen({
     super.key,
     this.userId,
+    this.propertyToEdit,
   });
 
   @override
@@ -18,15 +21,12 @@ class PostPropertyScreen extends StatefulWidget {
 
 class _PostPropertyScreenState extends State<PostPropertyScreen> {
   final _formKey = GlobalKey<FormState>();
-
-  static const double vSpace = 10; // ✅ single source of truth for spacing
+  static const double vSpace = 10;
 
   final titleController = TextEditingController();
   final subtitleController = TextEditingController();
   final priceController = TextEditingController();
   final superAreaController = TextEditingController();
-  final cityController = TextEditingController();
-  final stateController = TextEditingController();
   final locationController = TextEditingController();
   final contactController = TextEditingController();
 
@@ -39,20 +39,25 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   String constructionStatus = "Ready to Move";
   String postedByType = "Owner";
 
+  MasterValue? selectedState;
+  String? selectedCity;
+  List<MasterValue> states = [];
+  List<String> cities = [];
+
   final List<String> amenities = [];
   bool _loading = false;
+  bool _loadingStates = true;
+  bool _loadingCities = false;
 
   final List<String> rentSaleOptions = ["Rent", "Sale"];
   final List<String> categoryOptions = ["Residential", "Commercial"];
   final List<String> postedByOptions = ["Owner", "Broker", "Builder"];
-
   final List<String> constructionStatusOptions = [
     "Ready to Move",
     "Under Construction",
     "New Launch",
     "ReSale"
   ];
-
   final List<String> propertyTypes = [
     "HOUSE",
     "PLOT",
@@ -66,14 +71,88 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     "AGRICULTURAL",
   ];
 
+  bool get isEditMode => widget.propertyToEdit != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStates();
+    _prefillIfEdit();
+  }
+
+  void _prefillIfEdit() {
+    final p = widget.propertyToEdit;
+    if (p == null) return;
+
+    titleController.text = p.title ?? "";
+    subtitleController.text = p.description ?? "";
+    priceController.text = p.price != null
+        ? NumberFormat("#,##,###").format(p.price)
+        : "";
+    superAreaController.text = p.superArea?.toString() ?? "";
+    locationController.text = p.location ?? "";
+    contactController.text = p.contactNumber ?? "";
+
+    bedrooms = p.bedrooms;
+    bathrooms = p.bathrooms;
+
+    rentOrSale = (p.rentOrSale ?? "SALE").toUpperCase() == "RENT"
+        ? "Rent"
+        : "Sale";
+    category = p.category ?? category;
+    propertyType = p.type ?? propertyType;
+    constructionStatus = p.constructionStatus ?? constructionStatus;
+    postedByType = p.postedBy ?? postedByType;
+
+    if (p.state != null) {
+      selectedState = MasterValue(id: -1, value: p.state!);
+    }
+    selectedCity = p.city;
+  }
+
+  Future<void> _loadStates() async {
+    setState(() => _loadingStates = true);
+    try {
+      states = await MasterService.getStates();
+
+      if (isEditMode && widget.propertyToEdit?.state != null) {
+        selectedState = states.firstWhere(
+              (s) => s.value == widget.propertyToEdit!.state,
+          orElse: () => states.first,
+        );
+        await _loadCities(selectedState!.id);
+        selectedCity = widget.propertyToEdit!.city;
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to load states: $e')));
+    } finally {
+      if (mounted) setState(() => _loadingStates = false);
+    }
+  }
+
+  Future<void> _loadCities(int stateId) async {
+    setState(() {
+      _loadingCities = true;
+      cities = [];
+      selectedCity = null;
+    });
+    try {
+      cities = await MasterService.getCities(stateId);
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to load cities: $e')));
+    } finally {
+      if (mounted) setState(() => _loadingCities = false);
+    }
+  }
+
   @override
   void dispose() {
     titleController.dispose();
     subtitleController.dispose();
     priceController.dispose();
     superAreaController.dispose();
-    cityController.dispose();
-    stateController.dispose();
     locationController.dispose();
     contactController.dispose();
     super.dispose();
@@ -83,11 +162,10 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Post New Property"),
+        title: Text(isEditMode ? "Modify Property" : "Post New Property"),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
         child: Form(
@@ -97,7 +175,6 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
             children: [
               _field("Title", titleController),
               _space(),
-
               _field("Subtitle / Description", subtitleController),
               _space(),
 
@@ -142,16 +219,12 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
               _chipSelector(
                 options: constructionStatusOptions,
                 selected: constructionStatus,
-                onSelected: (v) =>
-                    setState(() => constructionStatus = v),
+                onSelected: (v) => setState(() => constructionStatus = v),
               ),
               _space(),
 
-              _field(
-                "Super Area (sqft)",
-                superAreaController,
-                keyboard: TextInputType.number,
-              ),
+              _field("Super Area (sqft)", superAreaController,
+                  keyboard: TextInputType.number),
               _space(),
 
               _sectionTitle("Bedrooms"),
@@ -171,12 +244,30 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
               _field("Location", locationController),
               _space(),
 
-              Row(
-                children: [
-                  Expanded(child: _field("City", cityController)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _field("State", stateController)),
-                ],
+              _sectionTitle("State"),
+              _loadingStates
+                  ? const Center(child: CircularProgressIndicator())
+                  : _fancyDropdown<MasterValue>(
+                items: states,
+                value: selectedState,
+                hint: "Select State",
+                itemLabel: (s) => s.value,
+                onChanged: (v) {
+                  setState(() => selectedState = v);
+                  if (v != null) _loadCities(v.id);
+                },
+              ),
+              _space(),
+
+              _sectionTitle("City"),
+              _loadingCities
+                  ? const Center(child: CircularProgressIndicator())
+                  : _fancyDropdown<String>(
+                items: cities,
+                value: selectedCity,
+                hint: "Select City",
+                itemLabel: (c) => c,
+                onChanged: (v) => setState(() => selectedCity = v),
               ),
               _space(),
 
@@ -219,9 +310,9 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
               onPressed: _loading ? null : _submit,
               child: _loading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text(
-                "Post Property",
-                style: TextStyle(
+                  : Text(
+                isEditMode ? "Update Property" : "Post Property",
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
                   color: Colors.white,
@@ -236,23 +327,170 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
   Widget _space() => const SizedBox(height: vSpace);
 
+  Widget _sectionTitle(String text) =>
+      Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14));
+
+  Widget _fancyDropdown<T>({
+    required List<T> items,
+    required T? value,
+    required String hint,
+    required String Function(T) itemLabel,
+    required ValueChanged<T?> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: AppColors.textBoxbackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          isExpanded: true,
+          value: value,
+          hint: Text(hint),
+          items: items.map((e) {
+            return DropdownMenuItem<T>(
+              value: e,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(itemLabel(e)),
+              ),
+            );
+          }).toList(),
+          onChanged: onChanged,
+          menuMaxHeight: 48.0 * 5,
+          itemHeight: 48,
+        ),
+      ),
+    );
+  }
+
+  Widget _sliderRow({int? value, required Function(int) onChanged}) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 8,
+          child: Slider(
+            value: (value ?? 0).toDouble(),
+            min: 0,
+            max: 12,
+            divisions: 12,
+            label: value?.toString() ?? "0",
+            onChanged: (v) => onChanged(v.toInt()),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(width: 40, child: Text(value?.toString() ?? "")),
+      ],
+    );
+  }
+
+  Widget _field(String label, TextEditingController controller,
+      {TextInputType keyboard = TextInputType.text,
+        IconData? prefix,
+        bool isPrice = false,
+        List<TextInputFormatter>? inputFormatters}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboard,
+      inputFormatters: inputFormatters,
+      validator: (v) => v == null || v.trim().isEmpty ? "Enter $label" : null,
+      onChanged: isPrice
+          ? (v) {
+        final clean = v.replaceAll(",", "");
+        final num? value = num.tryParse(clean);
+        if (value != null) {
+          final formatted = NumberFormat("#,##,###").format(value);
+          controller.value = TextEditingValue(
+            text: formatted,
+            selection: TextSelection.collapsed(offset: formatted.length),
+          );
+        }
+      }
+          : null,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: prefix != null ? Icon(prefix, size: 18) : null,
+        isDense: true,
+        contentPadding:
+        const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        filled: true,
+        fillColor: AppColors.textBoxbackground,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _chipSelector({
+    required List<String> options,
+    required String selected,
+    required Function(String) onSelected,
+  }) =>
+      Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        children: options
+            .map(
+              (o) => ChoiceChip(
+            label: Text(o, style: const TextStyle(fontSize: 12)),
+            selected: selected == o,
+            selectedColor: AppColors.primary.withAlpha(50),
+            onSelected: (_) => onSelected(o),
+          ),
+        )
+            .toList(),
+      );
+
+  Widget _dropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required Function(String) onChanged,
+  }) =>
+      DropdownButtonFormField<String>(
+        initialValue: value,
+        decoration: InputDecoration(
+          labelText: label,
+          isDense: true,
+          contentPadding:
+          const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          filled: true,
+          fillColor: AppColors.textBoxbackground,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+        ),
+        items:
+        items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        onChanged: (v) => onChanged(v!),
+      );
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (selectedState == null || selectedCity == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please select state and city")));
+      return;
+    }
 
     setState(() => _loading = true);
 
-    final price =
-    double.tryParse(priceController.text.replaceAll(",", ""));
+    final price = double.tryParse(priceController.text.replaceAll(",", ""));
 
     final property = PropertyModel(
+      id: widget.propertyToEdit?.id,
       title: _cap(titleController.text),
       description: _cap(subtitleController.text),
       projectName: _cap(titleController.text),
       address:
-      "${_cap(locationController.text)}, ${_cap(cityController.text)}, ${_cap(stateController.text)}",
+      "${_cap(locationController.text)}, $selectedCity, ${selectedState!.value}",
       location: _cap(locationController.text),
-      city: _cap(cityController.text),
-      state: _cap(stateController.text),
+      city: selectedCity!,
+      state: selectedState!.value,
       type: propertyType,
       category: category,
       rentOrSale: rentOrSale.toUpperCase(),
@@ -272,164 +510,27 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     );
 
     try {
-      await PropertyApiService.addProperty(property);
+      if (isEditMode) {
+        await PropertyApiService.updateProperty(property);
+      } else {
+        await PropertyApiService.addProperty(property);
+      }
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Property posted successfully")),
-      );
-      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isEditMode
+              ? "Property updated successfully"
+              : "Property posted successfully")));
+
+      Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to post property: $e")),
-      );
+          SnackBar(content: Text("Failed to save property: $e")));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  String _cap(String text) {
-    if (text.isEmpty) return text;
-    return text[0].toUpperCase() + text.substring(1);
-  }
-
-  Widget _sliderRow({int? value, required Function(int) onChanged}) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 8,
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: Colors.orange,
-              inactiveTrackColor: Colors.orange.withOpacity(0.3),
-              thumbColor: Colors.orange,
-              overlayColor: Colors.orange.withOpacity(0.2),
-              valueIndicatorColor: Colors.orange,
-            ),
-            child: Slider(
-              value: (value ?? 0).toDouble(),
-              min: 0,
-              max: 12,
-              divisions: 11,
-              label: value?.toString() ?? "0",
-              onChanged: (v) => onChanged(v.toInt()),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 50,
-          child: Text(
-            value == null || value == 0 ? " " : "$value",
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _field(
-      String label,
-      TextEditingController controller, {
-        TextInputType keyboard = TextInputType.text,
-        IconData? prefix,
-        bool isPrice = false,
-        List<TextInputFormatter>? inputFormatters,
-      }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboard,
-      textCapitalization: TextCapitalization.sentences,
-      inputFormatters: inputFormatters,
-      validator: (v) =>
-      v == null || v.trim().isEmpty ? "Enter $label" : null,
-      onChanged: isPrice
-          ? (v) {
-        final clean = v.replaceAll(",", "");
-        final num? value = num.tryParse(clean);
-        if (value != null) {
-          final formatted =
-          NumberFormat("#,##,###").format(value);
-          controller.value = TextEditingValue(
-            text: formatted,
-            selection:
-            TextSelection.collapsed(offset: formatted.length),
-          );
-        }
-      }
-          : null,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: prefix != null ? Icon(prefix, size: 18) : null,
-        isDense: true,
-        contentPadding:
-        const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        filled: true,
-        fillColor: AppColors.textBoxbackground,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    );
-  }
-
-  Widget _dropdown({
-    required String label,
-    required String value,
-    required List<String> items,
-    required Function(String) onChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      decoration: InputDecoration(
-        labelText: label,
-        isDense: true,
-        contentPadding:
-        const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        filled: true,
-        fillColor: AppColors.textBoxbackground,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-      items: items
-          .map(
-            (e) => DropdownMenuItem(
-          value: e,
-          child: Text(e),
-        ),
-      )
-          .toList(),
-      onChanged: (v) => onChanged(v!),
-    );
-  }
-
-  Widget _chipSelector({
-    required List<String> options,
-    required String selected,
-    required Function(String) onSelected,
-  }) {
-    return Wrap(
-      spacing: 6,
-      runSpacing: 4,
-      children: options.map((o) {
-        return ChoiceChip(
-          label: Text(o, style: const TextStyle(fontSize: 12)),
-          selected: selected == o,
-          selectedColor: AppColors.primary.withOpacity(0.2),
-          visualDensity: VisualDensity.compact,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          labelPadding:
-          const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-          onSelected: (_) => onSelected(o),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _sectionTitle(String text) {
-    return Text(
-      text,
-      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-    );
-  }
+  String _cap(String text) =>
+      text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
 }

@@ -4,15 +4,16 @@ import '../services/bank_service.dart';
 import '../theme/app_colors.dart';
 import '../cards/bank_card.dart';
 import '../screens/bank_rates_compare_dialog.dart';
+import '../screens/bank_applyLoan_dialog.dart';
 
 class BankPage extends StatefulWidget {
   final String? userId;
-
 
   const BankPage({
     super.key,
     this.userId,
   });
+
   @override
   State<BankPage> createState() => _BankPageState();
 }
@@ -24,7 +25,7 @@ class _BankPageState extends State<BankPage> {
   List<Bank> _allBanks = [];
   List<Bank> _filteredBanks = [];
 
-  /// ✅ Track selected banks using IDs
+  /// Track selected banks using IDs
   final Set<int> _selectedBankIds = {};
 
   bool _isLoading = true;
@@ -61,12 +62,8 @@ class _BankPageState extends State<BankPage> {
   void _search(String value) {
     setState(() {
       _filteredBanks = _allBanks
-          .where(
-            (b) =>
-            (b.bankName ?? '')
-                .toLowerCase()
-                .contains(value.toLowerCase()),
-      )
+          .where((b) =>
+          (b.bankName ?? '').toLowerCase().contains(value.toLowerCase()))
           .toList();
     });
   }
@@ -77,52 +74,65 @@ class _BankPageState extends State<BankPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
+
+      appBar: AppBar(
+        title: const Text("Home Loans & Banks"),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: TextButton.icon(
+              onPressed: () {
+                LoanApplySheet.show(context);
+              },
+              icon:
+              const Icon(Icons.support_agent, color: AppColors.primary),
+              label: const Text(
+                "Inquiry",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              style:
+              TextButton.styleFrom(backgroundColor: Colors.white),
+            ),
+          ),
+        ],
+      ),
+
       body: SafeArea(
         child: Column(
           children: [
-            _topBar(),
+            /// 🔍 SEARCH + 🔁 COMPARE ROW
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: _searchBar(),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(child: _searchBar()),
+                  const SizedBox(width: 8),
+                  if (_selectedBankIds.length >= 2)
+                    ElevatedButton.icon(
+                      onPressed: _showCompareDialog,
+                      icon:
+                      const Icon(Icons.compare_arrows, size: 18),
+                      label: const Text("Compare"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
+
             Expanded(child: _buildBody()),
           ],
         ),
-      ),
-    );
-  }
-
-  /// 🔝 Top bar with Compare button
-  Widget _topBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            "Banks",
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-
-          /// ✅ Show only when 2+ banks selected
-          if (_selectedBankIds.length >= 2)
-            ElevatedButton.icon(
-              onPressed: _showCompareDialog,
-              icon: const Icon(Icons.compare_arrows),
-              label: const Text("Compare"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }
@@ -146,7 +156,7 @@ class _BankPageState extends State<BankPage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       physics: const BouncingScrollPhysics(),
       itemCount: _filteredBanks.length,
       itemBuilder: (_, index) {
@@ -212,7 +222,8 @@ class _BankPageState extends State<BankPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: Colors.white),
+          const Icon(Icons.error_outline,
+              size: 64, color: Colors.white),
           const SizedBox(height: 12),
           Text(
             message,

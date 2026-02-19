@@ -3,6 +3,7 @@ import '../models/bank_model.dart';
 import '../screens/bankDetails_screen.dart';
 import '../screens/bank_applyLoan_dialog.dart';
 import '../theme/app_colors.dart';
+import '../commons/common_widget.dart'; // For AppButton
 
 class BankCard extends StatelessWidget {
   final Bank bank;
@@ -38,12 +39,7 @@ class BankCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => BankDetailPage(bank: bank),
-            ),
-          );
+          showBankDetailSheet(context, bank);
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -97,11 +93,9 @@ class BankCard extends StatelessWidget {
               /// INFO ROW
               Row(
                 children: [
-                  _info("Interest Rate",
-                      "${bank.interestRate ?? '-'}%"),
+                  _info("Interest Rate", "${bank.interestRate ?? '-'}%"),
                   const SizedBox(width: 12),
-                  _info("Tenure",
-                      "${bank.tenureYears ?? '-'} yrs"),
+                  _info("Tenure", "${bank.tenureYears ?? '-'} yrs"),
                 ],
               ),
 
@@ -111,33 +105,10 @@ class BankCard extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              /// APPLY BUTTON
-              SizedBox(
-                width: double.infinity,
-                height: 46,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => LoanApplyDialog.show(context),
-                  icon: const Icon(
-                    Icons.flash_on_rounded,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                  label: const Text(
-                    "Apply Now",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+              /// APPLY BUTTON using AppButton
+              AppButton(
+                text: "Apply Now",
+                onTap: () => LoanApplySheet.show(context),
               ),
             ],
           ),

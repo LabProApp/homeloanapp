@@ -12,7 +12,7 @@ import 'otp_verification_screen.dart';
 import 'user_forgot_password.dart';
 import '../services/user_service.dart';
 import '../theme/app_colors.dart';
-
+import '../commons/common_widget.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -144,11 +144,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 30),
 
-                  _gradientButton(
+                  AppButton(
                     text: selectedTab == 0 ? "Sign In" : "Sign Up",
-                    onTap:
-                    _loading ? null : (selectedTab == 0 ? _login : _signup),
+                    isLoading: _loading,
+                    onTap: _loading
+                        ? null
+                        : (selectedTab == 0 ? _login : _signup),
                   ),
+
                 ],
               ),
             ),
@@ -328,28 +331,5 @@ class _LoginScreenState extends State<LoginScreen> {
     BorderSide(color: focus ? Colors.white : Colors.white38),
   );
 
-  Widget _gradientButton({required String text, VoidCallback? onTap}) {
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient:
-          const LinearGradient(colors: [AppColors.primary, AppColors.secondary]),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: ElevatedButton(
-          onPressed: onTap,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-          ),
-          child: _loading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : Text(text,
-              style: const TextStyle(fontWeight: FontWeight.w600)),
-        ),
-      ),
-    );
-  }
+
 }

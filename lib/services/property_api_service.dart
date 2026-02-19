@@ -63,7 +63,7 @@ class PropertyApiService {
       addParam("postDate", postDate);
       addParam("postedByUser", postedByUser);
 
-      final uri = Uri.parse("${ApiUrls.propertySearch}")
+      final uri = Uri.parse(ApiUrls.propertySearch)
           .replace(queryParameters: queryParams.isEmpty ? null : queryParams);
 
       developer.log("📤 FETCH PROPERTIES: $uri");
@@ -85,7 +85,6 @@ class PropertyApiService {
     }
   }
 
-
   /// 🔹 Add Property
   static Future<bool> addProperty(PropertyModel property) async {
     final uri = Uri.parse(ApiUrls.post_property);
@@ -93,15 +92,13 @@ class PropertyApiService {
     developer.log("📤 ADD PROPERTY REQUEST");
     developer.log(jsonEncode(property.toJson()));
 
-    final response = await http
-        .post(
+    final response = await http.post(
       uri,
       headers: {
         "Content-Type": "application/json",
       },
       body: jsonEncode(property.toJson()),
-    )
-        .timeout(const Duration(seconds: 20));
+    ).timeout(const Duration(seconds: 20));
 
     developer.log("📥 ADD PROPERTY RESPONSE STATUS: ${response.statusCode}");
     developer.log("📥 ADD PROPERTY RESPONSE BODY: ${response.body}");
@@ -111,6 +108,37 @@ class PropertyApiService {
     } else {
       throw Exception(
         "Add property failed (${response.statusCode}): ${response.body}",
+      );
+    }
+  }
+
+  /// 🔹 Update Property
+  static Future<bool> updateProperty(PropertyModel property) async {
+    if (property.id == null) {
+      throw Exception("Property ID is required for update");
+    }
+
+    final uri = Uri.parse("${ApiUrls.update_property}/${property.id}");
+
+    developer.log("📤 UPDATE PROPERTY REQUEST");
+    developer.log(jsonEncode(property.toJson()));
+
+    final response = await http.put(
+      uri,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode(property.toJson()),
+    ).timeout(const Duration(seconds: 20));
+
+    developer.log("📥 UPDATE PROPERTY STATUS: ${response.statusCode}");
+    developer.log("📥 UPDATE PROPERTY BODY: ${response.body}");
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      return true;
+    } else {
+      throw Exception(
+        "Update property failed (${response.statusCode}): ${response.body}",
       );
     }
   }

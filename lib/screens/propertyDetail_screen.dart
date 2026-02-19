@@ -4,13 +4,18 @@ import '../theme/app_colors.dart';
 import '../utility/amenity_icon.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
-import '../commons/commonutil.dart';
 import 'package:intl/intl.dart';
+import '../screens/propertyAdd_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
+  final String userId; // logged in user
 
-  const PropertyDetailScreen({super.key, required this.property});
+  const PropertyDetailScreen({
+    super.key,
+    required this.property,
+    required this.userId,
+  });
 
   @override
   State<PropertyDetailScreen> createState() => _PropertyDetailScreenState();
@@ -44,6 +49,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       return widget.property.amenitiesAsList!.map((e) => e.toString()).toList();
     }
     return [];
+  }
+
+  /// ✅ FIXED OWNER CHECK (int vs string)
+  bool get _isOwner {
+    return widget.property.postedByUser?.toString() == widget.userId;
   }
 
   @override
@@ -120,7 +130,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
                         _images.length,
-                        (i) => Container(
+                            (i) => Container(
                           margin: const EdgeInsets.symmetric(horizontal: 4),
                           width: currentIndex == i ? 10 : 6,
                           height: 6,
@@ -146,7 +156,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// PRICE & TITLE
+                  /// PRICE
                   Text(
                     widget.property.price != null
                         ? "₹ ${NumberFormat('#,##,###.##').format(widget.property.price)}"
@@ -159,6 +169,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   ),
 
                   const SizedBox(height: 6),
+
+                  /// TITLE
                   Text(
                     widget.property.title ?? "-",
                     style: const TextStyle(
@@ -166,11 +178,32 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+
                   if (widget.property.address != null)
                     Text(
                       widget.property.address!,
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
+
+                  /// 🔥 MODIFY BUTTON (ONLY FOR OWNER)
+                  if (_isOwner) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.edit),
+                        label: const Text("Modify Property"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: _openEditProperty,
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 20),
                   _featureRow(),
@@ -224,7 +257,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   const SizedBox(height: 10),
                   _detailsCard(),
 
-                  const SizedBox(height: 80), // Space for bottom padding
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
@@ -235,23 +268,42 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   /// ---------------- ACTIONS ----------------
+
+  void _openEditProperty() async {
+    final updated = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PostPropertyScreen(
+          userId: widget.userId,
+          propertyToEdit: widget.property, // edit mode
+        ),
+      ),
+    );
+
+    if (updated == true) {
+      Navigator.pop(context, true); // tell listing to refresh
+    }
+
+  }
+
   void _shareProperty() {
     Share.share(
       "${widget.property.title}\n"
-      "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}\n"
-      "Address: ${widget.property.address ?? "-"}",
+          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}\n"
+          "Address: ${widget.property.address ?? "-"}",
     );
   }
 
   void _shareWhatsApp() {
     Share.share(
       "Check out this property:\n"
-      "${widget.property.title}\n"
-      "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}",
+          "${widget.property.title}\n"
+          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}",
     );
   }
 
   /// ---------------- UI HELPERS ----------------
+
   Widget _imageActionIcon({
     required IconData icon,
     required VoidCallback onTap,
@@ -272,7 +324,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Widget _placeholderImage() {
-    // Show 3 default images rotated by currentIndex
     final img = [
       'assets/images/house1.jpg',
       'assets/images/house2.jpg',
@@ -313,7 +364,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       child: Column(
         children: [
           _DetailRow("Type", widget.property.type ?? "-"),
-
           _DetailRow(
             "Construction Status",
             widget.property.constructionStatus ?? "-",
@@ -327,7 +377,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             widget.property.superArea?.toString() ?? "-",
           ),
           _DetailRow("Posted By", widget.property.postedBy ?? "-"),
-          _DetailRow("Contact", widget.property.contactNumber),
+          _DetailRow("Contact", widget.property.contactNumber ?? "-"),
           _DetailRow("Posted On", widget.property.postDate ?? "-"),
         ],
       ),
@@ -336,6 +386,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 }
 
 /// ---------------- SMALL WIDGETS ----------------
+
 class _Feature extends StatelessWidget {
   final IconData icon;
   final String label;

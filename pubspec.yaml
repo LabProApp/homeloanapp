@@ -31,7 +31,7 @@ dependencies:
   package_info_plus: ^8.0.0
   flutter_native_splash: ^2.4.0
   shared_preferences: ^2.2.2
-
+  dropdown_button2: ^2.3.9
 
 dev_dependencies:
   flutter_test:
@@ -55,7 +55,7 @@ flutter:
 
 flutter_native_splash:
   color: "#FFFFFF"   # background color only
-  image: assets/images/splash_bg.jpg   # 👈 SHOW THIS INSTEAD OF ICON
+ # image: assets/images/ic_launcher.jpg   # 👈 SHOW THIS INSTEAD OF ICON
   android: true
   ios: true
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../models/legal_service_model.dart';
+import '../commons/common_widget.dart'; // Import AppButton
 
 class LegalServiceCard extends StatelessWidget {
   final LegalService service;
@@ -23,9 +24,7 @@ class LegalServiceCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Colors.grey.shade200, // subtle border
-        ),
+        side: BorderSide(color: Colors.grey.shade200),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -37,7 +36,6 @@ class LegalServiceCard extends StatelessWidget {
               children: [
                 _Avatar(letter: service.legalName),
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +63,7 @@ class LegalServiceCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            /// SERVICES (FLAT CHIPS)
+            /// SERVICES CHIPS
             Wrap(
               spacing: 8,
               runSpacing: 6,
@@ -90,24 +88,28 @@ class LegalServiceCard extends StatelessWidget {
             Divider(height: 1, color: Colors.grey.shade300),
             const SizedBox(height: 14),
 
-            /// ACTIONS
+            /// ACTIONS (using AppButton)
             Row(
               children: [
                 Expanded(
-                  child: _ActionButton(
-                    icon: Icons.call,
-                    label: "Call",
-                    color: AppColors.success,
+                  child: AppButton(
+                    text: "Call",
+
                     onTap: onCall,
+
+                    height: 44,
+
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _ActionButton(
-                    icon: Icons.message,
-                    label: "WhatsApp",
-                    color: AppColors.primary,
+                  child: AppButton(
+                    text: "WhatsApp",
+
                     onTap: onWhatsApp,
+
+                    height: 44,
+
                   ),
                 ),
               ],
@@ -134,9 +136,7 @@ class _Avatar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.primary.withOpacity(0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.3),
-        ),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
       ),
       child: Center(
         child: Text(
@@ -146,55 +146,6 @@ class _Avatar extends StatelessWidget {
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// ---------------- ACTION BUTTON ----------------
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Container(
-        height: 44,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withOpacity(0.35),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: color),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: color,
-              ),
-            ),
-          ],
         ),
       ),
     );

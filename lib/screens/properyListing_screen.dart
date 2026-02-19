@@ -10,7 +10,7 @@ import '../screens/property_filter_dialog.dart';
 class PropertyListingScreen extends StatefulWidget {
   final String userId;
 
-  const PropertyListingScreen({super.key,required  this.userId});
+  const PropertyListingScreen({super.key, required this.userId});
 
   @override
   State<PropertyListingScreen> createState() => _PropertyListingScreenState();
@@ -26,10 +26,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   bool isResidential = true;
   bool isBuy = true;
 
-  /// FILTERS
   Map<String, dynamic> _filters = {};
-
-  /// SORT
   String _sortBy = "latest";
 
   @override
@@ -39,7 +36,6 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     _refreshFromApi();
   }
 
-  // ================= SAFE CONVERTER =================
   int? _toInt(dynamic v) {
     if (v == null) return null;
     if (v is int) return v;
@@ -62,26 +58,18 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       });
 
       final service = PropertyApiService();
-
       final searchText = _searchController.text.trim();
 
       final data = await service.fetchProperties(
-        /// 🔍 One search box → used for multiple fields
-
         city: searchText.isEmpty ? _filters["city"] : searchText,
         location: searchText.isEmpty ? null : searchText,
-
         category: isResidential ? "Residential" : "Commercial",
         rentOrSale: isBuy ? "SALE" : "RENT",
-
         type: _filters["type"],
-
         minBedrooms: _toInt(_filters["bedrooms"]),
         minBathrooms: _toInt(_filters["bathrooms"]),
-
         minPrice: _toDouble(_filters["minPrice"]),
         maxPrice: _toDouble(_filters["maxPrice"]),
-
         minArea: _toDouble(_filters["minArea"]),
         maxArea: _toDouble(_filters["maxArea"]),
       );
@@ -98,7 +86,6 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     }
   }
 
-
   void _refreshFromApi() => _loadProperties();
 
   @override
@@ -114,21 +101,23 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final added = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => PostPropertyScreen(userId: widget.userId),
             ),
           );
+
+          if (added == true) {
+            _refreshFromApi(); // ✅ refresh after add
+          }
         },
         child: const Icon(Icons.add),
         foregroundColor: AppColors.white,
       ),
     );
   }
-
-  // ================= UI =================
 
   Widget _buildSearchBar() {
     return Padding(
@@ -186,7 +175,6 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     );
   }
 
-
   Widget _buildList() {
     return Expanded(
       child: RefreshIndicator(
@@ -201,22 +189,27 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
               style: TextStyle(fontSize: 16)),
         )
             : ListView.builder(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           itemCount: _properties.length,
           itemBuilder: (context, index) {
             final property = _properties[index];
             return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.only(bottom: 3),
               child: InkWell(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  final updated = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => PropertyDetailScreen(
                         property: property,
+                        userId: widget.userId,
                       ),
                     ),
                   );
+
+                  if (updated == true) {
+                    _refreshFromApi(); // ✅ refresh after edit
+                  }
                 },
                 child: PropertyCard(property: property),
               ),
@@ -226,8 +219,6 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       ),
     );
   }
-
-  // ================= ACTIONS =================
 
   void _openFilterDialog() {
     showModalBottomSheet(
@@ -274,8 +265,6 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       },
     );
   }
-
-  // ================= HELPERS =================
 
   Widget _toggle(List<String> labels, bool firstSelected, Function(bool) onTap) {
     return ToggleButtons(
