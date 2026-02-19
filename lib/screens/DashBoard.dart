@@ -125,7 +125,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _drawerItem(Icons.home_rounded, "Home", 0),
             _drawerItem(Icons.account_balance_rounded, "Bank Loans", 1),
             _drawerItem(Icons.business_rounded, "Projects", 2),
-            _drawerItem(Icons.document_scanner_rounded, "Legal Documents", 3),
+            _drawerItem(Icons.document_scanner_rounded, "Documentation", 3),
 
             /// ⭐ MY PROPERTY POSTINGS
             ListTile(

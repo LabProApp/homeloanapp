@@ -1,185 +1,214 @@
-import 'package:flutter/material.dart';
+import 'dart:ffi';
 
-class ProfileScreen extends StatelessWidget {
-  final String? userId;
+import 'package:flutter/material.dart';
+import '../services/user_service.dart';
+import '../models/user_model.dart';
+
+class ProfileScreen extends StatefulWidget {
+  final String userId; // email or mobile used during login
 
   const ProfileScreen({
     super.key,
-    this.userId,
+    required this.userId,
   });
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late Future<UserModel> _futureUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureUser = UserApiService.getProfile(widget.userId);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
-      body: CustomScrollView(
-        slivers: [
-          /// ---------------- APP BAR ----------------
-          SliverAppBar(
-            expandedHeight: 180,
-            pinned: true,
-            backgroundColor: Colors.orange.shade700,
-            flexibleSpace: FlexibleSpaceBar(
-              centerTitle: true,
-              title: const Text(
-                "My Profile",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.orange.shade400,
-                      Colors.brown.shade400,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+      body: FutureBuilder<UserModel>(
+        future: _futureUser,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return const Center(child: Text("Failed to load profile"));
+          }
+
+          final user = snapshot.data!;
+
+          return CustomScrollView(
+            slivers: [
+              /// ---------------- APP BAR ----------------
+              SliverAppBar(
+                expandedHeight: 180,
+                pinned: true,
+                backgroundColor: Colors.orange.shade700,
+                flexibleSpace: FlexibleSpaceBar(
+                  centerTitle: true,
+                  title: const Text(
+                    "My Profile",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.orange.shade400,
+                          Colors.brown.shade400,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
 
-          /// ---------------- CONTENT ----------------
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  /// PROFILE HEADER
-                  _profileHeader(),
+              /// ---------------- CONTENT ----------------
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _profileHeader(user),
 
-                  const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                  /// PERSONAL INFO
-                  _sectionCard(
-                    title: "Personal Information",
-                    icon: Icons.person,
-                    child: Column(
-                      children: const [
-                        _InfoField(label: "Full Name", value: "John Anderson"),
-                        SizedBox(height: 12),
-                        _InfoField(
-                            label: "Email Address",
-                            value: "john.anderson@email.com"),
-                        SizedBox(height: 12),
-                        _InfoField(
-                            label: "Mobile Number",
-                            value: "+1 (555) 123-4567"),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  /// CURRENT PLAN
-                  _sectionCard(
-                    title: "Current Plan",
-                    icon: Icons.workspace_premium,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                      /// PERSONAL INFO
+                      _sectionCard(
+                        title: "Personal Information",
+                        icon: Icons.person,
+                        child: Column(
                           children: [
-                            Chip(
-                              label: const Text("Premium"),
-                              backgroundColor:
-                              Colors.orange.shade100,
-                              labelStyle: TextStyle(
-                                  color: Colors.orange.shade900,
-                                  fontWeight: FontWeight.bold),
+                            _InfoField(label: "Full Name", value: user.name),
+                            const SizedBox(height: 12),
+                            _InfoField(label: "Email Address", value: user.email),
+                            const SizedBox(height: 12),
+                            _InfoField(label: "Mobile Number", value: user.mobile),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      /// CURRENT PLAN
+                      _sectionCard(
+                        title: "Current Plan",
+                        icon: Icons.workspace_premium,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Chip(
+                                  label: Text(user.plan),
+                                  backgroundColor: Colors.orange.shade100,
+                                  labelStyle: TextStyle(
+                                    color: Colors.orange.shade900,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  user.planStatus,
+                                  style: const TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const Spacer(),
-                            const Text(
-                              "Active",
-                              style: TextStyle(
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold),
+                            const SizedBox(height: 10),
+                            Text(
+                              "Access to all premium features and unlimited property views.",
+                              style: TextStyle(color: Colors.grey.shade700),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Text(
+                                  "Next billing: ${user.nextBilling}",
+                                  style: TextStyle(color: Colors.grey.shade600),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  "Change Plan",
+                                  style: TextStyle(
+                                    color: Colors.orange.shade700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          "Access to all premium features and unlimited property views.",
-                          style: TextStyle(color: Colors.grey.shade700),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Text(
-                              "Next billing: Jan 15, 2025",
-                              style: TextStyle(color: Colors.grey.shade600),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      /// ACTION BUTTONS
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange.shade700,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
                             ),
-                            const Spacer(),
-                            Text(
-                              "Change Plan",
-                              style: TextStyle(
-                                  color: Colors.orange.shade700,
-                                  fontWeight: FontWeight.w600),
+                          ),
+                          onPressed: () {},
+                          child: const Text(
+                            "Save Changes",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-
-
-                  const SizedBox(height: 30),
-
-                  /// ACTION BUTTONS
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange.shade700,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                       ),
-                      onPressed: () {},
-                      child: const Text(
-                        "Save Changes",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold,
-                           color: Colors.white),
+
+                      const SizedBox(height: 12),
+
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text(
+                          "Sign Out",
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                    ),
+
+                      const SizedBox(height: 20),
+                    ],
                   ),
-
-                  const SizedBox(height: 12),
-
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      "Sign Out",
-                      style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
 
   /// ---------------- HEADER ----------------
-  Widget _profileHeader() {
+  Widget _profileHeader(UserModel user) {
     return Column(
       children: [
         Stack(
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 54,
-              backgroundImage: AssetImage("assets/user.png"),
+              backgroundImage: NetworkImage(user.imageUrl),
             ),
             Positioned(
               bottom: 0,
@@ -198,13 +227,13 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        const Text(
-          "John Anderson",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        Text(
+          user.name,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(
-          "Premium Member",
+          "${user.plan} Member",
           style: TextStyle(color: Colors.grey.shade600),
         ),
       ],
@@ -246,43 +275,6 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           child,
-        ],
-      ),
-    );
-  }
-
-  /// ---------------- SECTION TITLE ----------------
-  Widget _sectionTitle(String title) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  /// ---------------- ACTIVITY ITEM ----------------
-  Widget _activityItem(IconData icon, String title, String subtitle) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.orange.shade700),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              Text(subtitle,
-                  style: TextStyle(color: Colors.grey.shade600)),
-            ],
-          ),
         ],
       ),
     );

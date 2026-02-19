@@ -29,9 +29,13 @@ dependencies:
   intl: ^0.18.1
   sms_autofill: ^2.4.0
   package_info_plus: ^8.0.0
-  flutter_native_splash: ^2.4.0
+  flutter_native_splash: ^2.3.10
   shared_preferences: ^2.2.2
   dropdown_button2: ^2.3.9
+
+
+
+
 
 dev_dependencies:
   flutter_test:

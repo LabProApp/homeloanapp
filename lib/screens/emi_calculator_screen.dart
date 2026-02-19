@@ -3,6 +3,7 @@ import '../theme/app_colors.dart';
 import '../models/calcLoanRequest.dart';
 import '../models/calcLoanResponse.dart';
 import '../services/emi_service.dart';
+import '../commons/common_widget.dart'; // 👈 AppButton
 
 class EmiCalculatorScreen extends StatefulWidget {
   const EmiCalculatorScreen({super.key});
@@ -17,8 +18,6 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   final principalCtrl = TextEditingController();
   final interestCtrl = TextEditingController();
   final tenureCtrl = TextEditingController();
-//  final incomeCtrl = TextEditingController();
- // final existingEmiCtrl = TextEditingController();
 
   bool loading = false;
   CalcLoanResponse? response;
@@ -26,8 +25,6 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   @override
   void initState() {
     super.initState();
-
-    /// ✅ Clear everything on screen load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _resetForm();
     });
@@ -35,12 +32,9 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
 
   void _resetForm() {
     _formKey.currentState?.reset();
-
     principalCtrl.clear();
     interestCtrl.clear();
     tenureCtrl.clear();
-  //  incomeCtrl.clear();
-   // existingEmiCtrl.clear();
 
     setState(() {
       response = null;
@@ -53,8 +47,6 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     principalCtrl.dispose();
     interestCtrl.dispose();
     tenureCtrl.dispose();
-  //  incomeCtrl.dispose();
-  //  existingEmiCtrl.dispose();
     super.dispose();
   }
 
@@ -68,8 +60,6 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
         principal: double.parse(principalCtrl.text),
         annualInterestRate: double.parse(interestCtrl.text),
         tenureYears: int.parse(tenureCtrl.text),
-       // monthlyIncome: double.parse(incomeCtrl.text),
-      //  existingEmi: double.parse(existingEmiCtrl.text),
         includeSchedule: false,
       );
 
@@ -87,102 +77,76 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "EMI Calculator",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+      backgroundColor: AppColors.listingbackground, // 👈 dashboard style
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "EMI Calculator",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            /// 🔳 FORM CARD
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(height: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      _field("Loan Amount", principalCtrl),
+                      _field("Interest Rate (%)", interestCtrl),
+                      _field("Tenure (Years)", tenureCtrl),
+                      const SizedBox(height: 14),
 
-              /// 🔳 FORM CARD
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _field("Loan Amount", principalCtrl),
-                        _field("Interest Rate (%)", interestCtrl),
-                        _field("Tenure (Years)", tenureCtrl),
-                     //   _field("Monthly Income", incomeCtrl),
-                     //   _field("Existing EMI", existingEmiCtrl),
-                        const SizedBox(height: 20),
-
-                        /// 🤍 WHITE BUTTON
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: loading ? null : calculateEmi,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange.shade700,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: loading
-                                ? const SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.primary,
-                              ),
-                            )
-                                : const Text(
-                              "Calculate EMI",
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold,
-                                    color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      /// ✅ STANDARD AppButton
+                      AppButton(
+                        text: "Calculate EMI",
+                        isLoading: loading,
+                        onTap: calculateEmi,
+                      ),
+                    ],
                   ),
                 ),
               ),
+            ),
 
-              const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-              /// 📊 RESULT
-              if (response != null) _resultCard(),
-            ],
-          ),
+            /// 📊 RESULT
+            if (response != null) _resultCard(),
+          ],
         ),
       ),
     );
   }
 
+  /// 🔹 SLIM TEXT FIELD
   Widget _field(String label, TextEditingController ctrl) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: TextFormField(
         controller: ctrl,
         keyboardType: TextInputType.number,
+        validator: (v) => v == null || v.isEmpty ? "Required" : null,
         decoration: InputDecoration(
           labelText: label,
+          isDense: true, // 👈 slimmer
+          contentPadding:
+          const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppColors.textBoxbackground,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
         ),
-        validator: (v) => v == null || v.isEmpty ? "Required" : null,
       ),
     );
   }
@@ -197,8 +161,6 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
             _row("Monthly EMI", response!.monthlyPayment.toDouble()),
             _row("Total Interest", response!.totalInterest.toDouble()),
             _row("Total Payment", response!.totalPayment.toDouble()),
-          //  _row("Affordable EMI", response!.affordableEmi),
-        //    _row("Eligible Loan", response!.eligibleLoan),
           ],
         ),
       ),

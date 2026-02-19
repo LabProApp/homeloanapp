@@ -10,6 +10,11 @@ class ApiUrls {
   static const String userSignup = "$baseUrl/user/signup";
   static const String userlogin = "$baseUrl/user/login";
   static const String userlogout = "$baseUrl/user/logout";
+
+
+  static String userProfileById(String userId) =>
+      "$baseUrl/user/profile/$userId";
+
   static const String resetPassword = "$baseUrl/user/reset-password";
   //Tools services URLs
 

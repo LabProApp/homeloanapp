@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../services/legal_service_api.dart';
 import '../models/inquiry_request.dart';
+import '../commons/common_widget.dart';
 
 class InquiryDialog extends StatefulWidget {
   const InquiryDialog({super.key});
@@ -28,8 +29,9 @@ class _InquiryDialogState extends State<InquiryDialog> {
   String _selectedService = "DOCUMENT_SERVICES";
 
   Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() => _loading = true);
-    print("Submit called");  // 🔹 Debug log
 
     try {
       final inquiry = Inquiry(
@@ -39,8 +41,6 @@ class _InquiryDialogState extends State<InquiryDialog> {
         comments: _messageController.text.trim(),
         leadSource: "APP",
       );
-
-      print("Inquiry object: $inquiry");  // 🔹 Debug log
 
       await LegalServiceApi.submitInquiry(inquiry);
 
@@ -53,10 +53,8 @@ class _InquiryDialogState extends State<InquiryDialog> {
           content: Text("Inquiry submitted successfully"),
         ),
       );
-    } catch (e, st) {
-      print("Submit error: $e"); // 🔹 Debug log
+    } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: AppColors.error,
@@ -68,10 +66,13 @@ class _InquiryDialogState extends State<InquiryDialog> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       padding: EdgeInsets.only(
         left: 16,
         right: 16,
@@ -84,7 +85,7 @@ class _InquiryDialogState extends State<InquiryDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              /// 🔹 TITLE
+              /// HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -95,39 +96,30 @@ class _InquiryDialogState extends State<InquiryDialog> {
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
-                  )
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
 
-              /// 🔹 NAME
-              TextFormField(
+              /// NAME
+              _buildTextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: "Full Name",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) =>
-                v == null || v.isEmpty ? "Enter your name" : null,
+                label: "Full Name",
+                validator: (v) => v == null || v.isEmpty ? "Enter your name" : null,
               ),
               const SizedBox(height: 12),
 
-              /// 🔹 PHONE
-              TextFormField(
+              /// PHONE
+              _buildTextField(
                 controller: _phoneController,
+                label: "Mobile Number",
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: "Mobile Number",
-                  border: OutlineInputBorder(),
-                ),
                 validator: (v) =>
-                v == null || v.length != 10
-                    ? "Enter valid 10-digit number"
-                    : null,
+                v == null || v.length != 10 ? "Enter valid 10-digit number" : null,
               ),
               const SizedBox(height: 12),
 
-              /// 🔹 SERVICE
+              /// SERVICE
               DropdownButtonFormField<String>(
                 value: _selectedService,
                 items: _services
@@ -139,49 +131,64 @@ class _InquiryDialogState extends State<InquiryDialog> {
                 )
                     .toList(),
                 onChanged: (v) => setState(() => _selectedService = v!),
-                decoration: const InputDecoration(
-                  labelText: "Service",
-                  border: OutlineInputBorder(),
-                ),
+                decoration: _inputDecoration(label: "Service"),
               ),
               const SizedBox(height: 12),
 
-              /// 🔹 MESSAGE
-              TextFormField(
+              /// MESSAGE
+              _buildTextField(
                 controller: _messageController,
+                label: "Message",
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: "Message",
-                  border: OutlineInputBorder(),
-                ),
               ),
               const SizedBox(height: 20),
 
-              /// 🔹 SUBMIT
+              /// SUBMIT BUTTON
+              /// SUBMIT BUTTON (AppButton)
               SizedBox(
                 width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: _loading ? null : _submit,
-                  child: _loading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                    "Submit Inquiry",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
+                height: 50,
+                child: AppButton(
+                  text: "Submit Inquiry",
+                  isLoading: _loading,
+                  onTap: _loading ? null : _submit,
                 ),
               ),
+
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// STANDARD WHITE ROUNDED TEXTFIELD
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      validator: validator,
+      decoration: _inputDecoration(label: label),
+    );
+  }
+
+  InputDecoration _inputDecoration({required String label}) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: Colors.white,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
       ),
     );
   }

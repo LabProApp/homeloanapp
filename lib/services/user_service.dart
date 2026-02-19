@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../utility/ApiUrls.dart';
+import '../models/user_model.dart';
 import 'dart:async';
 import 'dart:io';
 /// ================= USER API SERVICE =================
@@ -61,6 +62,24 @@ class UserApiService {
       token: decoded["token"]?.toString(), // future-proof
     );
   }
+
+  /// 👤 GET USER PROFILE (by email or mobile)
+  static Future<UserModel> getProfile(String userId) async {
+    final uri = Uri.parse(ApiUrls.userProfileById(userId));
+
+    final res = await http.get(uri).timeout(const Duration(seconds: 15));
+
+    if (res.statusCode != 200) {
+      throw Exception("Failed to load profile");
+    }
+
+    final decoded = jsonDecode(res.body) as Map<String, dynamic>;
+
+    return UserModel.fromJson(decoded);
+  }
+
+
+
 
 
   /// 🔐 RESET PASSWORD
