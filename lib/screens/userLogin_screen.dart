@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text(
                     "Find. Finance. Finalize.",
                     style:
-                    TextStyle(fontSize: 16, color: Colors.deepOrange),
+                    TextStyle(fontSize: 16, color: Colors.white),
                   ),
 
                   const SizedBox(height: 30),

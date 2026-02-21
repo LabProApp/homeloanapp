@@ -58,8 +58,9 @@ class _WebViewPageState extends State<WebViewPage> {
           widget.title,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+
+        backgroundColor: AppColors.listingbackground,
+        foregroundColor: AppColors.primary,
         elevation: 1,
       ),
       body: Stack(

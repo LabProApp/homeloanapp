@@ -9,8 +9,8 @@ import '../screens/property_filter_dialog.dart';
 
 class PropertyListingScreen extends StatefulWidget {
   final String userId;
-
-  const PropertyListingScreen({super.key, required this.userId});
+  final String? postedbyuserId;
+  const PropertyListingScreen({super.key, required this.userId, this.postedbyuserId});
 
   @override
   State<PropertyListingScreen> createState() => _PropertyListingScreenState();
@@ -61,6 +61,9 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       final searchText = _searchController.text.trim();
 
       final data = await service.fetchProperties(
+        postedByUser: (widget.postedbyuserId != null && widget.postedbyuserId!.isNotEmpty)
+            ? widget.postedbyuserId
+            : null,
         city: searchText.isEmpty ? _filters["city"] : searchText,
         location: searchText.isEmpty ? null : searchText,
         category: isResidential ? "Residential" : "Commercial",
@@ -110,7 +113,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
           );
 
           if (added == true) {
-            _refreshFromApi(); // ✅ refresh after add
+            _refreshFromApi();
           }
         },
         child: const Icon(Icons.add),
@@ -130,7 +133,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
                 controller: _searchController,
@@ -163,7 +166,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
               _refreshFromApi();
             }),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 50),
           Expanded(
             child: _toggle(["Buy", "Rent"], isBuy, (val) {
               setState(() => isBuy = val);
@@ -179,42 +182,47 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     return Expanded(
       child: RefreshIndicator(
         onRefresh: () async => _refreshFromApi(),
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _error.isNotEmpty
-            ? Center(child: Text(_error))
-            : _properties.isEmpty
-            ? const Center(
-          child: Text("No properties found",
-              style: TextStyle(fontSize: 16)),
-        )
-            : ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          itemCount: _properties.length,
-          itemBuilder: (context, index) {
-            final property = _properties[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 3),
-              child: InkWell(
-                onTap: () async {
-                  final updated = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PropertyDetailScreen(
-                        property: property,
-                        userId: widget.userId,
+        child: ScrollConfiguration(
+          behavior: const _NoGlowScrollBehavior(),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _error.isNotEmpty
+              ? Center(child: Text(_error))
+              : _properties.isEmpty
+              ? const Center(
+            child: Text("No properties found", style: TextStyle(fontSize: 16)),
+          )
+              : ListView.builder(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            itemCount: _properties.length,
+            itemBuilder: (context, index) {
+              final property = _properties[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 3),
+                child: InkWell(
+                  onTap: () async {
+                    final updated = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PropertyDetailScreen(
+                          property: property,
+                          userId: widget.userId,
+                        ),
                       ),
-                    ),
-                  );
+                    );
 
-                  if (updated == true) {
-                    _refreshFromApi(); // ✅ refresh after edit
-                  }
-                },
-                child: PropertyCard(property: property),
-              ),
-            );
-          },
+                    if (updated == true) {
+                      _refreshFromApi();
+                    }
+                  },
+                  child: PropertyCard(property: property),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -270,12 +278,11 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     return ToggleButtons(
       isSelected: [firstSelected, !firstSelected],
       borderRadius: BorderRadius.circular(12),
-      constraints: const BoxConstraints(minHeight: 34, minWidth: 70),
+      constraints: const BoxConstraints(minHeight: 35, minWidth: 70),
       selectedColor: Colors.white,
-      fillColor: AppColors.secondary,
+      fillColor: AppColors.primary,
       onPressed: (i) => onTap(i == 0),
-      children:
-      labels.map((e) => Text(e, style: const TextStyle(fontSize: 12))).toList(),
+      children: labels.map((e) => Text(e, style: const TextStyle(fontSize: 12))).toList(),
     );
   }
 
@@ -285,9 +292,20 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       width: 40,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: IconButton(icon: Icon(icon), onPressed: onTap),
     );
+  }
+}
+
+/// Removes Android glow + improves scroll feel
+class _NoGlowScrollBehavior extends ScrollBehavior {
+  const _NoGlowScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    return child;
   }
 }

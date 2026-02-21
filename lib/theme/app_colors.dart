@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // ===== Brand / Primary =====
-  static const Color primary = Color(0xFFD97706);   // Deep Blue – Trust & Finance
-  static const Color secondary = Colors.orangeAccent; // Professional Blue
-  static const Color textBoxbackground = Color(0xFFFBE9E7); // Professional Blue
-  static const Color accent = Color(0xFF059669);    // Green – Growth / Approval
-  static const Color listingbackground = Color(0xFFFFF3E0); // Professional Blue
+  static const Color primary = Color(0xFFD97706);
+  static const Color secondary = Colors.orangeAccent;
+  static const Color textBoxbackground = Color(0xFFFBE9E7);
+  static const Color accent = Color(0xFF059669);
+  static const Color listingbackground = Color(0xFFFFF3E0);
   // ===== Backgrounds =====
-  static const Color scaffoldBg = Color(0xFFFFF3E0); // Clean off-white
+  static const Color scaffoldBg = Color(0xFFFBE9E7);
   static const Color cardBg = Colors.white;
   static const Color background = Color(0xFFFFF3E0); // Light slate
   static const Color white = Colors.white;

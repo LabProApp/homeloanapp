@@ -32,6 +32,7 @@ dependencies:
   flutter_native_splash: ^2.3.10
   shared_preferences: ^2.2.2
   dropdown_button2: ^2.3.9
+  image_picker: ^1.0.7
 
 
 
@@ -66,3 +67,9 @@ flutter_native_splash:
   android_12:
     color: "#FFFFFF"
 
+fonts:
+  - family: Poppins
+    fonts:
+      - asset: assets/fonts/Poppins-Regular.ttf
+      - asset: assets/fonts/Poppins-SemiBold.ttf
+      - asset: assets/fonts/Poppins-Bold.ttf

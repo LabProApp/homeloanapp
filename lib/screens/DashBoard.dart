@@ -31,21 +31,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _userName = "User";
   String _userEmail = "";
 
-  late final List<Widget> _pages;
+  String? _postedByUserId; // for My Property Postings
 
   @override
   void initState() {
     super.initState();
     debugPrint("✅ DashboardScreen received userId: ${widget.userId}");
-    _pages = [
-      PropertyListingScreen(userId: widget.userId), // Home ✅
-      BankPage(userId: widget.userId),              // Loans
-      PropertyListingScreen(userId: widget.userId), // Projects ✅
-      LegalServicePage(userId: widget.userId),      // Legal
-      const EmiCalculatorScreen(),                  // Drawer only
-    ];
-
-
     _loadAppVersion();
     _loadUserInfo();
   }
@@ -70,6 +61,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return _selectedIndex;
   }
 
+  /// 🔁 BUILD BODY PAGE (recreates every time)
+  Widget _buildPage() {
+    switch (_selectedIndex) {
+      case 0:
+        return PropertyListingScreen(
+          key: UniqueKey(),
+          userId: widget.userId,
+          postedbyuserId: _postedByUserId,
+        );
+      case 1:
+        return BankPage(userId: widget.userId);
+      case 2:
+        return PropertyListingScreen(
+          key: UniqueKey(),
+          userId: widget.userId,
+        );
+      case 3:
+        return LegalServicePage(userId: widget.userId);
+      case 4:
+        return const EmiCalculatorScreen();
+      default:
+        return PropertyListingScreen(userId: widget.userId);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,9 +99,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: const Text(
           "KeyBricks",
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            letterSpacing: 1,
+            fontFamily: 'Poppins', // ✅ Poppins font
+            fontWeight: FontWeight.w600,
+            color: AppColors.primary,
+            fontSize: 22,
+            letterSpacing: 1.2,
           ),
         ),
       ),
@@ -94,7 +112,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       drawer: Drawer(
         child: Column(
           children: [
-            InkWell(
+            const SizedBox(height: 40),
+
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text("Profile"),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -104,49 +126,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 );
               },
-              child: UserAccountsDrawerHeader(
-                decoration: const BoxDecoration(color: AppColors.primary),
-                accountName: Text(
-                  _userName,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                accountEmail: Text(_userEmail),
-                currentAccountPicture: const CircleAvatar(
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.person,
-                    size: 40,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
             ),
+
+            const Divider(),
 
             _drawerItem(Icons.home_rounded, "Home", 0),
             _drawerItem(Icons.account_balance_rounded, "Bank Loans", 1),
             _drawerItem(Icons.business_rounded, "Projects", 2),
             _drawerItem(Icons.document_scanner_rounded, "Documentation", 3),
 
-            /// ⭐ MY PROPERTY POSTINGS
             ListTile(
               leading: const Icon(Icons.home_work_outlined),
               title: const Text("My Property Postings"),
               onTap: () {
+                setState(() {
+                  _postedByUserId = widget.userId;
+                  _selectedIndex = 0;
+                });
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PropertyListingScreen(
-                      userId: widget.userId,
-                    ),
-                  ),
-                );
               },
             ),
 
             const Divider(),
 
-            /// 🔧 TOOLS
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Align(
@@ -222,7 +224,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
 
-            /// 🔐 LOGOUT
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text("Logout"),
@@ -234,20 +235,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
 
-      /// 📄 BODY
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
+      body: _buildPage(),
 
-      /// 🔻 BOTTOM NAV
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _bottomNavIndex ?? 0,
         selectedItemColor: AppColors.secondary,
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          setState(() => _selectedIndex = index);
+          setState(() {
+            _postedByUserId = null;
+            _selectedIndex = index;
+          });
         },
         items: const [
           BottomNavigationBarItem(
@@ -282,13 +281,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       selected: _selectedIndex == index,
       selectedColor: AppColors.secondary,
       onTap: () {
-        setState(() => _selectedIndex = index);
+        setState(() {
+          _postedByUserId = null;
+          _selectedIndex = index;
+        });
         Navigator.pop(context);
       },
     );
   }
 
-  /// 🔐 LOGOUT CONFIRMATION
   void _showLogoutDialog() {
     showDialog(
       context: context,

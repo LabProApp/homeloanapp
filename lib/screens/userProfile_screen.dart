@@ -1,11 +1,14 @@
-import 'dart:ffi';
-
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/user_service.dart';
 import '../models/user_model.dart';
+import '../theme/app_colors.dart';
+import '../commons/common_widget.dart';
+import '../services/document_service.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final String userId; // email or mobile used during login
+  final String userId; // email or mobile
 
   const ProfileScreen({
     super.key,
@@ -18,11 +21,120 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<UserModel> _futureUser;
+  File? _selectedImage;
+  bool _loading = false;
+
+  late TextEditingController _nameCtrl;
+  late TextEditingController _addressCtrl;
+
+  String? _profileImageUrl; // 👈 from documents API
 
   @override
   void initState() {
     super.initState();
     _futureUser = UserApiService.getProfile(widget.userId);
+  }
+
+  /// 🔽 Fetch user documents and get image
+  Future<void> _loadProfileImage(int userId) async {
+    try {
+      final docs = await DocumentApiService.getDocuments(
+        objectType: "USER",
+        objectId: userId,
+      );
+
+      if (docs.isNotEmpty) {
+        setState(() {
+          _profileImageUrl = docs.first.fileUrl; // assuming backend sends fileUrl
+        });
+      }
+    } catch (e) {
+      debugPrint("Failed to load profile image: $e");
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: source, imageQuality: 70);
+
+    if (picked != null) {
+      setState(() {
+        _selectedImage = File(picked.path);
+      });
+    }
+  }
+
+  Future<void> _saveProfile(UserModel user) async {
+    try {
+      setState(() => _loading = true);
+
+      await UserApiService.updateProfile(
+        userId: user.id,
+        name: _nameCtrl.text,
+        address: _addressCtrl.text,
+      );
+
+      if (_selectedImage != null) {
+        await DocumentApiService.uploadDocuments(
+          objectType: "USER",
+          objectId: user.id,
+          files: [_selectedImage!],
+        );
+
+        // reload image
+        await _loadProfileImage(user.id);
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile updated successfully")),
+      );
+
+      setState(() {
+        _futureUser = UserApiService.getProfile(widget.userId);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Update failed: $e")),
+      );
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  void _showImagePickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text("Take Photo"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text("Choose from Gallery"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -37,31 +149,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
 
           if (snapshot.hasError) {
-            return const Center(child: Text("Failed to load profile"));
+            return _errorView(snapshot.error.toString());
+          }
+
+          if (!snapshot.hasData) {
+            return const Center(child: Text("No profile data"));
           }
 
           final user = snapshot.data!;
 
+          _nameCtrl = TextEditingController(text: user.name);
+          _addressCtrl = TextEditingController(text: user.address);
+
+          // 👇 load image once
+          if (_profileImageUrl == null) {
+            _loadProfileImage(user.id);
+          }
+
           return CustomScrollView(
             slivers: [
-              /// ---------------- APP BAR ----------------
               SliverAppBar(
                 expandedHeight: 180,
                 pinned: true,
-                backgroundColor: Colors.orange.shade700,
+                backgroundColor: AppColors.primary,
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
-                  title: const Text(
-                    "My Profile",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  title: const Text("My Profile",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   background: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.orange.shade400,
-                          Colors.brown.shade400,
-                        ],
+                        colors: [AppColors.primary, AppColors.secondary],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -70,7 +188,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              /// ---------------- CONTENT ----------------
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -80,71 +197,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       const SizedBox(height: 24),
 
-                      /// PERSONAL INFO
                       _sectionCard(
                         title: "Personal Information",
                         icon: Icons.person,
                         child: Column(
                           children: [
-                            _InfoField(label: "Full Name", value: user.name),
-                            const SizedBox(height: 12),
-                            _InfoField(label: "Email Address", value: user.email),
-                            const SizedBox(height: 12),
-                            _InfoField(label: "Mobile Number", value: user.mobile),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      /// CURRENT PLAN
-                      _sectionCard(
-                        title: "Current Plan",
-                        icon: Icons.workspace_premium,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Chip(
-                                  label: Text(user.plan),
-                                  backgroundColor: Colors.orange.shade100,
-                                  labelStyle: TextStyle(
-                                    color: Colors.orange.shade900,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  user.planStatus,
-                                  style: const TextStyle(
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                            _InfoField(
+                              label: "Full Name",
+                              controller: _nameCtrl,
+                              readOnly: false,
                             ),
-                            const SizedBox(height: 10),
-                            Text(
-                              "Access to all premium features and unlimited property views.",
-                              style: TextStyle(color: Colors.grey.shade700),
+                            const SizedBox(height: 12),
+                            _InfoField(
+                              label: "Email Address",
+                              value: user.email,
+                              readOnly: true,
                             ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Text(
-                                  "Next billing: ${user.nextBilling}",
-                                  style: TextStyle(color: Colors.grey.shade600),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  "Change Plan",
-                                  style: TextStyle(
-                                    color: Colors.orange.shade700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(height: 12),
+                            _InfoField(
+                              label: "Mobile Number",
+                              value: user.mobile,
+                              readOnly: true,
+                            ),
+                            const SizedBox(height: 12),
+                            _InfoField(
+                              label: "Address",
+                              controller: _addressCtrl,
+                              readOnly: false,
                             ),
                           ],
                         ),
@@ -152,40 +231,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       const SizedBox(height: 30),
 
-                      /// ACTION BUTTONS
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange.shade700,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          onPressed: () {},
-                          child: const Text(
-                            "Save Changes",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                      AppButton(
+                        text: "Save Profile",
+                        isLoading: _loading,
+                        onTap: () => _saveProfile(user),
                       ),
 
                       const SizedBox(height: 12),
 
                       TextButton(
-                        onPressed: () {},
-                        child: const Text(
-                          "Sign Out",
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text("Sign Out",
+                            style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.w600)),
                       ),
 
                       const SizedBox(height: 20),
@@ -200,47 +261,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// ---------------- HEADER ----------------
   Widget _profileHeader(UserModel user) {
+    ImageProvider imageProvider;
+
+    if (_selectedImage != null) {
+      imageProvider = FileImage(_selectedImage!);
+    } else if (_profileImageUrl != null && _profileImageUrl!.isNotEmpty) {
+      imageProvider = NetworkImage(_profileImageUrl!);
+    } else {
+      imageProvider = const AssetImage("assets/images/ic_launcher.png");
+    }
+
     return Column(
       children: [
-        Stack(
-          children: [
-            CircleAvatar(
-              radius: 54,
-              backgroundImage: NetworkImage(user.imageUrl),
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                height: 32,
-                width: 32,
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade700,
-                  shape: BoxShape.circle,
+        GestureDetector(
+          onTap: _showImagePickerSheet,
+          child: Stack(
+            children: [
+              CircleAvatar(radius: 54, backgroundImage: imageProvider),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  height: 34,
+                  width: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.camera_alt,
+                      color: Colors.white, size: 18),
                 ),
-                child: const Icon(Icons.camera_alt,
-                    color: Colors.white, size: 18),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 12),
-        Text(
-          user.name,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          "${user.plan} Member",
-          style: TextStyle(color: Colors.grey.shade600),
-        ),
+        Text(user.name,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
       ],
     );
   }
 
-  /// ---------------- SECTION CARD ----------------
+  Widget _errorView(String msg) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 60, color: Colors.red),
+            const SizedBox(height: 12),
+            const Text("Failed to load profile",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(msg, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _futureUser = UserApiService.getProfile(widget.userId);
+                });
+              },
+              child: const Text("Retry"),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _sectionCard({
     required String title,
     required IconData icon,
@@ -253,10 +343,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          )
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4))
         ],
       ),
       child: Column(
@@ -264,13 +353,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.orange.shade700),
+              Icon(icon, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style:
-                const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 12),
@@ -281,12 +368,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-/// ---------------- INFO FIELD ----------------
 class _InfoField extends StatelessWidget {
   final String label;
-  final String value;
+  final String? value;
+  final TextEditingController? controller;
+  final bool readOnly;
 
-  const _InfoField({required this.label, required this.value});
+  const _InfoField({
+    required this.label,
+    this.value,
+    this.controller,
+    this.readOnly = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -297,10 +390,10 @@ class _InfoField extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 6),
         TextField(
-          controller: TextEditingController(text: value),
-          readOnly: true,
+          controller: controller ?? TextEditingController(text: value),
+          readOnly: readOnly,
           decoration: InputDecoration(
-            suffixIcon: const Icon(Icons.edit, size: 18),
+            suffixIcon: readOnly ? null : const Icon(Icons.edit, size: 18),
             filled: true,
             fillColor: Colors.grey.shade100,
             border: OutlineInputBorder(

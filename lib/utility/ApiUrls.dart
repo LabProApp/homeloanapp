@@ -2,6 +2,8 @@ class ApiUrls {
 
   static const String baseUrl = "http://15.206.9.70:8080/api";
 
+  static const String uploadDocuments="$baseUrl/documents/uploadDocuments";
+  static const String downloadDocuments="$baseUrl/documents";
 
   //Property services URLs
   static const String updateUserProfile = "$baseUrl/user/update";

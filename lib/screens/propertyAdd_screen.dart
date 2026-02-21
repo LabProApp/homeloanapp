@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/property_model.dart';
 import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
+import '../commons/common_widget.dart';
 import '../services/state_api_service.dart'; // MasterService
 class PostPropertyScreen extends StatefulWidget {
   final String? userId;
@@ -163,8 +164,21 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEditMode ? "Modify Property" : "Post New Property"),
-        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary,
+                AppColors.secondary,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
@@ -297,28 +311,10 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: _loading ? null : _submit,
-              child: _loading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text(
-                isEditMode ? "Update Property" : "Post Property",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+          child: AppButton(
+            isLoading: _loading,
+            text: isEditMode ? "Update Property" : "Post Property",
+            onTap: _submit,
           ),
         ),
       ),
