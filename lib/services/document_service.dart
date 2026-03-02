@@ -7,7 +7,7 @@ import '../utility/APIUrls.dart';
 
 class DocumentApiService {
   /// 📤 Upload documents (USER / PROPERTY etc)
-  static Future<List<DocumentModel>> uploadDocuments({
+  static Future<bool> uploadDocuments({
     required String objectType, // e.g. USER
     required int objectId,       // e.g. 10
     required List<File> files,
@@ -48,23 +48,19 @@ class DocumentApiService {
       developer.log("RESPONSE: ${response.body}",
           name: "DocumentApiService");
 
-      if (response.statusCode != 200) {
-        throw Exception("Failed to upload documents");
+      if (response.statusCode == 200) {
+        return true; // ✅ success
+      } else {
+        return false; // ❌ failure
       }
-
-      final List decoded = jsonDecode(response.body) as List;
-
-      return decoded
-          .map((e) => DocumentModel.fromJson(e as Map<String, dynamic>))
-          .toList();
     } on SocketException {
       developer.log("❌ No Internet", name: "DocumentApiService");
-      throw Exception("No internet connection");
+      return false;
     } on FormatException {
-      throw Exception("Invalid JSON from server");
+      return false;
     } catch (e) {
       developer.log("❌ ERROR: $e", name: "DocumentApiService");
-      rethrow;
+      return false;
     }
   }
 

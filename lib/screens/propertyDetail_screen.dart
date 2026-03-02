@@ -378,10 +378,15 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ),
           _DetailRow("Posted By", widget.property.postedBy ?? "-"),
           _DetailRow("Contact", widget.property.contactNumber ?? "-"),
-          _DetailRow("Posted On", widget.property.postDate ?? "-"),
+          _DetailRow("Posted On", formatDate(widget.property.postDate) ?? "-"),
         ],
       ),
     );
+  }
+  String formatDate(String? date) {
+    if (date == null || date.isEmpty) return "-";
+    final parsed = DateTime.parse(date);
+    return DateFormat("dd MMM yyyy").format(parsed);
   }
 }
 

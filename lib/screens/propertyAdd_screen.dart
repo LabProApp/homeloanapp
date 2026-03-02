@@ -6,6 +6,8 @@ import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
 import '../services/state_api_service.dart'; // MasterService
+import '../screens/property_media_screen.dart';
+
 class PostPropertyScreen extends StatefulWidget {
   final String? userId;
   final PropertyModel? propertyToEdit; // 👈 NEW
@@ -33,7 +35,8 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
   int? bedrooms;
   int? bathrooms;
-
+  int? _createdPropertyId;
+  bool _alreadyCreated = false;
   String rentOrSale = "Sale";
   String category = "Residential";
   String propertyType = "APARTMENT";
@@ -79,6 +82,13 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     super.initState();
     _loadStates();
     _prefillIfEdit();
+
+    if(isEditMode)
+      {
+        _alreadyCreated = true;
+        _createdPropertyId = widget.propertyToEdit!.id;
+      }
+
   }
 
   void _prefillIfEdit() {
@@ -466,10 +476,12 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       );
 
   Future<void> _submit() async {
+    if(_loading) return;
     if (!_formKey.currentState!.validate()) return;
     if (selectedState == null || selectedCity == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please select state and city")));
+        const SnackBar(content: Text("Please select state and city")),
+      );
       return;
     }
 
@@ -478,7 +490,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     final price = double.tryParse(priceController.text.replaceAll(",", ""));
 
     final property = PropertyModel(
-      id: widget.propertyToEdit?.id,
+      id: _createdPropertyId ?? widget.propertyToEdit?.id,
       title: _cap(titleController.text),
       description: _cap(subtitleController.text),
       projectName: _cap(titleController.text),
@@ -506,22 +518,35 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     );
 
     try {
-      if (isEditMode) {
+      int propertyId;
+
+      if (_alreadyCreated || isEditMode) {
         await PropertyApiService.updateProperty(property);
+        propertyId = property.id!;
       } else {
-        await PropertyApiService.addProperty(property);
+        propertyId = await PropertyApiService.addProperty(property);
+
+        // ✅ Mark as created
+        _createdPropertyId = propertyId;
+        _alreadyCreated = true;
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(isEditMode
-              ? "Property updated successfully"
-              : "Property posted successfully")));
 
-      Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Property saved. Add images now")),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PropertyMediaScreen(propertyId: propertyId),
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to save property: $e")));
+        SnackBar(content: Text("Failed to save property: $e")),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }

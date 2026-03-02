@@ -9,6 +9,8 @@ import 'legalServiceProviders_listing.dart';
 import 'banksListing_screen.dart';
 import 'emi_calculator_screen.dart';
 import 'webviewhtml.dart';
+import 'favourite_property_listing_screen.dart';
+import 'interested_users_screen.dart';
 
 import '../theme/app_colors.dart';
 
@@ -31,12 +33,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _userName = "User";
   String _userEmail = "";
 
-  String? _postedByUserId; // for My Property Postings
+  String? _postedByUserId;
 
   @override
   void initState() {
     super.initState();
-    debugPrint("✅ DashboardScreen received userId: ${widget.userId}");
     _loadAppVersion();
     _loadUserInfo();
   }
@@ -56,12 +57,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  int? get _bottomNavIndex {
-    if (_selectedIndex >= 4) return null;
-    return _selectedIndex;
-  }
-
-  /// 🔁 BUILD BODY PAGE (recreates every time)
   Widget _buildPage() {
     switch (_selectedIndex) {
       case 0:
@@ -91,7 +86,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
 
-      /// 🔷 APP BAR
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.listingbackground,
@@ -99,16 +93,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: const Text(
           "KeyBricks",
           style: TextStyle(
-            fontFamily: 'Poppins', // ✅ Poppins font
             fontWeight: FontWeight.w600,
-            color: AppColors.primary,
             fontSize: 22,
             letterSpacing: 1.2,
           ),
         ),
       ),
 
-      /// 📂 DRAWER
       drawer: Drawer(
         child: Column(
           children: [
@@ -149,6 +140,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             const Divider(),
 
+            /// ⭐ NEW OPTIONS
+            ListTile(
+              leading: const Icon(Icons.favorite),
+              title: const Text("My Favourite Properties"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FavouritePropertyListingScreen(
+                      userId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.people_alt),
+              title: const Text("Users Interested"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BrokerLeadsScreen(
+                      userId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            const Divider(),
+
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Align(
@@ -172,42 +198,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onTap: () {
                 setState(() => _selectedIndex = 4);
                 Navigator.pop(context);
-              },
-            ),
-
-            const Divider(),
-
-            ListTile(
-              leading: const Icon(Icons.language),
-              title: const Text("Website"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const WebViewPage(
-                      title: "Website",
-                      url: "http://15.206.9.70",
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            ListTile(
-              leading: const Icon(Icons.warning_amber_outlined),
-              title: const Text("Terms of Use"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const WebViewPage(
-                      title: "Terms of Use",
-                      url: "http://15.206.9.70/terms-of-use.html",
-                    ),
-                  ),
-                );
               },
             ),
 
@@ -238,7 +228,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: _buildPage(),
 
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _bottomNavIndex ?? 0,
+        currentIndex: _selectedIndex,
         selectedItemColor: AppColors.secondary,
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,

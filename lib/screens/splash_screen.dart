@@ -7,19 +7,42 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _zoomOutAnim;
+
   @override
   void initState() {
     super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    // Zoom OUT: start large → normal size
+    _zoomOutAnim = Tween<double>(begin: 1.5, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+
+    _controller.forward();
+
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
             child: Container(
-              color: Colors.black.withOpacity(0.1), // Dark overlay
+              color: Colors.black.withOpacity(0.1),
             ),
           ),
 
@@ -47,17 +70,18 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo as circular launcher/icon
-                CircleAvatar(
-                  radius: 50,
-
-                  backgroundImage: AssetImage('assets/images/ic_launcher.png'),
+                /// LOGO ZOOM OUT
+                ScaleTransition(
+                  scale: _zoomOutAnim,
+                  child: const CircleAvatar(
+                    radius: 50,
+                    backgroundImage:
+                    AssetImage('assets/images/ic_launcher.png'),
+                  ),
                 ),
-
 
                 const SizedBox(height: 20),
 
-                /// App Name
                 const Text(
                   "KeyBricks",
                   style: TextStyle(
@@ -70,7 +94,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
                 const SizedBox(height: 8),
 
-                /// Tagline
                 const Text(
                   "Find. Finance. Finalize.",
                   style: TextStyle(

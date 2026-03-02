@@ -6,15 +6,18 @@ import '../utility/amenity_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
+import '../services/property_api_service.dart';
 
 class PropertyCard extends StatefulWidget {
   final PropertyModel property;
   final bool showWhatsAppIcon;
   final bool showAmenitiesExpandable;
+  final String? userId;
 
   const PropertyCard({
     super.key,
     required this.property,
+    this.userId,
     this.showWhatsAppIcon = true,
     this.showAmenitiesExpandable = true,
   });
@@ -26,6 +29,7 @@ class PropertyCard extends StatefulWidget {
 class _PropertyCardState extends State<PropertyCard> {
   int currentIndex = 0;
   bool _amenitiesExpanded = false;
+  bool _isFavourite = false;
 
   TextStyle get titleStyle => const TextStyle(
     fontFamily: 'Poppins',
@@ -47,11 +51,11 @@ class _PropertyCardState extends State<PropertyCard> {
     fontWeight: FontWeight.w500,
   );
 
-  TextStyle get priceStyle => TextStyle(
+  TextStyle get priceStyle => const TextStyle(
     fontFamily: 'Poppins',
     fontSize: 17,
     fontWeight: FontWeight.bold,
-    color: AppColors.white,
+    color: Colors.white,
   );
 
   List<String> get _images {
@@ -68,10 +72,6 @@ class _PropertyCardState extends State<PropertyCard> {
       'assets/images/house2.jpg',
       'assets/images/house3.jpg',
     ];
-  }
-
-  List<String> get _amenities {
-    return widget.property.amenitiesAsList?.map((e) => e.toString()).toList() ?? [];
   }
 
   @override
@@ -97,12 +97,16 @@ class _PropertyCardState extends State<PropertyCard> {
                 final img = _images[i];
                 return img.startsWith('assets/')
                     ? Image.asset(img, fit: BoxFit.cover)
-                    : Image.network(img, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholderImage());
+                    : Image.network(
+                  img,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _placeholderImage(),
+                );
               },
             ),
           ),
 
+          /// STATUS
           Positioned(
             top: 12,
             left: 12,
@@ -124,6 +128,29 @@ class _PropertyCardState extends State<PropertyCard> {
             ),
           ),
 
+          /// 🔥 TOP RIGHT ICONS
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Column(
+              children: [
+                _iconCircle(
+                  _isFavourite ? Icons.favorite : Icons.favorite_border,
+                  _toggleFavorite,
+                ),
+                const SizedBox(height: 8),
+                _iconCircle(Icons.share, _shareProperty),
+                const SizedBox(height: 8),
+                _iconCircle(Icons.call, _callOwner),
+                if (widget.showWhatsAppIcon) ...[
+                  const SizedBox(height: 8),
+                  _iconCircle(Icons.chat, _openWhatsApp),
+                ],
+              ],
+            ),
+          ),
+
+          /// BOTTOM DETAILS
           Positioned(
             bottom: 0,
             left: 0,
@@ -142,14 +169,10 @@ class _PropertyCardState extends State<PropertyCard> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              widget.property.title ?? "-",
-                              style: titleStyle,
-                            ),
+                            child: Text(widget.property.title ?? "-", style: titleStyle),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: AppColors.primary,
                               borderRadius: BorderRadius.circular(20),
@@ -240,14 +263,50 @@ class _PropertyCardState extends State<PropertyCard> {
     return Image.asset('assets/images/house1.jpg', fit: BoxFit.cover);
   }
 
-  void _toggleFavorite() {}
+  /// ❤️ Favourite API
+  Future<void> _toggleFavorite() async {
+  //  if (widget.userId == null) return;
+
+    await PropertyApiService.toggleFavourite(
+      userId: widget.userId!,
+      propertyId: widget.property.id!.toString(),
+    );
+
+    setState(() => _isFavourite = !_isFavourite);
+  }
+
+  /// 📤 SHARE
+  void _shareProperty() {
+    Share.share(
+      "Check this property: ${widget.property.title}\n₹${widget.property.price}",
+    );
+  }
+
+  /// 📞 CALL
+  Future<void> _callOwner() async {
+    final phone = widget.property.contactNumber;
+    if (phone == null || phone.isEmpty) return;
+
+    final uri = Uri.parse("tel:$phone");
+    await launchUrl(uri);
+  }
+
+  /// 💬 WHATSAPP
+  Future<void> _openWhatsApp() async {
+    final phone = widget.property.contactNumber;
+    if (phone == null || phone.isEmpty) return;
+
+    final uri = Uri.parse("https://wa.me/$phone");
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   Widget _iconCircle(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: const CircleAvatar(
+      child: CircleAvatar(
         radius: 20,
         backgroundColor: Colors.black45,
-        child: Icon(Icons.favorite_border, color: Colors.white),
+        child: Icon(icon, color: Colors.white),
       ),
     );
   }

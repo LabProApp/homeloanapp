@@ -218,7 +218,9 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                       _refreshFromApi();
                     }
                   },
-                  child: PropertyCard(property: property),
+                  child: PropertyCard(property: property,
+                  userId: widget.userId,
+                  ),
                 ),
               );
             },

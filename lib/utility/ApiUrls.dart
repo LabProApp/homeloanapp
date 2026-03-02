@@ -13,6 +13,11 @@ class ApiUrls {
   static const String userlogin = "$baseUrl/user/login";
   static const String userlogout = "$baseUrl/user/logout";
 
+  // Leads APIs
+  static const String getBrokerLeads = "$baseUrl/leads/broker/{brokerId}";
+  static const String postBrokerLeads = "$baseUrl/leads";
+  static const String updateBrokerLeads = "$baseUrl/leads";
+
 
   static String userProfileById(String userId) =>
       "$baseUrl/user/profile/$userId";
@@ -33,7 +38,9 @@ class ApiUrls {
   static const String post_property = "$baseUrl/property/add";
   static const String update_property = "$baseUrl/property/update";
 
-  static const String post_MarkFavProperty = "$baseUrl/user/{userId}/favourite/4";
+
+
+  static const String post_MarkFavProperty = "$baseUrl/user/{userId}/favourite/{propertyId}";
   static const String get_FavProperty_list = "$baseUrl/user/{userId}/favourites";
 
   //Document legal services URLs

@@ -13,6 +13,7 @@ import 'user_forgot_password.dart';
 import '../services/user_service.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -24,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   int selectedTab = 0;
   bool _isPasswordVisible = false;
   bool _loading = false;
+  bool _checkingLogin = true;
 
   final TextEditingController emailOrMobileController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -47,11 +49,19 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (_) => DashboardScreen(userId: userId),
         ),
       );
+    } else {
+      setState(() => _checkingLogin = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_checkingLogin) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -87,8 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 5),
                   const Text(
                     "Find. Finance. Finalize.",
-                    style:
-                    TextStyle(fontSize: 16, color: Colors.white),
+                    style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
 
                   const SizedBox(height: 30),
@@ -151,7 +160,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? null
                         : (selectedTab == 0 ? _login : _signup),
                   ),
-
                 ],
               ),
             ),
@@ -330,6 +338,4 @@ class _LoginScreenState extends State<LoginScreen> {
     borderSide:
     BorderSide(color: focus ? Colors.white : Colors.white38),
   );
-
-
 }
