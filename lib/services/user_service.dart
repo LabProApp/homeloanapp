@@ -45,7 +45,6 @@ class UserApiService {
     }
 
     final Map<String, dynamic> decoded;
-
     try {
       decoded = jsonDecode(res.body) as Map<String, dynamic>;
     } catch (_) {
@@ -57,11 +56,23 @@ class UserApiService {
       throw Exception("User ID missing in response");
     }
 
-    // ✅ Build LoginResponse safely
+    // ✅ Build UserModel from API
+    final user = UserModel.fromJson(decoded);
+
     return LoginResponse(
-      userId: decoded["id"].toString(),
-      token: decoded["token"]?.toString(), // future-proof
+      user: user,
+      token: decoded["token"]?.toString(), // if backend adds token later
     );
+  }
+
+  /// Extract API error safely
+  static String _extractApiError(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      return decoded["message"]?.toString() ?? "Login failed";
+    } catch (_) {
+      return "Login failed";
+    }
   }
   static Future<String> uploadProfileImage(int userId, File image) async {
     final uri = Uri.parse("${ApiUrls.uploadDocuments}/USER/$userId");
@@ -155,8 +166,8 @@ class UserApiService {
 
 
   /// 👤 GET USER PROFILE (by email or mobile)
-  static Future<UserModel> getProfile(String userId) async {
-    final uri = Uri.parse(ApiUrls.userProfileById(userId));
+  static Future<UserModel> getProfile(int userId) async {
+    final uri = Uri.parse(ApiUrls.userProfileById(userId.toString()));
 
     final res = await http.get(uri).timeout(const Duration(seconds: 15));
 
@@ -280,22 +291,14 @@ class UserApiService {
 
 /// ================= LOGIN RESPONSE MODEL =================
 class LoginResponse {
-  final String userId;
+  final UserModel user;
   final String? token;
 
-  LoginResponse({required this.userId, this.token});
-
-  factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    return LoginResponse(
-      userId: json["userId"]?.toString() ??
-          json["id"]?.toString() ??
-          json["user_id"]?.toString() ??
-          "",
-      token: json["token"]?.toString(),
-    );
-  }
+  LoginResponse({
+    required this.user,
+    this.token,
+  });
 }
-
 /// ================= ERROR HANDLER =================
 String _extractApiError(String responseBody) {
   try {

@@ -9,7 +9,7 @@ import '../services/state_api_service.dart'; // MasterService
 import '../screens/property_media_screen.dart';
 
 class PostPropertyScreen extends StatefulWidget {
-  final String? userId;
+  final int? userId;
   final PropertyModel? propertyToEdit; // 👈 NEW
 
   const PostPropertyScreen({
@@ -510,7 +510,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       bedrooms: bedrooms == 0 ? null : bedrooms,
       bathrooms: bathrooms == 0 ? null : bathrooms,
       amenities: amenities.join(","),
-      postedByUser: int.tryParse(widget.userId ?? "0"),
+      postedByUser: widget.userId,
       postedBy: postedByType,
       verified: false,
       postDate: DateTime.now().toIso8601String(),

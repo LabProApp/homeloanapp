@@ -16,7 +16,7 @@ class ApiUrls {
   // Leads APIs
   static const String getBrokerLeads = "$baseUrl/leads/broker/{brokerId}";
   static const String postBrokerLeads = "$baseUrl/leads";
-  static const String updateBrokerLeads = "$baseUrl/leads";
+  static const String updateBrokerLeads = "$baseUrl/leads/{leadId}";
 
 
   static String userProfileById(String userId) =>

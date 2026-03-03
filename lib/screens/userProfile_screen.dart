@@ -8,7 +8,7 @@ import '../commons/common_widget.dart';
 import '../services/document_service.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final String userId; // email or mobile
+  final int userId; // email or mobile
 
   const ProfileScreen({
     super.key,

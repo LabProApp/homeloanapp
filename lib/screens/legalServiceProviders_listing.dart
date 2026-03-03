@@ -18,7 +18,7 @@ class FastScrollBehavior extends MaterialScrollBehavior {
 
 class LegalServicePage extends StatefulWidget {
 
-  final String? userId;
+  final int? userId;
 
   const LegalServicePage({
     super.key,

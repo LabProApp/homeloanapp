@@ -8,8 +8,8 @@ import '../screens/propertyAdd_screen.dart';
 import '../screens/property_filter_dialog.dart';
 
 class PropertyListingScreen extends StatefulWidget {
-  final String userId;
-  final String? postedbyuserId;
+  final int userId;
+  final int? postedbyuserId;
   const PropertyListingScreen({super.key, required this.userId, this.postedbyuserId});
 
   @override
@@ -61,9 +61,8 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       final searchText = _searchController.text.trim();
 
       final data = await service.fetchProperties(
-        postedByUser: (widget.postedbyuserId != null && widget.postedbyuserId!.isNotEmpty)
-            ? widget.postedbyuserId
-            : null,
+        postedByUserId: widget.postedbyuserId,
+
         city: searchText.isEmpty ? _filters["city"] : searchText,
         location: searchText.isEmpty ? null : searchText,
         category: isResidential ? "Residential" : "Commercial",

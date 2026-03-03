@@ -1,18 +1,19 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/property_model.dart';
+import '../models/ClientLead_model.dart';
+import '../services/leads_service.dart';
 import '../theme/app_colors.dart';
-import '../utility/amenity_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import '../services/property_api_service.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 class PropertyCard extends StatefulWidget {
   final PropertyModel property;
   final bool showWhatsAppIcon;
   final bool showAmenitiesExpandable;
-  final String? userId;
+  final int? userId;
 
   const PropertyCard({
     super.key,
@@ -28,8 +29,8 @@ class PropertyCard extends StatefulWidget {
 
 class _PropertyCardState extends State<PropertyCard> {
   int currentIndex = 0;
-  bool _amenitiesExpanded = false;
   bool _isFavourite = false;
+  bool _sendingLead = false;
 
   TextStyle get titleStyle => const TextStyle(
     fontFamily: 'Poppins',
@@ -110,25 +111,10 @@ class _PropertyCardState extends State<PropertyCard> {
           Positioned(
             top: 12,
             left: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.75),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                status,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+            child: _pill(status),
           ),
 
-          /// 🔥 TOP RIGHT ICONS
+          /// ICONS
           Positioned(
             top: 8,
             right: 8,
@@ -171,21 +157,8 @@ class _PropertyCardState extends State<PropertyCard> {
                           Expanded(
                             child: Text(widget.property.title ?? "-", style: titleStyle),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              widget.property.rentOrSale ?? "-",
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 12,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                          _pill(widget.property.rentOrSale ?? "-",
+                              color: AppColors.primary),
                         ],
                       ),
 
@@ -195,48 +168,9 @@ class _PropertyCardState extends State<PropertyCard> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.person, size: 14, color: Colors.white70),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              "Posted by: ${widget.property.postedBy ?? "Owner"}",
-                              style: metaStyle,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
                           Expanded(
                             child: Text(
                               "${widget.property.city ?? "-"} | ${widget.property.state ?? "-"}",
-                              style: bodyStyle,
-                            ),
-                          ),
-                          const Icon(Icons.square_foot, size: 14, color: Colors.white70),
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.property.superArea != null
-                                ? "${widget.property.superArea!.toStringAsFixed(0)} Sqft"
-                                : "-",
-                            style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "${widget.property.category ?? "-"} | ${widget.property.type ?? "-"}",
                               style: bodyStyle,
                             ),
                           ),
@@ -248,6 +182,41 @@ class _PropertyCardState extends State<PropertyCard> {
                           ),
                         ],
                       ),
+
+                      const SizedBox(height: 8),
+
+                      /// ⭐ INTEREST BUTTON
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: _sendingLead ? null : _createLead,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: _sendingLead
+                                ? const SizedBox(
+                              height: 14,
+                              width: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                                : const Text(
+                              "Interested",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
                     ],
                   ),
                 ),
@@ -259,20 +228,88 @@ class _PropertyCardState extends State<PropertyCard> {
     );
   }
 
+  Widget _pill(String text, {Color color = Colors.black}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 11, color: Colors.white),
+      ),
+    );
+  }
+
   Widget _placeholderImage() {
     return Image.asset('assets/images/house1.jpg', fit: BoxFit.cover);
   }
 
   /// ❤️ Favourite API
   Future<void> _toggleFavorite() async {
-  //  if (widget.userId == null) return;
-
     await PropertyApiService.toggleFavourite(
       userId: widget.userId!,
-      propertyId: widget.property.id!.toString(),
+      propertyId: widget.property.id!,
+    );
+    setState(() => _isFavourite = !_isFavourite);
+  }
+
+  /// 🆕 CREATE LEAD
+  /// 🆕 CREATE LEAD
+  Future<void> _createLead() async {
+    if (widget.userId == null || widget.property.id == null) return;
+
+    setState(() => _sendingLead = true);
+
+    final prefs = await SharedPreferences.getInstance();
+
+    final String clientName = prefs.getString("userName") ?? "";
+    final String email = prefs.getString("userEmail") ?? "";
+    final String mobile = prefs.getString("userMobile") ?? "";
+
+    final lead = ClientLeadModel(
+      brokerId: widget.property.postedByUser,
+      userId: widget.userId!,
+      propertyId: widget.property.id!,
+      clientName: clientName,
+      email: email,
+      mobile: mobile,
+      propertyTitle: widget.property.title,
+      propertyCity: widget.property.city,
+      propertyPrice: widget.property.price,
+      preferredPropertyType: widget.property.type,
+      preferredBudget: widget.property.price,
+      inquiryDate: DateTime.now().toIso8601String(),
+      status: "NEW",
+      contacted: false,
+      leadSource: "Property Interest",
+      remark:
+      "User showed interest from property ${widget.property.title ?? ""} in ${widget.property.city ?? ""}",
     );
 
-    setState(() => _isFavourite = !_isFavourite);
+    try {
+      await LeadApiService.createLead(lead);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Interest sent successfully")),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("You already showed interest in this property"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _sendingLead = false);
+      }
+    }
   }
 
   /// 📤 SHARE
@@ -286,18 +323,15 @@ class _PropertyCardState extends State<PropertyCard> {
   Future<void> _callOwner() async {
     final phone = widget.property.contactNumber;
     if (phone == null || phone.isEmpty) return;
-
-    final uri = Uri.parse("tel:$phone");
-    await launchUrl(uri);
+    await launchUrl(Uri.parse("tel:$phone"));
   }
 
   /// 💬 WHATSAPP
   Future<void> _openWhatsApp() async {
     final phone = widget.property.contactNumber;
     if (phone == null || phone.isEmpty) return;
-
-    final uri = Uri.parse("https://wa.me/$phone");
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    await launchUrl(Uri.parse("https://wa.me/$phone"),
+        mode: LaunchMode.externalApplication);
   }
 
   Widget _iconCircle(IconData icon, VoidCallback onTap) {

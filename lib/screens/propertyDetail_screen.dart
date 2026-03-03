@@ -9,7 +9,7 @@ import '../screens/propertyAdd_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
-  final String userId; // logged in user
+  final int userId; // logged in user
 
   const PropertyDetailScreen({
     super.key,
@@ -51,9 +51,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     return [];
   }
 
-  /// ✅ FIXED OWNER CHECK (int vs string)
+  /// ✅ FIXED OWNER CHECK
   bool get _isOwner {
-    return widget.property.postedByUser?.toString() == widget.userId;
+    return widget.property.postedByUser == widget.userId;
   }
 
   @override

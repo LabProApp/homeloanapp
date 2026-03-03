@@ -1,15 +1,14 @@
+import 'package:KeyBricks/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../theme/app_colors.dart';
 import '../services/leads_service.dart';
+import '../cards/lead_card.dart';
 
 class BrokerLeadsScreen extends StatefulWidget {
-  final String userId;
+  final int brokerId;
 
   const BrokerLeadsScreen({
     super.key,
-    required this.userId,
+    required this.brokerId,
   });
 
   @override
@@ -17,22 +16,15 @@ class BrokerLeadsScreen extends StatefulWidget {
 }
 
 class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
-  bool _isLoading = true;
-  String _error = "";
-
   List<dynamic> _leads = [];
+  List<dynamic> _filteredLeads = [];
 
-  DateTime? _startDate;
-  DateTime? _endDate;
-  List<String> _selectedStatus = [];
+  bool _loading = true;
 
-  final List<String> _statusList = [
-    "NEW",
-    "CONTACTED",
-    "VISIT PLANNED",
-    "CLOSED",
-    "DROPPED"
-  ];
+  String _search = "";
+  String _selectedStatus = "ALL";
+
+  final List<String> _statuses = ["ALL", "NEW", "CONTACTED", "CLOSED", "DROPPED"];
 
   @override
   void initState() {
@@ -41,160 +33,94 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
   }
 
   Future<void> _loadLeads() async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _error = "";
-      });
+    setState(() => _loading = true);
 
+    try {
       final data = await LeadApiService.fetchBrokerLeads(
-        brokerId: widget.userId,
-        status: _selectedStatus,
-        startDate: _startDate,
-        endDate: _endDate,
+        brokerId: widget.brokerId,
       );
 
-      setState(() {
-        _leads = data;
-        _isLoading = false;
-      });
+      _leads = data;
+      _applyFilters();
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      debugPrint("Error loading leads: $e");
     }
+
+    setState(() => _loading = false);
   }
 
-  String _formatDate(String? date) {
-    if (date == null) return "-";
-    return DateFormat("dd MMM yyyy").format(DateTime.parse(date));
+  void _applyFilters() {
+    _filteredLeads = _leads.where((lead) {
+      final name = (lead["clientName"] ?? "").toString().toLowerCase();
+      final mobile = (lead["mobile"] ?? "").toString().toLowerCase();
+      final status = (lead["status"] ?? "").toString().toUpperCase();
+
+      final matchesSearch =
+          name.contains(_search) || mobile.contains(_search);
+
+      final matchesStatus =
+          _selectedStatus == "ALL" || status == _selectedStatus;
+
+      return matchesSearch && matchesStatus;
+    }).toList();
+
+    setState(() {});
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text("My Leads"),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
-          Expanded(child: _buildList()),
-        ],
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.center, // 🔥 important
+        child: TextField(
+          textAlignVertical: TextAlignVertical.center, // 🔥 vertical centering
+          decoration: const InputDecoration(
+            hintText: "Search by name or mobile",
+            border: InputBorder.none,
+            isDense: true,
+            prefixIcon: Icon(Icons.search),
+            prefixIconConstraints: BoxConstraints(
+              minWidth: 36, // 🔥 reduce icon padding
+              minHeight: 36,
+            ),
+            contentPadding: EdgeInsets.zero, // 🔥 remove default padding
+          ),
+          onChanged: (value) {
+            _search = value.toLowerCase();
+            _applyFilters();
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildList() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error.isNotEmpty) {
-      return Center(child: Text("❌ $_error"));
-    }
-
-    if (_leads.isEmpty) {
-      return const Center(child: Text("No leads found"));
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadLeads,
+  Widget _buildStatusChips() {
+    return SizedBox(
+      height: 42,
       child: ListView.builder(
-        padding: const EdgeInsets.all(10),
-        itemCount: _leads.length,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: _statuses.length,
         itemBuilder: (context, index) {
-          final lead = _leads[index];
+          final status = _statuses[index];
+          final selected = status == _selectedStatus;
 
-          return Card(
-            elevation: 3,
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// HEADER
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          lead["clientName"] ?? "Client",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      _statusBadge(lead["status"]),
-                    ],
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  /// CONTACT INFO
-                  Text("📞 ${lead["mobile"] ?? "-"}"),
-                  if (lead["email"] != null)
-                    Text("✉️ ${lead["email"]}"),
-
-                  const Divider(),
-
-                  /// PROPERTY SNAPSHOT
-                  Text("🏠 ${lead["propertyTitle"] ?? "-"}"),
-                  Text("📍 ${lead["propertyCity"] ?? "-"}"),
-                  Text("💰 Price: ₹${lead["propertyPrice"] ?? "-"}"),
-
-                  const SizedBox(height: 4),
-
-                  /// CLIENT PREFERENCE
-                  Text("🎯 Preference: ${lead["preferredPropertyType"] ?? "-"}"),
-                  Text("💼 Budget: ₹${lead["preferredBudget"] ?? "-"}"),
-
-                  const Divider(),
-
-                  /// DATES
-                  Text("🗓 Inquiry: ${_formatDate(lead["inquiryDate"])}"),
-                  Text("☎️ Contacted: ${_formatDate(lead["contactedDate"])}"),
-                  Text("⏭ Follow-up: ${_formatDate(lead["nextFollowUpDate"])}"),
-
-                  const Divider(),
-
-                  /// META
-                  Text("📌 Lead Source: ${lead["leadSource"] ?? "-"}"),
-                  Text("📝 Remark: ${lead["remark"] ?? "-"}"),
-
-                  const SizedBox(height: 10),
-
-                  /// ACTIONS
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _call(lead["mobile"]),
-                          icon: const Icon(Icons.call),
-                          label: const Text("Call"),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green),
-                          onPressed: () => _whatsapp(lead["mobile"]),
-                          icon: const Icon(Icons.chat),
-                          label: const Text("WhatsApp"),
-                        ),
-                      ),
-                    ],
-                  )
-                ],
-              ),
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(status),
+              selected: selected,
+              onSelected: (_) {
+                _selectedStatus = status;
+                _applyFilters();
+              },
+              selectedColor: Colors.blue.shade100,
             ),
           );
         },
@@ -202,45 +128,79 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
     );
   }
 
-  Widget _statusBadge(String? status) {
-    Color color = Colors.grey;
-    switch (status) {
-      case "NEW":
-        color = Colors.blue;
-        break;
-      case "CONTACTED":
-        color = Colors.orange;
-        break;
-      case "CLOSED":
-        color = Colors.green;
-        break;
-      case "DROPPED":
-        color = Colors.red;
-        break;
+  Widget _buildList() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status ?? "-",
-        style: TextStyle(color: color, fontWeight: FontWeight.bold),
+    if (_filteredLeads.isEmpty) {
+      return const Center(child: Text("No leads found"));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadLeads,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: _filteredLeads.length,
+        itemBuilder: (context, index) {
+          final lead = _filteredLeads[index];
+
+          return LeadCard(
+            lead: lead,
+            onEdit: () {
+              _editLeadDialog(lead);
+            },
+          );
+        },
       ),
     );
   }
 
-  Future<void> _call(String? phone) async {
-    if (phone == null || phone.isEmpty) return;
-    final uri = Uri.parse("tel:$phone");
-    await launchUrl(uri);
+  void _editLeadDialog(Map lead) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: Center(
+              child: Text(
+                "Edit Lead UI here for ${lead["clientName"]}",
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
-  Future<void> _whatsapp(String? phone) async {
-    if (phone == null || phone.isEmpty) return;
-    final uri = Uri.parse("https://wa.me/$phone");
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Customer Inquiries"),
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: AppColors.primary, // icon + text color
+        elevation: 2,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildSearchBar(),
+            _buildStatusChips(),
+            const SizedBox(height: 6),
+            Expanded(child: _buildList()),
+          ],
+        ),
+      ),
+    );
   }
 }

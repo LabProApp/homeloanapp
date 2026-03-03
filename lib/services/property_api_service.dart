@@ -29,7 +29,7 @@ class PropertyApiService {
     String? amenity,
     String? rentOrSale,
     String? postDate,
-    String? postedByUser,
+    int? postedByUserId,
   }) async {
     try {
       final Map<String, String> queryParams = {};
@@ -61,7 +61,7 @@ class PropertyApiService {
       addParam("amenity", amenity);
       addParam("rentOrSale", rentOrSale);
       addParam("postDate", postDate);
-      addParam("postedByUser", postedByUser);
+      addParam("postedByUser", postedByUserId);
 
       final uri = Uri.parse(ApiUrls.propertySearch)
           .replace(queryParameters: queryParams.isEmpty ? null : queryParams);
@@ -166,7 +166,7 @@ class PropertyApiService {
     }
   }
 
-  Future<List<PropertyModel>> fetchFavouriteProperties(String userId) async {
+  Future<List<PropertyModel>> fetchFavouriteProperties(int userId) async {
     try {
       final uri = Uri.parse("${ApiUrls.baseUrl}/user/$userId/favourites");
 
@@ -191,12 +191,12 @@ class PropertyApiService {
 
   /// 🔹 Toggle Property Favourite
   static Future<bool> toggleFavourite({
-    required String userId,
-    required String propertyId,
+    required int userId,
+    required int propertyId,
   }) async {
     final url = ApiUrls.post_MarkFavProperty
-        .replaceFirst("{userId}", userId)
-        .replaceFirst("{propertyId}", propertyId);
+        .replaceFirst("{userId}", userId.toString())
+        .replaceFirst("{propertyId}", propertyId.toString());
 
     final uri = Uri.parse(url);
 

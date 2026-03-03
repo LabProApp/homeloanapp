@@ -8,14 +8,13 @@ import 'properyListing_screen.dart';
 import 'legalServiceProviders_listing.dart';
 import 'banksListing_screen.dart';
 import 'emi_calculator_screen.dart';
-import 'webviewhtml.dart';
 import 'favourite_property_listing_screen.dart';
 import 'interested_users_screen.dart';
 
 import '../theme/app_colors.dart';
 
 class DashboardScreen extends StatefulWidget {
-  final String userId;
+  final int userId;
 
   const DashboardScreen({
     super.key,
@@ -33,13 +32,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _userName = "User";
   String _userEmail = "";
 
-  String? _postedByUserId;
+  int? _postedByUserId;
+  Widget? _currentPage;
 
   @override
   void initState() {
     super.initState();
     _loadAppVersion();
     _loadUserInfo();
+    _currentPage = _buildPage();
   }
 
   Future<void> _loadAppVersion() async {
@@ -81,6 +82,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  void _setPage(Widget page) {
+    setState(() {
+      _currentPage = page;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,136 +103,134 @@ class _DashboardScreenState extends State<DashboardScreen> {
             fontWeight: FontWeight.w600,
             fontSize: 22,
             letterSpacing: 1.2,
+            color: AppColors.primary,
           ),
         ),
       ),
 
       drawer: Drawer(
-        child: Column(
-          children: [
-            const SizedBox(height: 40),
-
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text("Profile"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ProfileScreen(userId: widget.userId),
-                  ),
-                );
-              },
+        child: SafeArea(
+          child: ListView(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewPadding.bottom + 12,
             ),
+            children: [
+              const SizedBox(height: 12),
 
-            const Divider(),
-
-            _drawerItem(Icons.home_rounded, "Home", 0),
-            _drawerItem(Icons.account_balance_rounded, "Bank Loans", 1),
-            _drawerItem(Icons.business_rounded, "Projects", 2),
-            _drawerItem(Icons.document_scanner_rounded, "Documentation", 3),
-
-            ListTile(
-              leading: const Icon(Icons.home_work_outlined),
-              title: const Text("My Property Postings"),
-              onTap: () {
-                setState(() {
-                  _postedByUserId = widget.userId;
-                  _selectedIndex = 0;
-                });
-                Navigator.pop(context);
-              },
-            ),
-
-            const Divider(),
-
-            /// ⭐ NEW OPTIONS
-            ListTile(
-              leading: const Icon(Icons.favorite),
-              title: const Text("My Favourite Properties"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FavouritePropertyListingScreen(
-                      userId: widget.userId,
+              /// USER HEADER
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      child: const Icon(Icons.account_circle_rounded,
+                          color: AppColors.primary),
                     ),
-                  ),
-                );
-              },
-            ),
-
-            ListTile(
-              leading: const Icon(Icons.people_alt),
-              title: const Text("Users Interested"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BrokerLeadsScreen(
-                      userId: widget.userId,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _userName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          Text(
+                            _userEmail,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-
-            const Divider(),
-
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "TOOLS",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
+                  ],
                 ),
               ),
-            ),
 
-            ListTile(
-              leading: const Icon(Icons.calculate),
-              title: const Text("EMI Calculator"),
-              selected: _selectedIndex == 4,
-              selectedColor: AppColors.secondary,
-              onTap: () {
-                setState(() => _selectedIndex = 4);
-                Navigator.pop(context);
-              },
-            ),
+              const Divider(height: 1),
 
-            const Spacer(),
+              _drawerItem(Icons.dashboard_rounded, "Home", 0),
+              _drawerItem(Icons.account_balance_wallet_rounded, "Bank Loans", 1),
+              _drawerItem(Icons.apartment_rounded, "Rentals / PG", 2),
+              _drawerItem(Icons.assignment_rounded, "Documentation", 3),
 
-            Padding(
-              padding: const EdgeInsets.only(left: 16, bottom: 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.business_center_rounded),
+                title: const Text("My Property Postings"),
+                onTap: () {
+                  setState(() {
+                    _postedByUserId = widget.userId;
+                    _selectedIndex = 0;
+                    _currentPage = _buildPage();
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+
+              const Divider(),
+
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.favorite_rounded),
+                title: const Text("My Favourite Properties"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _setPage(FavouritePropertyListingScreen(
+                    userId: widget.userId,
+                  ));
+                },
+              ),
+
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.groups_rounded),
+                title: const Text("Customer Inquiries"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _setPage(BrokerLeadsScreen(
+                    brokerId: widget.userId,
+                  ));
+                },
+              ),
+
+              const Divider(),
+
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 8),
                 child: Text(
                   _appVersion,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
               ),
-            ),
 
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text("Logout"),
-              onTap: () => _showLogoutDialog(),
-            ),
+              const SizedBox(height: 8),
 
-            const SizedBox(height: 12),
-          ],
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.logout_rounded, color: Colors.red),
+                title: const Text(
+                  "Logout",
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () => _showLogoutDialog(),
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
 
-      body: _buildPage(),
+      body: _currentPage ?? _buildPage(),
 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -236,27 +241,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
           setState(() {
             _postedByUserId = null;
             _selectedIndex = index;
+            _currentPage = _buildPage();
           });
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home_rounded),
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard_rounded),
             label: "Home",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_outlined),
-            activeIcon: Icon(Icons.account_balance),
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            activeIcon: Icon(Icons.account_balance_wallet_rounded),
             label: "Loans",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.business_outlined),
-            activeIcon: Icon(Icons.business),
-            label: "Projects",
+            icon: Icon(Icons.apartment_outlined),
+            activeIcon: Icon(Icons.apartment_rounded),
+            label: "Rentals/PG",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.document_scanner_outlined),
-            activeIcon: Icon(Icons.document_scanner),
+            icon: Icon(Icons.assignment_outlined),
+            activeIcon: Icon(Icons.assignment_rounded),
             label: "Documents",
           ),
         ],
@@ -266,6 +272,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _drawerItem(IconData icon, String title, int index) {
     return ListTile(
+      dense: true,
       leading: Icon(icon),
       title: Text(title),
       selected: _selectedIndex == index,
@@ -274,6 +281,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _postedByUserId = null;
           _selectedIndex = index;
+          _currentPage = _buildPage();
         });
         Navigator.pop(context);
       },

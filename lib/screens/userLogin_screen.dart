@@ -39,9 +39,9 @@ class _LoginScreenState extends State<LoginScreen> {
   /// 🔐 AUTO LOGIN CHECK
   Future<void> _checkIfLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString("user_id");
+    final userId = prefs.getInt("user_id");
 
-    if (userId != null && userId.isNotEmpty) {
+    if (userId != null && userId!=0) {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -186,21 +186,34 @@ class _LoginScreenState extends State<LoginScreen> {
         passwordController.text.trim(),
       );
 
-      if (response.userId.isEmpty) {
+      final user = response.user;
+
+      if (user.id == null || user.id == 0) {
         _showError("Login failed. User ID missing.");
         return;
       }
 
-      /// ✅ SAVE LOGIN
+      /// ✅ SAVE USER INFO (SAFE FIELDS ONLY)
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString("user_id", response.userId);
+
+      await prefs.setInt("userId", user.id!);
+      await prefs.setString("userName", user.name ?? "");
+      await prefs.setString("userEmail", user.email ?? "");
+      await prefs.setString("userMobile", user.mobile ?? "");
+      await prefs.setString("userRole", user.userRole ?? "");
+      await prefs.setBool("isVerified", user.isVerified ?? false);
+
+      // optional (future proof)
+      if (response.token != null) {
+        await prefs.setString("token", response.token!);
+      }
 
       if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => DashboardScreen(userId: response.userId),
+          builder: (_) => DashboardScreen(userId: user.id!),
         ),
       );
     } on SocketException catch (e, s) {

@@ -7,7 +7,7 @@ import '../screens/bank_rates_compare_dialog.dart';
 import '../screens/bank_applyLoan_dialog.dart';
 
 class BankPage extends StatefulWidget {
-  final String? userId;
+  final int? userId;
 
   const BankPage({
     super.key,

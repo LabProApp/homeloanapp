@@ -6,7 +6,7 @@ import '../cards/property_card.dart';
 import '../screens/propertyDetail_screen.dart';
 
 class FavouritePropertyListingScreen extends StatefulWidget {
-  final String userId;
+  final int userId;
 
   const FavouritePropertyListingScreen({
     super.key,
@@ -60,7 +60,7 @@ class _FavouritePropertyListingScreenState
   Future<void> _toggleFavourite(int propertyId) async {
     await PropertyApiService.toggleFavourite(
       userId: widget.userId,
-      propertyId: propertyId.toString(),
+      propertyId: propertyId,
     );
     _refreshFromApi();
   }

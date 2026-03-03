@@ -101,7 +101,7 @@ class BankCard extends StatelessWidget {
 
               const SizedBox(height: 14),
 
-              Divider(color: Colors.grey.shade200),
+              Divider(color: AppColors.primary),
 
               const SizedBox(height: 12),
 
