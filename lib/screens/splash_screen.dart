@@ -23,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    /// REMOVE NATIVE SPLASH IMMEDIATELY
+    /// REMOVE NATIVE SPLASH
     FlutterNativeSplash.remove();
 
     _controller = AnimationController(
@@ -54,9 +54,32 @@ class _SplashScreenState extends State<SplashScreen>
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (_) =>
-        userId == null ? const LoginScreen() : DashboardScreen(userId: userId),
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 600),
+        pageBuilder: (_, animation, __) {
+          return userId == null
+              ? const LoginScreen()
+              : DashboardScreen(userId: userId);
+        },
+        transitionsBuilder: (_, animation, __, child) {
+          final fade = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOut,
+          );
+
+          final slide = Tween<Offset>(
+            begin: const Offset(0, 0.08),
+            end: Offset.zero,
+          ).animate(fade);
+
+          return FadeTransition(
+            opacity: fade,
+            child: SlideTransition(
+              position: slide,
+              child: child,
+            ),
+          );
+        },
       ),
     );
   }
@@ -73,10 +96,21 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/splash_bg.jpg', fit: BoxFit.cover),
+          /// Background image
+          Image.asset(
+            'assets/images/splash_bg.jpg',
+            fit: BoxFit.cover,
+          ),
 
-          /// ❌ Removed heavy blur
+          /// 🔹 Blur layer
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              color: Colors.black.withOpacity(0.25),
+            ),
+          ),
 
+          /// Foreground content
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -94,7 +128,9 @@ class _SplashScreenState extends State<SplashScreen>
                     );
                   },
                 ),
+
                 const SizedBox(height: 24),
+
                 FadeTransition(
                   opacity: _fadeTextAnim,
                   child: const Text(
@@ -107,7 +143,9 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 6),
+
                 FadeTransition(
                   opacity: _fadeTextAnim,
                   child: const Text(

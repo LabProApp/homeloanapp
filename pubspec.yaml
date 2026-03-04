@@ -66,9 +66,9 @@ flutter_native_splash:
   android: true
   ios: true
   color: "#000000"
-  image: assets/images/splash_bg.jpg
+  image: assets/images/ic_launcher.png
   android_12:
-    image: assets/images/splash_bg.jpg
+    image: assets/images/ic_launcher.png
     color: "#000000"
 
 

@@ -102,6 +102,12 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
+      appBar: AppBar(
+        title: const Text("Residential & Commercial Sale"),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 1,
+      ),
       body: Column(
         children: [
           _buildSearchBar(),

@@ -103,7 +103,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
       appBar: AppBar(
-        title: const Text("Rental & PG Listings"),
+        title: const Text("Leasing, Rental & PG"),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 1,
