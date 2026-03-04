@@ -2,41 +2,40 @@ import 'package:flutter/material.dart';
 import '../models/property_model.dart';
 import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
-import '../cards/property_card.dart';
-import '../screens/propertyDetail_screen.dart';
+import '../cards/rent_property_card.dart';
+import '../screens/rent_propertyDetail_screen.dart';
 import '../screens/propertyAdd_screen.dart';
 import '../screens/property_filter_dialog.dart';
 
-class PropertyListingScreen extends StatefulWidget {
+class RentalListingScreen extends StatefulWidget {
   final int userId;
   final int? postedbyuserId;
 
-  const PropertyListingScreen({
+  const RentalListingScreen({
     super.key,
     required this.userId,
     this.postedbyuserId,
   });
 
   @override
-  State<PropertyListingScreen> createState() => _PropertyListingScreenState();
+  State<RentalListingScreen> createState() => _RentalListingScreenState();
 }
 
-class _PropertyListingScreenState extends State<PropertyListingScreen> {
+class _RentalListingScreenState extends State<RentalListingScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   List<PropertyModel> _properties = [];
   bool _isLoading = true;
   String _error = "";
 
-  bool isResidential = true; // only Residential / Commercial toggle
-
+  bool isResidential = true; // Residential / Commercial only
   Map<String, dynamic> _filters = {};
   String _sortBy = "latest";
 
   @override
   void initState() {
     super.initState();
-    debugPrint("✅ PropertyListing received userId: ${widget.userId}");
+    debugPrint("✅ RentalListing userId: ${widget.userId}");
     _refreshFromApi();
   }
 
@@ -69,12 +68,13 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
         city: searchText.isEmpty ? _filters["city"] : searchText,
         location: searchText.isEmpty ? null : searchText,
 
-        /// 🔒 ALWAYS SALE
-        rentOrSale: "SALE",
+        /// 🔒 Always RENT
+        rentOrSale: "RENT",
 
         /// Residential / Commercial
         category: isResidential ? "Residential" : "Commercial",
 
+        /// Filters
         type: _filters["type"],
         minBedrooms: _toInt(_filters["bedrooms"]),
         minBathrooms: _toInt(_filters["bathrooms"]),
@@ -102,10 +102,16 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
+      appBar: AppBar(
+        title: const Text("Rental & PG Listings"),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 1,
+      ),
       body: Column(
         children: [
           _buildSearchBar(),
-          _buildToggles(), // only Residential / Commercial
+          _buildToggles(),
           _buildList(),
         ],
       ),
@@ -124,31 +130,31 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
           }
         },
         child: const Icon(Icons.add),
-        foregroundColor: AppColors.white,
+        foregroundColor: Colors.white,
       ),
     );
   }
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       child: Row(
         children: [
           Expanded(
             child: Container(
-              height: 42,
+              height: 44,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: TextField(
                 controller: _searchController,
                 onSubmitted: (_) => _refreshFromApi(),
                 decoration: const InputDecoration(
-                  hintText: "Search by title or city",
+                  hintText: "Search city, area, PG, flat...",
                   border: InputBorder.none,
-                  prefixIcon: Icon(Icons.search),
+                  prefixIcon: Icon(Icons.location_on_outlined),
                 ),
               ),
             ),
@@ -190,26 +196,28 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
               ? Center(child: Text(_error))
               : _properties.isEmpty
               ? const Center(
-            child: Text("No properties found",
-                style: TextStyle(fontSize: 16)),
+            child: Text(
+              "No rental properties available",
+              style: TextStyle(fontSize: 16),
+            ),
           )
               : ListView.builder(
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
             padding: const EdgeInsets.symmetric(
-                horizontal: 8, vertical: 2),
+                horizontal: 8, vertical: 4),
             itemCount: _properties.length,
             itemBuilder: (context, index) {
               final property = _properties[index];
               return Padding(
-                padding: const EdgeInsets.only(bottom: 3),
+                padding: const EdgeInsets.only(bottom: 6),
                 child: InkWell(
                   onTap: () async {
                     final updated = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => PropertyDetailScreen(
+                        builder: (_) => RentalPropertyDetailScreen(
                           property: property,
                           userId: widget.userId,
                         ),
@@ -220,7 +228,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                       _refreshFromApi();
                     }
                   },
-                  child: PropertyCard(
+                  child: RentPropertyCard(
                     property: property,
                     userId: widget.userId,
                   ),
@@ -260,8 +268,8 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _sortTile("Latest", "latest"),
-          _sortTile("Price: Low to High", "price_low"),
-          _sortTile("Price: High to Low", "price_high"),
+          _sortTile("Rent: Low to High", "price_low"),
+          _sortTile("Rent: High to Low", "price_high"),
         ],
       ),
     );
@@ -279,26 +287,28 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     );
   }
 
-  Widget _toggle(List<String> labels, bool firstSelected, Function(bool) onTap) {
+  Widget _toggle(
+      List<String> labels, bool firstSelected, Function(bool) onTap) {
     return ToggleButtons(
       isSelected: [firstSelected, !firstSelected],
       borderRadius: BorderRadius.circular(12),
-      constraints: const BoxConstraints(minHeight: 35, minWidth: 90),
+      constraints: const BoxConstraints(minHeight: 36, minWidth: 110),
       selectedColor: Colors.white,
       fillColor: AppColors.primary,
       onPressed: (i) => onTap(i == 0),
-      children:
-      labels.map((e) => Text(e, style: const TextStyle(fontSize: 12))).toList(),
+      children: labels
+          .map((e) => Text(e, style: const TextStyle(fontSize: 13)))
+          .toList(),
     );
   }
 
   Widget _iconBtn(IconData icon, VoidCallback onTap) {
     return Container(
-      height: 40,
-      width: 40,
+      height: 42,
+      width: 42,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: IconButton(icon: Icon(icon), onPressed: onTap),
     );

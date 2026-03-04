@@ -1,7 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'userLogin_screen.dart';
 import '../theme/app_colors.dart';
+import '../screens/dashBoard.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,58 +16,49 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _zoomAnim;
-  late Animation<double> _rotateAnim;
-  late Animation<double> _glowAnim;
+  late Animation<double> _scaleAnim;
   late Animation<double> _fadeTextAnim;
 
   @override
   void initState() {
     super.initState();
 
+    /// REMOVE NATIVE SPLASH IMMEDIATELY
+    FlutterNativeSplash.remove();
+
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: const Duration(milliseconds: 1200),
     );
 
-    /// Zoom IN → Zoom OUT
-    _zoomAnim = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.2, end: 1.5)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 50,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.5, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 50,
-      ),
-    ]).animate(_controller);
-
-    /// Slight rotation
-    _rotateAnim = Tween<double>(begin: -0.2, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    _scaleAnim = Tween<double>(begin: 0.9, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
 
-    /// Glow ring expand
-    _glowAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-
-    /// Text fade in (starts later)
     _fadeTextAnim = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.55, 1.0, curve: Curves.easeIn),
+      curve: const Interval(0.3, 1.0, curve: Curves.easeIn),
     );
 
     _controller.forward();
+    _navigateNext();
+  }
 
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-    });
+  Future<void> _navigateNext() async {
+    await Future.delayed(const Duration(milliseconds: 1400));
+
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt("user_id");
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+        userId == null ? const LoginScreen() : DashboardScreen(userId: userId),
+      ),
+    );
   }
 
   @override
@@ -79,88 +73,48 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          /// Background Image
-          Image.asset(
-            'assets/images/splash_bg.jpg',
-            fit: BoxFit.cover,
-          ),
+          Image.asset('assets/images/splash_bg.jpg', fit: BoxFit.cover),
 
-          /// Blur Effect
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-            child: Container(
-              color: Colors.black.withOpacity(0.2),
-            ),
-          ),
+          /// ❌ Removed heavy blur
 
-          /// Foreground Content
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                /// LOGO + EFFECTS
                 AnimatedBuilder(
                   animation: _controller,
-                  builder: (context, child) {
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        /// Ripple glow
-                        Container(
-                          width: 180 * _glowAnim.value,
-                          height: 180 * _glowAnim.value,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color:
-                            AppColors.primary.withOpacity(0.18),
-                          ),
-                        ),
-
-                        /// Rotating + zooming logo
-                        Transform.rotate(
-                          angle: _rotateAnim.value,
-                          child: Transform.scale(
-                            scale: _zoomAnim.value,
-                            child: const CircleAvatar(
-                              radius: 55,
-                              backgroundImage: AssetImage(
-                                  'assets/images/ic_launcher.png'),
-                            ),
-                          ),
-                        ),
-                      ],
+                  builder: (_, __) {
+                    return Transform.scale(
+                      scale: _scaleAnim.value,
+                      child: const CircleAvatar(
+                        radius: 55,
+                        backgroundImage:
+                        AssetImage('assets/images/ic_launcher.png'),
+                      ),
                     );
                   },
                 ),
-
-                const SizedBox(height: 30),
-
-                /// APP NAME (fade in)
+                const SizedBox(height: 24),
                 FadeTransition(
                   opacity: _fadeTextAnim,
                   child: const Text(
                     "KeyBricks",
                     style: TextStyle(
-                      fontSize: 30,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
-                      letterSpacing: 1.4,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
-                /// TAGLINE (fade in)
+                const SizedBox(height: 6),
                 FadeTransition(
                   opacity: _fadeTextAnim,
                   child: const Text(
                     "Find. Finance. Finalize.",
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
                       color: Colors.white70,
-                      letterSpacing: 0.6,
                     ),
                   ),
                 ),

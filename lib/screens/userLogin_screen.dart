@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'Dashboard.dart';
+import 'dashBoard.dart';
 import 'otp_verification_screen.dart';
 import 'user_forgot_password.dart';
 import '../services/user_service.dart';
@@ -38,11 +38,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   /// 🔐 AUTO LOGIN CHECK
   Future<void> _checkIfLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt("user_id");
+    dev.log("Checking login from SharedPreferences...",
+        name: "LoginScreen");
 
-    if (userId != null && userId!=0) {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt("userId"); // ✅ FIXED KEY
+
+    dev.log("Stored userId = $userId", name: "LoginScreen");
+
+    if (userId != null && userId != 0) {
+      dev.log("User already logged in → Navigating to Dashboard",
+          name: "LoginScreen");
+
       if (!mounted) return;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -50,7 +59,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     } else {
-      setState(() => _checkingLogin = false);
+      dev.log("No user logged in → Showing Login Screen",
+          name: "LoginScreen");
+
+      if (mounted) {
+        setState(() => _checkingLogin = false);
+      }
     }
   }
 
@@ -80,10 +94,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const SizedBox(height: 50),
 
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundImage:
-                    AssetImage('assets/images/ic_launcher.png'),
+                  const Hero(
+                    tag: "appLogo",
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundImage:
+                      AssetImage('assets/images/ic_launcher.png'),
+                    ),
                   ),
 
                   const SizedBox(height: 15),
@@ -181,6 +198,8 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
 
     try {
+      dev.log("Attempting login...", name: "LoginScreen");
+
       final LoginResponse response = await UserApiService.login(
         emailOrMobileController.text.trim(),
         passwordController.text.trim(),
@@ -188,13 +207,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final user = response.user;
 
+      dev.log("Login success. UserId=${user.id}", name: "LoginScreen");
+
       if (user.id == null || user.id == 0) {
         _showError("Login failed. User ID missing.");
         return;
       }
 
-      /// ✅ SAVE USER INFO (SAFE FIELDS ONLY)
       final prefs = await SharedPreferences.getInstance();
+
+      dev.log("Saving user data...", name: "LoginScreen");
 
       await prefs.setInt("userId", user.id!);
       await prefs.setString("userName", user.name ?? "");
@@ -203,10 +225,11 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString("userRole", user.userRole ?? "");
       await prefs.setBool("isVerified", user.isVerified ?? false);
 
-      // optional (future proof)
       if (response.token != null) {
         await prefs.setString("token", response.token!);
       }
+
+      dev.log("User saved in SharedPreferences", name: "LoginScreen");
 
       if (!mounted) return;
 
@@ -242,7 +265,10 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
 
     try {
-      await UserApiService.resendOtp(emailOrMobileController.text.trim());
+      dev.log("Sending OTP...", name: "LoginScreen");
+
+      await UserApiService.resendOtp(
+          emailOrMobileController.text.trim());
 
       Navigator.push(
         context,

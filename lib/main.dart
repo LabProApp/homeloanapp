@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import '../screens/splash_screen.dart';
 import '../network/service_locator.dart';
 import 'theme/app_colors.dart';
-
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: WidgetsBinding.instance);
   runApp(const MyApp());
 }
 

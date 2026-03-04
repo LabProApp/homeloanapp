@@ -3,8 +3,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'userLogin_screen.dart';
-import 'userProfile_screen.dart';
 import 'properyListing_screen.dart';
+import 'rental_Listing_screen.dart';
 import 'legalServiceProviders_listing.dart';
 import 'banksListing_screen.dart';
 import 'emi_calculator_screen.dart';
@@ -69,7 +69,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 1:
         return BankPage(userId: widget.userId);
       case 2:
-        return PropertyListingScreen(
+        return RentalListingScreen(
           key: UniqueKey(),
           userId: widget.userId,
         );

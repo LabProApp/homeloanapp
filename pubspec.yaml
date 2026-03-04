@@ -63,13 +63,14 @@ flutter:
     - assets/images/ic_launcher.png
 
 flutter_native_splash:
-  color: "#FFFFFF"   # background color only
- # image: assets/images/ic_launcher.jpg   # 👈 SHOW THIS INSTEAD OF ICON
   android: true
   ios: true
-
+  color: "#000000"
+  image: assets/images/splash_bg.jpg
   android_12:
-    color: "#FFFFFF"
+    image: assets/images/splash_bg.jpg
+    color: "#000000"
+
 
 fonts:
   - family: Poppins

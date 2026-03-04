@@ -5,38 +5,31 @@ import '../utility/amenity_icon.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
-import '../screens/propertyAdd_screen.dart';
 
-class PropertyDetailScreen extends StatefulWidget {
+class RentalPropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
   final int userId;
 
-  const PropertyDetailScreen({
+  const RentalPropertyDetailScreen({
     super.key,
     required this.property,
     required this.userId,
   });
 
   @override
-  State<PropertyDetailScreen> createState() => _PropertyDetailScreenState();
+  State<RentalPropertyDetailScreen> createState() =>
+      _RentalPropertyDetailScreenState();
 }
 
-class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
+class _RentalPropertyDetailScreenState
+    extends State<RentalPropertyDetailScreen> {
   int currentIndex = 0;
-  bool isFavourite = false;
 
-  /// Detect commercial property
-  bool get _isCommercial {
-    final type = widget.property.type?.toLowerCase() ?? "";
-    return type.contains("commercial");
-  }
-
-  /// Images
   List<String> get _images {
     if (widget.property.documentList != null &&
         widget.property.documentList!.isNotEmpty) {
       final urls = widget.property.documentList!
-          .map((doc) => doc.docUrl)
+          .map((e) => e.docUrl)
           .whereType<String>()
           .toList();
       if (urls.isNotEmpty) return urls;
@@ -48,7 +41,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     ];
   }
 
-  /// Amenities
   List<String> get _amenities {
     if (widget.property.amenitiesAsList != null &&
         widget.property.amenitiesAsList!.isNotEmpty) {
@@ -57,8 +49,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     return [];
   }
 
-  bool get _isOwner {
-    return widget.property.postedByUser == widget.userId;
+  bool get _isCommercial {
+    return widget.property.type?.toLowerCase() == "commercial";
   }
 
   @override
@@ -72,7 +64,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             expandedHeight: 280,
             pinned: true,
             backgroundColor: AppColors.primary,
-            iconTheme: const IconThemeData(color: Colors.white),
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -82,38 +73,18 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     onPageChanged: (i) => setState(() => currentIndex = i),
                     itemBuilder: (_, i) {
                       final img = _images[i];
-                      if (img.startsWith('assets/')) {
-                        return Image.asset(img, fit: BoxFit.cover);
-                      } else {
-                        return Image.network(
-                          img,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _placeholderImage(),
-                        );
-                      }
+                      return img.startsWith('assets/')
+                          ? Image.asset(img, fit: BoxFit.cover)
+                          : Image.network(
+                        img,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            _placeholderImage(),
+                      );
                     },
                   ),
 
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 12,
-                    right: 12,
-                    child: Column(
-                      children: [
-                        _imageActionIcon(icon: Icons.message, onTap: _shareWhatsApp),
-                        const SizedBox(height: 10),
-                        _imageActionIcon(icon: Icons.share, onTap: _shareProperty),
-                        const SizedBox(height: 10),
-                        _imageActionIcon(
-                          icon: isFavourite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          onTap: () =>
-                              setState(() => isFavourite = !isFavourite),
-                        ),
-                      ],
-                    ),
-                  ),
-
+                  /// DOTS
                   Positioned(
                     bottom: 12,
                     left: 0,
@@ -148,10 +119,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// PRICE
+                  /// RENT PRICE
                   Text(
                     widget.property.price != null
-                        ? "₹ ${NumberFormat('#,##,###.##').format(widget.property.price)}"
+                        ? "₹ ${NumberFormat('#,##,###').format(widget.property.price)} / month"
                         : "-",
                     style: TextStyle(
                       fontSize: 28,
@@ -162,7 +133,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
                   const SizedBox(height: 6),
 
-                  /// TITLE
                   Text(
                     widget.property.title ?? "-",
                     style: const TextStyle(
@@ -176,25 +146,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       widget.property.address!,
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
-
-                  if (_isOwner) ...[
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.edit),
-                        label: const Text("Modify Property"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: _openEditProperty,
-                      ),
-                    ),
-                  ],
 
                   const SizedBox(height: 20),
                   _featureRow(),
@@ -244,7 +195,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     const SizedBox(height: 24),
                   ],
 
-                  _sectionTitle("Property Details"),
+                  _sectionTitle("Rental Details"),
                   const SizedBox(height: 10),
                   _detailsCard(),
 
@@ -258,79 +209,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     );
   }
 
-  /// ---------------- ACTIONS ----------------
-
-  void _openEditProperty() async {
-    final updated = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PostPropertyScreen(
-          userId: widget.userId,
-          propertyToEdit: widget.property,
-        ),
-      ),
-    );
-
-    if (updated == true) {
-      Navigator.pop(context, true);
-    }
-  }
-
-  void _shareProperty() {
-    Share.share(
-      "${widget.property.title}\n"
-          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}\n"
-          "Address: ${widget.property.address ?? "-"}",
-    );
-  }
-
-  void _shareWhatsApp() {
-    Share.share(
-      "Check out this property:\n"
-          "${widget.property.title}\n"
-          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}",
-    );
-  }
-
-  /// ---------------- UI HELPERS ----------------
-
-  Widget _imageActionIcon({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.35),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: Colors.white, size: 22),
-      ),
-    );
-  }
-
   Widget _placeholderImage() {
-    final img = [
-      'assets/images/house1.jpg',
-      'assets/images/house2.jpg',
-      'assets/images/house3.jpg',
-    ][currentIndex % 3];
-
-    return Image.asset(img, fit: BoxFit.cover);
+    return Image.asset('assets/images/house1.jpg', fit: BoxFit.cover);
   }
 
   Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-    );
+    return Text(title,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
   }
 
-  /// ✅ Feature row with commercial check
+  /// FEATURES ROW
   Widget _featureRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -343,6 +231,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           Icons.square_foot,
           "${widget.property.superArea?.toStringAsFixed(0) ?? '-'} Sqft",
         ),
+       /* _Feature(
+          Icons.event_available,
+          widget.property.availableFrom ?? "Available",
+        ),*/
       ],
     );
   }
@@ -356,33 +248,24 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       ),
       child: Column(
         children: [
-          _DetailRow("Type", widget.property.type ?? "-"),
-          _DetailRow(
-              "Construction Status",
-              widget.property.constructionStatus ?? "-"),
-          _DetailRow(
-              "Carpet Area",
+          _DetailRow("Listing Type", "For Rent"),
+          _DetailRow("Property Type", widget.property.type ?? "-"),
+    //     _DetailRow("Deposit", widget.property.deposit?.toString() ?? "-"),
+       //   _DetailRow(
+        //      "Furnishing", widget.property.furnishingStatus ?? "-"),
+       //   _DetailRow("Tenant Type", widget.property.tenantType ?? "-"),
+          _DetailRow("Carpet Area",
               widget.property.carpetArea?.toString() ?? "-"),
-          _DetailRow(
-              "Super Area",
+          _DetailRow("Super Area",
               widget.property.superArea?.toString() ?? "-"),
-          _DetailRow("Posted By", widget.property.postedBy ?? "-"),
           _DetailRow("Contact", widget.property.contactNumber ?? "-"),
-          _DetailRow("Posted On", formatDate(widget.property.postDate) ?? "-"),
         ],
       ),
     );
   }
-
-  String formatDate(String? date) {
-    if (date == null || date.isEmpty) return "-";
-    final parsed = DateTime.parse(date);
-    return DateFormat("dd MMM yyyy").format(parsed);
-  }
 }
 
-/// ---------------- SMALL WIDGETS ----------------
-
+/// SMALL WIDGETS
 class _Feature extends StatelessWidget {
   final IconData icon;
   final String label;
