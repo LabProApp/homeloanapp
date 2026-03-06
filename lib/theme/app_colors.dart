@@ -4,7 +4,7 @@ class AppColors {
   // ===== Brand / Primary =====
   static const Color primary = Color(0xFFD97706);
   static const Color secondary = Colors.orangeAccent;
-  static const Color textBoxbackground = Color(0xFFFBE9E7);
+  static const Color textBoxbackground = Color(0xFFFFFFFF);
   static const Color accent = Color(0xFF059669);
   static const Color listingbackground = Color(0xFFFFF3E0);
   // ===== Backgrounds =====

@@ -22,4 +22,11 @@ class DocumentModel {
       objectId: json["objectId"],
     );
   }
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "fileName": fileName,
+    "fileUrl": fileUrl,
+    "objectType": objectType,
+    "objectId": objectId,
+  };
 }

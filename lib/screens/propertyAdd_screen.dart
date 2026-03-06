@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+
 import '../models/property_model.dart';
 import '../services/property_api_service.dart';
+import '../services/state_api_service.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
-import '../services/state_api_service.dart'; // MasterService
 import '../screens/property_media_screen.dart';
 
 class PostPropertyScreen extends StatefulWidget {
   final int? userId;
-  final PropertyModel? propertyToEdit; // 👈 NEW
+  final PropertyModel? propertyToEdit;
 
   const PostPropertyScreen({
     super.key,
@@ -24,383 +25,424 @@ class PostPropertyScreen extends StatefulWidget {
 
 class _PostPropertyScreenState extends State<PostPropertyScreen> {
   final _formKey = GlobalKey<FormState>();
-  static const double vSpace = 10;
 
+  /// Controllers
   final titleController = TextEditingController();
-  final subtitleController = TextEditingController();
+  final descriptionController = TextEditingController();
   final priceController = TextEditingController();
   final superAreaController = TextEditingController();
+  final carpetAreaController = TextEditingController();
+  final addressController = TextEditingController();
   final locationController = TextEditingController();
   final contactController = TextEditingController();
 
-  int? bedrooms;
-  int? bathrooms;
-  int? _createdPropertyId;
-  bool _alreadyCreated = false;
+  /// Core
   String rentOrSale = "Sale";
   String category = "Residential";
   String propertyType = "APARTMENT";
-  String constructionStatus = "Ready to Move";
   String postedByType = "Owner";
+  String constructionStatus = "Ready to Move";
 
+  int? bedrooms;
+  int? bathrooms;
+  int? floorNumber;
+  int? totalFloors;
+
+  /// Smart attributes
+  String furnishing = "Unfurnished";
+  String parking = "None";
+  String facing = "North";
+  String propertyAge = "0-1 Years";
+  String availableFrom = "Immediate";
+
+  /// Location
   MasterValue? selectedState;
   String? selectedCity;
   List<MasterValue> states = [];
   List<String> cities = [];
 
+  /// Amenities
   final List<String> amenities = [];
+
   bool _loading = false;
   bool _loadingStates = true;
   bool _loadingCities = false;
 
-  final List<String> rentSaleOptions = ["Rent", "Sale"];
-  final List<String> categoryOptions = ["Residential", "Commercial"];
-  final List<String> postedByOptions = ["Owner", "Broker", "Builder"];
-  final List<String> constructionStatusOptions = [
-    "Ready to Move",
-    "Under Construction",
-    "New Launch",
-    "ReSale"
-  ];
-  final List<String> propertyTypes = [
-    "HOUSE",
-    "PLOT",
+  bool get isResidential => category == "Residential";
+  bool get isRent => rentOrSale == "Rent";
+
+  /// Options
+  final rentSaleOptions = ["Rent", "Sale"];
+  final categoryOptions = ["Residential", "Commercial"];
+
+  final propertyTypesResidential = [
     "APARTMENT",
+    "HOUSE",
     "BUILDER FLOOR",
+    "PLOT"
+  ];
+
+  final propertyTypesCommercial = [
     "SHOP",
     "OFFICE",
     "SHOWROOM",
-    "PG",
-    "CO WORKING",
-    "AGRICULTURAL",
+    "CO WORKING"
   ];
 
-  bool get isEditMode => widget.propertyToEdit != null;
+  final postedByOptions = [
+    "Owner",
+    "Broker",
+    "Builder"
+  ];
+
+  final constructionStatusOptions = [
+    "Ready to Move",
+    "Under Construction",
+    "New Launch"
+  ];
+
+  final furnishingOptions = [
+    "Furnished",
+    "Semi Furnished",
+    "Unfurnished"
+  ];
+
+  final parkingOptions = [
+    "None",
+    "1",
+    "2",
+    "3+"
+  ];
+
+  final facingOptions = [
+    "North",
+    "South",
+    "East",
+    "West"
+  ];
+
+  final propertyAgeOptions = [
+    "0-1 Years",
+    "1-5 Years",
+    "5-10 Years",
+    "10+ Years"
+  ];
+
+  final availableFromOptions = [
+    "Immediate",
+    "Within 15 Days",
+    "Within 30 Days"
+  ];
+
+  final amenityOptions = [
+    "Club House",
+    "Lift",
+    "Power Backup",
+    "Security",
+    "Gym",
+    "Swimming Pool",
+    "Garden",
+    "Parking",
+    "CCTV"
+  ];
 
   @override
   void initState() {
     super.initState();
     _loadStates();
-    _prefillIfEdit();
-
-    if(isEditMode)
-      {
-        _alreadyCreated = true;
-        _createdPropertyId = widget.propertyToEdit!.id;
-      }
-
   }
 
-  void _prefillIfEdit() {
-    final p = widget.propertyToEdit;
-    if (p == null) return;
-
-    titleController.text = p.title ?? "";
-    subtitleController.text = p.description ?? "";
-    priceController.text = p.price != null
-        ? NumberFormat("#,##,###").format(p.price)
-        : "";
-    superAreaController.text = p.superArea?.toString() ?? "";
-    locationController.text = p.location ?? "";
-    contactController.text = p.contactNumber ?? "";
-
-    bedrooms = p.bedrooms;
-    bathrooms = p.bathrooms;
-
-    rentOrSale = (p.rentOrSale ?? "SALE").toUpperCase() == "RENT"
-        ? "Rent"
-        : "Sale";
-    category = p.category ?? category;
-    propertyType = p.type ?? propertyType;
-    constructionStatus = p.constructionStatus ?? constructionStatus;
-    postedByType = p.postedBy ?? postedByType;
-
-    if (p.state != null) {
-      selectedState = MasterValue(id: -1, value: p.state!);
-    }
-    selectedCity = p.city;
-  }
-
+  /// Load States
   Future<void> _loadStates() async {
-    setState(() => _loadingStates = true);
     try {
       states = await MasterService.getStates();
+    } catch (_) {}
 
-      if (isEditMode && widget.propertyToEdit?.state != null) {
-        selectedState = states.firstWhere(
-              (s) => s.value == widget.propertyToEdit!.state,
-          orElse: () => states.first,
-        );
-        await _loadCities(selectedState!.id);
-        selectedCity = widget.propertyToEdit!.city;
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Failed to load states: $e')));
-    } finally {
-      if (mounted) setState(() => _loadingStates = false);
-    }
+    setState(() {
+      _loadingStates = false;
+    });
   }
 
+  /// Load Cities
   Future<void> _loadCities(int stateId) async {
     setState(() {
       _loadingCities = true;
       cities = [];
       selectedCity = null;
     });
+
     try {
       cities = await MasterService.getCities(stateId);
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Failed to load cities: $e')));
-    } finally {
-      if (mounted) setState(() => _loadingCities = false);
-    }
-  }
+    } catch (_) {}
 
-  @override
-  void dispose() {
-    titleController.dispose();
-    subtitleController.dispose();
-    priceController.dispose();
-    superAreaController.dispose();
-    locationController.dispose();
-    contactController.dispose();
-    super.dispose();
+    setState(() {
+      _loadingCities = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final propertyTypes =
+    isResidential ? propertyTypesResidential : propertyTypesCommercial;
+
+    if (!propertyTypes.contains(propertyType)) {
+      propertyType = propertyTypes.first;
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditMode ? "Modify Property" : "Post New Property"),
-        foregroundColor: Colors.white,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primary,
-                AppColors.secondary,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+        title: const Text("Post Property"),
+        backgroundColor: AppColors.primary,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _field("Title", titleController),
-              _space(),
-              _field("Subtitle / Description", subtitleController),
-              _space(),
 
-              _sectionTitle("Rent / Sale"),
-              _chipSelector(
-                options: rentSaleOptions,
-                selected: rentOrSale,
-                onSelected: (v) => setState(() => rentOrSale = v),
+              /// BASIC
+              _sectionTitle("Basic Details"),
+
+              _field("Title *", titleController),
+
+              const SizedBox(height: 10),
+
+              _field("Description *", descriptionController, maxLines: 3),
+
+              const SizedBox(height: 20),
+
+              /// TYPE
+              _sectionTitle("Property Type"),
+
+              _chipSelector(rentSaleOptions, rentOrSale,
+                      (v) => setState(() => rentOrSale = v)),
+
+              const SizedBox(height: 10),
+
+              _chipSelector(categoryOptions, category, (v) {
+                setState(() {
+                  category = v;
+                  propertyType = isResidential
+                      ? propertyTypesResidential.first
+                      : propertyTypesCommercial.first;
+                });
+              }),
+
+              const SizedBox(height: 10),
+
+              _dropdown(
+                "Property Type *",
+                propertyType,
+                propertyTypes,
+                    (v) => setState(() => propertyType = v),
               ),
-              _space(),
+
+              const SizedBox(height: 10),
+
+              _dropdown(
+                "Posted By *",
+                postedByType,
+                postedByOptions,
+                    (v) => setState(() => postedByType = v),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// PRICE
+              _sectionTitle("Price"),
 
               _field(
-                "Price",
+                isRent ? "Monthly Rent *" : "Price *",
                 priceController,
                 keyboard: TextInputType.number,
                 prefix: Icons.currency_rupee,
                 isPrice: true,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10),
-                ],
               ),
-              _space(),
 
-              _sectionTitle("Category"),
-              _chipSelector(
-                options: categoryOptions,
-                selected: category,
-                onSelected: (v) => setState(() => category = v),
-              ),
-              _space(),
+              const SizedBox(height: 20),
+
+              /// AREA
+              _sectionTitle("Area"),
+
+              _field("Super Area (sqft) *", superAreaController,
+                  keyboard: TextInputType.number),
+
+              const SizedBox(height: 10),
+
+              _field("Carpet Area", carpetAreaController,
+                  keyboard: TextInputType.number),
+
+              /// ROOMS
+              if (isResidential) ...[
+                const SizedBox(height: 20),
+                _sectionTitle("Rooms"),
+
+                _slider("Bedrooms", bedrooms,
+                        (v) => setState(() => bedrooms = v)),
+
+                _slider("Bathrooms", bathrooms,
+                        (v) => setState(() => bathrooms = v)),
+              ],
+
+              /// FLOOR
+              if (propertyType == "APARTMENT" ||
+                  propertyType == "OFFICE") ...[
+                const SizedBox(height: 20),
+                _sectionTitle("Floor Details"),
+
+                _slider("Floor Number", floorNumber,
+                        (v) => setState(() => floorNumber = v)),
+
+                _slider("Total Floors", totalFloors,
+                        (v) => setState(() => totalFloors = v)),
+              ],
+
+              const SizedBox(height: 20),
+
+              /// PROPERTY DETAILS
+              _sectionTitle("Property Details"),
+
+              _dropdown("Furnishing", furnishing, furnishingOptions,
+                      (v) => setState(() => furnishing = v)),
+
+              const SizedBox(height: 10),
+
+              _dropdown("Parking", parking, parkingOptions,
+                      (v) => setState(() => parking = v)),
+
+              const SizedBox(height: 10),
+
+              _dropdown("Facing", facing, facingOptions,
+                      (v) => setState(() => facing = v)),
+
+              const SizedBox(height: 10),
+
+              _dropdown("Property Age", propertyAge, propertyAgeOptions,
+                      (v) => setState(() => propertyAge = v)),
+
+              const SizedBox(height: 10),
 
               _dropdown(
-                label: "Property Type",
-                value: propertyType,
-                items: propertyTypes,
-                onChanged: (v) => setState(() => propertyType = v),
+                "Construction Status *",
+                constructionStatus,
+                constructionStatusOptions,
+                    (v) => setState(() => constructionStatus = v),
               ),
-              _space(),
 
-              _sectionTitle("Construction Status"),
-              _chipSelector(
-                options: constructionStatusOptions,
-                selected: constructionStatus,
-                onSelected: (v) => setState(() => constructionStatus = v),
+              if (isRent) ...[
+                const SizedBox(height: 10),
+                _dropdown("Available From", availableFrom,
+                    availableFromOptions,
+                        (v) => setState(() => availableFrom = v)),
+              ],
+
+              const SizedBox(height: 20),
+
+              /// AMENITIES
+              _sectionTitle("Amenities"),
+
+              Wrap(
+                spacing: 8,
+                children: amenityOptions.map((a) {
+                  final selected = amenities.contains(a);
+
+                  return FilterChip(
+                    label: Text(a),
+                    selected: selected,
+                    selectedColor: AppColors.primary,
+                    onSelected: (v) {
+                      setState(() {
+                        v ? amenities.add(a) : amenities.remove(a);
+                      });
+                    },
+                  );
+                }).toList(),
               ),
-              _space(),
 
-              _field("Super Area (sqft)", superAreaController,
-                  keyboard: TextInputType.number),
-              _space(),
+              const SizedBox(height: 20),
 
-              _sectionTitle("Bedrooms"),
-              _sliderRow(
-                value: bedrooms,
-                onChanged: (v) => setState(() => bedrooms = v),
-              ),
-              _space(),
+              /// LOCATION
+              _sectionTitle("Location"),
 
-              _sectionTitle("Bathrooms"),
-              _sliderRow(
-                value: bathrooms,
-                onChanged: (v) => setState(() => bathrooms = v),
-              ),
-              _space(),
+              _field("Full Address *", addressController, maxLines: 2),
 
-              _field("Location", locationController),
-              _space(),
+              const SizedBox(height: 10),
 
-              _sectionTitle("State"),
+              _field("Locality / Area *", locationController),
+
+              const SizedBox(height: 10),
+
               _loadingStates
-                  ? const Center(child: CircularProgressIndicator())
-                  : _fancyDropdown<MasterValue>(
-                items: states,
-                value: selectedState,
-                hint: "Select State",
-                itemLabel: (s) => s.value,
-                onChanged: (v) {
-                  setState(() => selectedState = v);
-                  if (v != null) _loadCities(v.id);
-                },
-              ),
-              _space(),
+                  ? const CircularProgressIndicator()
+                  : _stateDropdown(),
 
-              _sectionTitle("City"),
+              const SizedBox(height: 10),
+
               _loadingCities
-                  ? const Center(child: CircularProgressIndicator())
-                  : _fancyDropdown<String>(
-                items: cities,
-                value: selectedCity,
-                hint: "Select City",
-                itemLabel: (c) => c,
-                onChanged: (v) => setState(() => selectedCity = v),
-              ),
-              _space(),
+                  ? const CircularProgressIndicator()
+                  : _cityDropdown(),
+
+              const SizedBox(height: 20),
+
+              /// CONTACT
+              _sectionTitle("Contact"),
 
               _field(
-                "Contact Number",
+                "Phone *",
                 contactController,
                 keyboard: TextInputType.phone,
                 prefix: Icons.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(12),
-                ],
               ),
-              _space(),
 
-              _sectionTitle("Posted By"),
-              _chipSelector(
-                options: postedByOptions,
-                selected: postedByType,
-                onSelected: (v) => setState(() => postedByType = v),
-              ),
+              const SizedBox(height: 80)
             ],
           ),
         ),
       ),
 
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: AppButton(
-            isLoading: _loading,
-            text: isEditMode ? "Update Property" : "Post Property",
-            onTap: _submit,
-          ),
+      /// SAVE
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(12),
+        child: AppButton(
+          text: "Save Property",
+          isLoading: _loading,
+          onTap: _submit,
         ),
       ),
     );
   }
 
-  Widget _space() => const SizedBox(height: vSpace);
+  /// ---------------- UI WIDGETS ----------------
 
-  Widget _sectionTitle(String text) =>
-      Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14));
-
-  Widget _fancyDropdown<T>({
-    required List<T> items,
-    required T? value,
-    required String hint,
-    required String Function(T) itemLabel,
-    required ValueChanged<T?> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppColors.textBoxbackground,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          isExpanded: true,
-          value: value,
-          hint: Text(hint),
-          items: items.map((e) {
-            return DropdownMenuItem<T>(
-              value: e,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(itemLabel(e)),
-              ),
-            );
-          }).toList(),
-          onChanged: onChanged,
-          menuMaxHeight: 48.0 * 5,
-          itemHeight: 48,
-        ),
-      ),
+  Widget _sectionTitle(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(text,
+          style: const TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold)),
     );
   }
 
-  Widget _sliderRow({int? value, required Function(int) onChanged}) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 8,
-          child: Slider(
-            value: (value ?? 0).toDouble(),
-            min: 0,
-            max: 12,
-            divisions: 12,
-            label: value?.toString() ?? "0",
-            onChanged: (v) => onChanged(v.toInt()),
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(width: 40, child: Text(value?.toString() ?? "")),
-      ],
-    );
-  }
-
-  Widget _field(String label, TextEditingController controller,
-      {TextInputType keyboard = TextInputType.text,
+  Widget _field(
+      String label,
+      TextEditingController controller, {
+        int maxLines = 1,
+        TextInputType keyboard = TextInputType.text,
         IconData? prefix,
         bool isPrice = false,
-        List<TextInputFormatter>? inputFormatters}) {
+      }) {
     return TextFormField(
       controller: controller,
+      maxLines: maxLines,
       keyboardType: keyboard,
-      inputFormatters: inputFormatters,
-      validator: (v) => v == null || v.trim().isEmpty ? "Enter $label" : null,
+      validator: (v) {
+        if (label.contains("*") && (v == null || v.isEmpty)) {
+          return "Required";
+        }
+        return null;
+      },
       onChanged: isPrice
           ? (v) {
         final clean = v.replaceAll(",", "");
@@ -409,149 +451,185 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
           final formatted = NumberFormat("#,##,###").format(value);
           controller.value = TextEditingValue(
             text: formatted,
-            selection: TextSelection.collapsed(offset: formatted.length),
+            selection:
+            TextSelection.collapsed(offset: formatted.length),
           );
         }
       }
           : null,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: prefix != null ? Icon(prefix, size: 18) : null,
-        isDense: true,
-        contentPadding:
-        const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        prefixIcon: prefix != null ? Icon(prefix) : null,
         filled: true,
         fillColor: AppColors.textBoxbackground,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
         ),
       ),
     );
   }
 
-  Widget _chipSelector({
-    required List<String> options,
-    required String selected,
-    required Function(String) onSelected,
-  }) =>
-      Wrap(
-        spacing: 6,
-        runSpacing: 4,
-        children: options
-            .map(
-              (o) => ChoiceChip(
-            label: Text(o, style: const TextStyle(fontSize: 12)),
-            selected: selected == o,
-            selectedColor: AppColors.primary.withAlpha(50),
-            onSelected: (_) => onSelected(o),
-          ),
-        )
-            .toList(),
-      );
+  Widget _chipSelector(
+      List<String> options,
+      String selected,
+      Function(String) onSelected,
+      ) {
+    return Wrap(
+      spacing: 8,
+      children: options.map((e) {
 
-  Widget _dropdown({
-    required String label,
-    required String value,
-    required List<String> items,
-    required Function(String) onChanged,
-  }) =>
-      DropdownButtonFormField<String>(
-        initialValue: value,
-        decoration: InputDecoration(
-          labelText: label,
-          isDense: true,
-          contentPadding:
-          const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          filled: true,
-          fillColor: AppColors.textBoxbackground,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+        final isSelected = selected == e;
+
+        return ChoiceChip(
+          label: Text(
+            e,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppColors.primary,
+            ),
+          ),
+          selected: isSelected,
+          onSelected: (_) => onSelected(e),
+          selectedColor: AppColors.primary,
+          backgroundColor: AppColors.secondary.withOpacity(0.15),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _dropdown(
+      String label,
+      String value,
+      List<String> items,
+      Function(String) onChanged,
+      ) {
+    return DropdownButtonFormField<String>(
+      value: items.contains(value) ? value : null,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: AppColors.textBoxbackground,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      items: items
+          .map((e) =>
+          DropdownMenuItem(value: e, child: Text(e)))
+          .toList(),
+      onChanged: (v) {
+        if (v != null) onChanged(v);
+      },
+    );
+  }
+
+  Widget _slider(String label, int? value, Function(int) onChanged) {
+
+    final int currentValue = value ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label),
+            Text(currentValue.toString()),
+          ],
+        ),
+
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: AppColors.primary,
+            inactiveTrackColor: AppColors.primary.withAlpha(60),
+            thumbColor: AppColors.primary,
+          ),
+          child: Slider(
+            value: currentValue.toDouble(),
+            min: 0,
+            max: 10,
+            divisions: 10,
+            label: currentValue.toString(),
+            onChanged: (v) => onChanged(v.toInt()),
           ),
         ),
-        items:
-        items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: (v) => onChanged(v!),
-      );
+      ],
+    );
+  }
+
+  Widget _stateDropdown() {
+    return DropdownButtonFormField<MasterValue>(
+      hint: const Text("Select State"),
+      value: selectedState,
+      items: states
+          .map((s) =>
+          DropdownMenuItem(value: s, child: Text(s.value)))
+          .toList(),
+      onChanged: (v) {
+        setState(() => selectedState = v);
+        if (v != null) _loadCities(v.id);
+      },
+    );
+  }
+
+  Widget _cityDropdown() {
+    return DropdownButtonFormField<String>(
+      hint: const Text("Select City"),
+      value: selectedCity,
+      items: cities
+          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+          .toList(),
+      onChanged: (v) => setState(() => selectedCity = v),
+    );
+  }
 
   Future<void> _submit() async {
-    if(_loading) return;
+
     if (!_formKey.currentState!.validate()) return;
-    if (selectedState == null || selectedCity == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select state and city")),
-      );
-      return;
-    }
 
-    setState(() => _loading = true);
-
-    final price = double.tryParse(priceController.text.replaceAll(",", ""));
+    final price =
+    double.tryParse(priceController.text.replaceAll(",", ""));
 
     final property = PropertyModel(
-      id: _createdPropertyId ?? widget.propertyToEdit?.id,
-      title: _cap(titleController.text),
-      description: _cap(subtitleController.text),
-      projectName: _cap(titleController.text),
-      address:
-      "${_cap(locationController.text)}, $selectedCity, ${selectedState!.value}",
-      location: _cap(locationController.text),
-      city: selectedCity!,
-      state: selectedState!.value,
+      title: titleController.text,
+      description: descriptionController.text,
+      price: price,
+      superArea: double.tryParse(superAreaController.text),
+      carpetArea: double.tryParse(carpetAreaController.text),
+      address: addressController.text,
+      location: locationController.text,
+      city: selectedCity,
+      state: selectedState?.value,
       type: propertyType,
       category: category,
       rentOrSale: rentOrSale.toUpperCase(),
-      propertyStatus: "ACTIVE",
-      constructionStatus: constructionStatus,
-      price: price,
-      superArea: double.tryParse(superAreaController.text),
-      carpetArea: double.tryParse(superAreaController.text),
-      bedrooms: bedrooms == 0 ? null : bedrooms,
-      bathrooms: bathrooms == 0 ? null : bathrooms,
-      amenities: amenities.join(","),
-      postedByUser: widget.userId,
       postedBy: postedByType,
-      verified: false,
-      postDate: DateTime.now().toIso8601String(),
-      contactNumber: contactController.text.trim(),
+      constructionStatus: constructionStatus,
+      bedrooms: bedrooms,
+      bathrooms: bathrooms,
+      amenities: amenities.join(","),
+      contactNumber: contactController.text,
     );
 
     try {
-      int propertyId;
 
-      if (_alreadyCreated || isEditMode) {
-        await PropertyApiService.updateProperty(property);
-        propertyId = property.id!;
-      } else {
-        propertyId = await PropertyApiService.addProperty(property);
-
-        // ✅ Mark as created
-        _createdPropertyId = propertyId;
-        _alreadyCreated = true;
-      }
+      final id = await PropertyApiService.addProperty(property);
 
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Property saved. Add images now")),
-      );
 
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PropertyMediaScreen(propertyId: propertyId),
+          builder: (_) => PropertyMediaScreen(propertyId: id),
         ),
       );
+
     } catch (e) {
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to save property: $e")),
+        SnackBar(content: Text("Error: $e")),
       );
-    } finally {
-      if (mounted) setState(() => _loading = false);
+
     }
   }
-
-  String _cap(String text) =>
-      text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
 }

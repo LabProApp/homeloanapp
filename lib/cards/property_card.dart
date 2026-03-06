@@ -63,7 +63,7 @@ class _PropertyCardState extends State<PropertyCard> {
     if (widget.property.documentList != null &&
         widget.property.documentList!.isNotEmpty) {
       final urls = widget.property.documentList!
-          .map((doc) => doc.docUrl)
+          .map((doc) => doc.fileUrl)
           .whereType<String>()
           .toList();
       if (urls.isNotEmpty) return urls;

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'DocumentModel.dart';
 
 class PropertyModel {
   final String? code;
@@ -10,12 +11,10 @@ class PropertyModel {
   final String? title;
   final String? address;
   final String? city;
-  final String? propertyStatus;
-  final String? planPackage;
   final String? state;
+  final String? propertyStatus;
   final String? type;
 
-  // ✅ Changed to double
   final double? price;
   final int? bedrooms;
   final int? bathrooms;
@@ -23,8 +22,9 @@ class PropertyModel {
   final double? carpetArea;
   final double? superArea;
 
-  final String? amenities; // CSV string
+  final String? amenities;
   final String? postedBy;
+  final String contactNumber;
   final String? constructionStatus;
   final String? currency;
   final DateTime? readyDate;
@@ -32,14 +32,44 @@ class PropertyModel {
   final String? projectName;
   final String? description;
   final int? postedByUser;
-
-  final String contactNumber; // required, non-null
-
   final String? postDate;
   final String? rentOrSale;
   final bool? verified;
+
+  // 🆕 Extra fields from JSON
+  final String? landmark;
+  final double? latitude;
+  final double? longitude;
+  final int? floorNumber;
+  final int? totalFloors;
+  final int? parkingCount;
+  final String? parkingType;
+  final String? facing;
+  final int? propertyAge;
+  final String? ownershipType;
+
+  final String? furnishing;
+
+  final bool? negotiable;
+  final bool? loanAvailable;
+  final double? monthlyRent;
+  final double? securityDeposit;
+  final double? brokerage;
+  final String? preferredTenants;
+  final bool? petsAllowed;
+  final bool? nonVegAllowed;
+  final String? leaseDuration;
+  final String? noticePeriod;
+  final bool? maintenanceIncluded;
+  final String? builderName;
+  final bool? reraApproved;
+  final String? reraNumber;
+  final int? viewsCount;
+  final int? shortListCount;
+
   final List<DocumentModel>? documentList;
   final List<int>? amenitiesAsList;
+  final List<int>? amenitiesFromList;
 
   PropertyModel({
     this.code,
@@ -51,9 +81,8 @@ class PropertyModel {
     this.title,
     this.address,
     this.city,
-    this.propertyStatus,
-    this.planPackage,
     this.state,
+    this.propertyStatus,
     this.type,
     this.price,
     this.bedrooms,
@@ -63,6 +92,7 @@ class PropertyModel {
     this.superArea,
     this.amenities,
     this.postedBy,
+    required this.contactNumber,
     this.constructionStatus,
     this.currency,
     this.readyDate,
@@ -70,71 +100,109 @@ class PropertyModel {
     this.projectName,
     this.description,
     this.postedByUser,
-    required this.contactNumber,
     this.postDate,
     this.rentOrSale,
     this.verified,
+    this.landmark,
+    this.latitude,
+    this.longitude,
+    this.floorNumber,
+    this.totalFloors,
+    this.parkingCount,
+    this.parkingType,
+    this.facing,
+    this.propertyAge,
+    this.ownershipType,
+    this.furnishing,
+    this.negotiable,
+    this.loanAvailable,
+    this.monthlyRent,
+    this.securityDeposit,
+    this.brokerage,
+    this.preferredTenants,
+    this.petsAllowed,
+    this.nonVegAllowed,
+    this.leaseDuration,
+    this.noticePeriod,
+    this.maintenanceIncluded,
+    this.builderName,
+    this.reraApproved,
+    this.reraNumber,
+    this.viewsCount,
+    this.shortListCount,
     this.documentList,
     this.amenitiesAsList,
+    this.amenitiesFromList,
   });
 
   factory PropertyModel.fromJson(Map<String, dynamic> json) => PropertyModel(
-    code: json["code"] as String?,
-    createdTs: json["createdTs"] != null
-        ? DateTime.parse(json["createdTs"])
-        : null,
-    lastUpdatedTs: json["lastUpdatedTs"] != null
-        ? DateTime.parse(json["lastUpdatedTs"])
-        : null,
-    createdBy: json["createdBy"] as String?,
-    updatedBy: json["updatedBy"] as String?,
-    id: json["id"] as int?,
-    title: json["title"] as String?,
-    address: json["address"] as String?,
-    city: json["city"] as String?,
-    propertyStatus: json["propertyStatus"]?.toString(),
-    planPackage: json["planPackage"]?.toString(),
-    state: json["state"] as String?,
-    type: json["type"] as String?,
-
-    // ✅ Parse price safely
+    code: json["code"],
+    createdTs: json["createdTs"] != null ? DateTime.parse(json["createdTs"]) : null,
+    lastUpdatedTs: json["lastUpdatedTs"] != null ? DateTime.parse(json["lastUpdatedTs"]) : null,
+    createdBy: json["createdBy"],
+    updatedBy: json["updatedBy"],
+    id: json["id"],
+    title: json["title"],
+    address: json["address"],
+    city: json["city"],
+    state: json["state"],
+    propertyStatus: json["propertyStatus"],
+    type: json["type"],
     price: _toDouble(json["price"]),
-
-    bedrooms: json["bedrooms"] as int?,
-    bathrooms: json["bathrooms"] as int?,
-    location: json["location"] as String?,
-
-    // ✅ carpetArea and superArea as double
+    bedrooms: json["bedrooms"],
+    bathrooms: json["bathrooms"],
+    location: json["location"],
     carpetArea: _toDouble(json["carpetArea"]),
     superArea: _toDouble(json["superArea"]),
-
-    amenities: json["amenities"] as String?,
-    postedBy: json["postedBy"] as String?,
-    constructionStatus: json["constructionStatus"] as String?,
-    currency: json["currency"] as String?,
-    readyDate: json["readyDate"] != null
-        ? DateTime.parse(json["readyDate"])
-        : null,
-    category: json["category"] as String?,
-    projectName: json["projectName"] as String?,
-    description: json["description"] as String?,
-    postedByUser: json["postedByUser"] as int?,
-
-    contactNumber: (json["contactNumber"] as String?) ?? "",
-
-    postDate:  json["postDate"] as String? ?? "",
-
-
-    rentOrSale: json["rentOrSale"] as String?,
-    verified: json["verified"] as bool?,
+    amenities: json["amenities"],
+    postedBy: json["postedBy"],
+    contactNumber: json["contactNumber"] ?? "",
+    constructionStatus: json["constructionStatus"],
+    currency: json["currency"],
+    readyDate: json["readyDate"] != null ? DateTime.parse(json["readyDate"]) : null,
+    category: json["category"],
+    projectName: json["projectName"],
+    description: json["description"],
+    postedByUser: json["postedByUser"],
+    postDate: json["postDate"],
+    rentOrSale: json["rentOrSale"],
+    verified: json["verified"],
+    landmark: json["landmark"],
+    latitude: _toDouble(json["latitude"]),
+    longitude: _toDouble(json["longitude"]),
+    floorNumber: json["floorNumber"],
+    totalFloors: json["totalFloors"],
+    parkingCount: json["parkingCount"],
+    parkingType: json["parkingType"],
+    facing: json["facing"],
+    propertyAge: json["propertyAge"],
+    ownershipType: json["ownershipType"],
+    furnishing: json["furnishing"],
+    negotiable: json["negotiable"],
+    loanAvailable: json["loanAvailable"],
+    monthlyRent: _toDouble(json["monthlyRent"]),
+    securityDeposit: _toDouble(json["securityDeposit"]),
+    brokerage: _toDouble(json["brokerage"]),
+    preferredTenants: json["preferredTenants"],
+    petsAllowed: json["petsAllowed"],
+    nonVegAllowed: json["nonVegAllowed"],
+    leaseDuration: json["leaseDuration"],
+    noticePeriod: json["noticePeriod"],
+    maintenanceIncluded: json["maintenanceIncluded"],
+    builderName: json["builderName"],
+    reraApproved: json["reraApproved"],
+    reraNumber: json["reraNumber"],
+    viewsCount: json["viewsCount"],
+    shortListCount: json["shortListCount"],
     documentList: json["documentList"] != null
         ? List<DocumentModel>.from(
-      (json["documentList"] as List<dynamic>)
-          .map((x) => DocumentModel.fromJson(x)),
-    )
+        json["documentList"].map((x) => DocumentModel.fromJson(x)))
         : [],
     amenitiesAsList: json["amenitiesAsList"] != null
         ? List<int>.from(json["amenitiesAsList"])
+        : [],
+    amenitiesFromList: json["amenitiesFromList"] != null
+        ? List<int>.from(json["amenitiesFromList"])
         : [],
   );
 
@@ -148,9 +216,8 @@ class PropertyModel {
     "title": title,
     "address": address,
     "city": city,
-    "propertyStatus": propertyStatus,
-    "planPackage": planPackage,
     "state": state,
+    "propertyStatus": propertyStatus,
     "type": type,
     "price": price,
     "bedrooms": bedrooms,
@@ -160,6 +227,7 @@ class PropertyModel {
     "superArea": superArea,
     "amenities": amenities,
     "postedBy": postedBy,
+    "contactNumber": contactNumber,
     "constructionStatus": constructionStatus,
     "currency": currency,
     "readyDate": readyDate?.toIso8601String(),
@@ -167,16 +235,41 @@ class PropertyModel {
     "projectName": projectName,
     "description": description,
     "postedByUser": postedByUser,
-    "contactNumber": contactNumber,
     "postDate": postDate,
     "rentOrSale": rentOrSale,
     "verified": verified,
-    "documentList":
-    documentList?.map((document) => document.toJson()).toList(),
+    "landmark": landmark,
+    "latitude": latitude,
+    "longitude": longitude,
+    "floorNumber": floorNumber,
+    "totalFloors": totalFloors,
+    "parkingCount": parkingCount,
+    "parkingType": parkingType,
+    "facing": facing,
+    "propertyAge": propertyAge,
+    "ownershipType": ownershipType,
+    "furnishing": furnishing,
+    "negotiable": negotiable,
+    "loanAvailable": loanAvailable,
+    "monthlyRent": monthlyRent,
+    "securityDeposit": securityDeposit,
+    "brokerage": brokerage,
+    "preferredTenants": preferredTenants,
+    "petsAllowed": petsAllowed,
+    "nonVegAllowed": nonVegAllowed,
+    "leaseDuration": leaseDuration,
+    "noticePeriod": noticePeriod,
+    "maintenanceIncluded": maintenanceIncluded,
+    "builderName": builderName,
+    "reraApproved": reraApproved,
+    "reraNumber": reraNumber,
+    "viewsCount": viewsCount,
+    "shortListCount": shortListCount,
+    "documentList": documentList?.map((e) => e.toJson()).toList(),
     "amenitiesAsList": amenitiesAsList,
+    "amenitiesFromList": amenitiesFromList,
   };
 
-  /// ---------------- HELPERS ----------------
   static double? _toDouble(dynamic value) {
     if (value == null) return null;
     if (value is double) return value;
@@ -185,64 +278,3 @@ class PropertyModel {
     return null;
   }
 }
-
-/// ---------------- DOCUMENT MODEL ----------------
-class DocumentModel {
-  final int? id;
-  final String? docUrl;
-  final String? s3key;
-  final String? docType;
-  final String? objectType;
-  final int? objectId;
-  final String? caption;
-  final String? documentStatus;
-  final String? rejectionReason;
-  final String? comments;
-
-  DocumentModel({
-    this.id,
-    this.docUrl,
-    this.s3key,
-    this.docType,
-    this.objectType,
-    this.objectId,
-    this.caption,
-    this.documentStatus,
-    this.rejectionReason,
-    this.comments,
-  });
-
-  factory DocumentModel.fromJson(Map<String, dynamic> json) => DocumentModel(
-    id: json["id"] as int?,
-    docUrl: json["docUrl"] as String?,
-    s3key: json["s3key"] as String?,
-    docType: json["docType"] as String?,
-    objectType: json["objectType"] as String?,
-    objectId: json["objectId"] as int?,
-    caption: json["caption"] as String?,
-    documentStatus: json["documentStatus"] as String?,
-    rejectionReason: json["rejectionReason"] as String?,
-    comments: json["comments"] as String?,
-  );
-
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "docUrl": docUrl,
-    "s3key": s3key,
-    "docType": docType,
-    "objectType": objectType,
-    "objectId": objectId,
-    "caption": caption,
-    "documentStatus": documentStatus,
-    "rejectionReason": rejectionReason,
-    "comments": comments,
-  };
-}
-
-/// ---------------- PARSING ----------------
-List<PropertyModel> propertyListFromJson(String str) =>
-    List<PropertyModel>.from(
-        json.decode(str).map((x) => PropertyModel.fromJson(x)));
-
-String propertyListToJson(List<PropertyModel> data) =>
-    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
