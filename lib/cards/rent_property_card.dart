@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import '../services/property_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utility/amenity_icon.dart';
 
 class RentPropertyCard extends StatefulWidget {
   final PropertyModel property;
@@ -45,6 +46,16 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
     return ['assets/images/house1.jpg'];
   }
 
+  String get rent {
+    if (widget.property.monthlyRent != null) {
+      return "₹ ${NumberFormat('#,##,###').format(widget.property.monthlyRent)} / month";
+    }
+    if (widget.property.price != null) {
+      return "₹ ${NumberFormat('#,##,###').format(widget.property.price)} / month";
+    }
+    return "-";
+  }
+
   @override
   Widget build(BuildContext context) {
     final status = widget.property.propertyStatus ?? "Available";
@@ -56,6 +67,8 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
+
+          /// IMAGE SLIDER
           SizedBox(
             height: 420,
             width: double.infinity,
@@ -66,26 +79,50 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                 final img = _images[i];
                 return img.startsWith('assets/')
                     ? Image.asset(img, fit: BoxFit.cover)
-                    : Image.network(img,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholderImage());
+                    : Image.network(
+                  img,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _placeholderImage(),
+                );
               },
             ),
           ),
 
-          /// TOP STATUS
+          /// STATUS BADGE
           Positioned(top: 12, left: 12, child: _pill(status)),
 
-          /// ICONS
+          /// VERIFIED BADGE
+          if (widget.property.verified == true)
+            Positioned(
+              top: 12,
+              left: 100,
+              child: Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.verified, size: 12, color: Colors.white),
+                    SizedBox(width: 4),
+                    Text("Verified",
+                        style: TextStyle(fontSize: 10, color: Colors.white)),
+                  ],
+                ),
+              ),
+            ),
+
+          /// RIGHT ICONS
           Positioned(
             top: 8,
             right: 8,
             child: Column(
               children: [
                 _iconCircle(
-                  _isFavourite ? Icons.favorite : Icons.favorite_border,
-                  _toggleFavorite,
-                ),
+                    _isFavourite ? Icons.favorite : Icons.favorite_border,
+                    _toggleFavorite),
                 const SizedBox(height: 8),
                 _iconCircle(Icons.share, _shareProperty),
                 const SizedBox(height: 8),
@@ -114,14 +151,14 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+
                       /// TITLE
                       Text(
                         widget.property.title ?? "-",
                         style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white),
                       ),
 
                       const SizedBox(height: 4),
@@ -129,40 +166,73 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                       /// LOCATION
                       Text(
                         "${widget.property.location ?? ""}, ${widget.property.city ?? ""}",
-                        style:
-                        const TextStyle(fontSize: 13, color: Colors.white70),
+                        style: const TextStyle(
+                            fontSize: 13, color: Colors.white70),
                       ),
 
                       const SizedBox(height: 6),
 
-                      /// META
+                      /// PROPERTY META
                       Row(
                         children: [
-                          _meta("Type", widget.property.type),
-                          _meta("Beds", widget.property.bedrooms?.toString()),
-                       //   _meta("Furn.", widget.property.furnishingStatus),
+                          _metaIcon(Icons.bed,
+                              "${widget.property.bedrooms ?? '-'}"),
+                          _metaIcon(Icons.bathtub,
+                              "${widget.property.bathrooms ?? '-'}"),
+                          _metaIcon(
+                              Icons.square_foot,
+                              widget.property.superArea != null
+                                  ? "${widget.property.superArea!.toInt()} sqft"
+                                  : "-"),
+                          _metaIcon(
+                              Icons.layers,
+                              widget.property.floorNumber != null
+                                  ? "Fl ${widget.property.floorNumber}"
+                                  : "-"),
                         ],
                       ),
+
+                      const SizedBox(height: 6),
+
+                      /// RENT META
+                      Row(
+                        children: [
+                          _metaChip("Furn.", widget.property.furnishing),
+                          /*_metaChip("Parking", widget.property.parkingCount),
+                          _metaChip(
+                            "Deposit",
+                            widget.property.securityDeposit != null
+                                ? "₹${NumberFormat.compact().format(widget.property.securityDeposit)}"
+                                : null,
+                          ),*/
+                        ],
+                      ),
+
+                      /// AMENITIES
+                      if (widget.showAmenitiesExpandable &&
+                          widget.property.amenitiesAsList != null &&
+                          widget.property.amenitiesAsList!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        _amenitiesRow(),
+                      ],
 
                       const SizedBox(height: 8),
 
                       /// PRICE + CTA
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            widget.property.price != null
-                                ? "₹ ${NumberFormat('#,##,###').format(widget.property.price)} / month"
-                                : "-",
+                            rent,
                             style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
                           ),
                           _contactButton(),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -174,14 +244,60 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
     );
   }
 
-  Widget _meta(String label, String? value) {
-    if (value == null || value.isEmpty) return const SizedBox();
+  /// AMENITIES ROW
+  Widget _amenitiesRow() {
+    final amenities = widget.property.amenitiesAsList!;
+    final visible = amenities.take(4);
+
+    return Row(
+      children: [
+        ...visible.map((e) {
+          final a = AmenityIcon.getAmenity(e.toString());
+          return Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Row(
+              children: [
+                Icon(a.icon, size: 14, color: Colors.white70),
+                const SizedBox(width: 3),
+                Text(a.label,
+                    style:
+                    const TextStyle(fontSize: 11, color: Colors.white70)),
+              ],
+            ),
+          );
+        }),
+        if (amenities.length > 4)
+          Text("+${amenities.length - 4} more",
+              style: const TextStyle(fontSize: 11, color: Colors.white70)),
+      ],
+    );
+  }
+
+  Widget _metaIcon(IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.only(right: 12),
-      child: Text(
-        "$label: $value",
-        style: const TextStyle(fontSize: 12, color: Colors.white70),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: Colors.white70),
+          const SizedBox(width: 4),
+          Text(text,
+              style: const TextStyle(fontSize: 12, color: Colors.white)),
+        ],
       ),
+    );
+  }
+
+  Widget _metaChip(String label, String? value) {
+    if (value == null || value.isEmpty) return const SizedBox();
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text("$label: $value",
+          style: const TextStyle(fontSize: 11, color: Colors.white)),
     );
   }
 
@@ -199,17 +315,14 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
           height: 14,
           width: 14,
           child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: Colors.white,
-          ),
+              strokeWidth: 2, color: Colors.white),
         )
             : const Text(
           "Contact Owner",
           style: TextStyle(
-            fontSize: 12,
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+              fontSize: 12,
+              color: Colors.white,
+              fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -231,7 +344,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
     return Image.asset('assets/images/house1.jpg', fit: BoxFit.cover);
   }
 
-  /// ❤️ Favourite
+  /// FAVORITE
   Future<void> _toggleFavorite() async {
     await PropertyApiService.toggleFavourite(
       userId: widget.userId!,
@@ -240,7 +353,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
     setState(() => _isFavourite = !_isFavourite);
   }
 
-  /// 🆕 CREATE LEAD
+  /// CREATE LEAD
   Future<void> _createLead() async {
     if (widget.userId == null || widget.property.id == null) return;
 
@@ -289,19 +402,18 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
 
   void _shareProperty() {
     Share.share(
-      "Check this rental property: ${widget.property.title}\n₹${widget.property.price}/month",
-    );
+        "Check this rental property: ${widget.property.title}\n$rent");
   }
 
   Future<void> _callOwner() async {
     final phone = widget.property.contactNumber;
-    if (phone == null || phone.isEmpty) return;
+    if (phone.isEmpty) return;
     await launchUrl(Uri.parse("tel:$phone"));
   }
 
   Future<void> _openWhatsApp() async {
     final phone = widget.property.contactNumber;
-    if (phone == null || phone.isEmpty) return;
+    if (phone.isEmpty) return;
     await launchUrl(Uri.parse("https://wa.me/$phone"),
         mode: LaunchMode.externalApplication);
   }

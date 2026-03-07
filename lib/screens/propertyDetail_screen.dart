@@ -6,7 +6,7 @@ import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import '../screens/propertyAdd_screen.dart';
-
+import '../commons/commonutil.dart';
 class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
   final int userId;
@@ -368,17 +368,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               widget.property.superArea?.toString() ?? "-"),
           _DetailRow("Posted By", widget.property.postedBy ?? "-"),
           _DetailRow("Contact", widget.property.contactNumber ?? "-"),
-          _DetailRow("Posted On", formatDate(widget.property.postDate) ?? "-"),
+          _DetailRow("Posted On",  AppUtils.formatDate(widget.property.postDate) ?? "-"),
         ],
       ),
     );
   }
 
-  String formatDate(String? date) {
-    if (date == null || date.isEmpty) return "-";
-    final parsed = DateTime.parse(date);
-    return DateFormat("dd MMM yyyy").format(parsed);
-  }
+
 }
 
 /// ---------------- SMALL WIDGETS ----------------

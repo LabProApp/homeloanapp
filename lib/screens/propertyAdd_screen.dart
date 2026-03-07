@@ -261,13 +261,14 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                 prefix: Icons.currency_rupee,
                 isPrice: true,
               ),
-              _field(
-                isRent ? "Security Deposit" : "Price *",
-                securityDepositController,
-                keyboard: TextInputType.number,
-                prefix: Icons.currency_rupee,
-                isPrice: true,
-              ),
+              if (isRent)
+                _field(
+                  "Security Deposit",
+                  securityDepositController,
+                  keyboard: TextInputType.number,
+                  prefix: Icons.currency_rupee,
+                  isPrice: true,
+                ),
               const SizedBox(height: 20),
 
               /// AREA
