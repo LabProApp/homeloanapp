@@ -42,10 +42,10 @@ class PropertyModel {
   final double? longitude;
   final int? floorNumber;
   final int? totalFloors;
-  final int? parkingCount;
+  final String? parkingCount;
   final String? parkingType;
   final String? facing;
-  final int? propertyAge;
+  final String? propertyAge;
   final String? ownershipType;
 
   final String? furnishing;

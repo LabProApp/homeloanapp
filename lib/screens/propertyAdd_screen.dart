@@ -10,12 +10,12 @@ import '../commons/common_widget.dart';
 import '../screens/property_media_screen.dart';
 
 class PostPropertyScreen extends StatefulWidget {
-  final int? userId;
+  final int userId;
   final PropertyModel? propertyToEdit;
 
   const PostPropertyScreen({
     super.key,
-    this.userId,
+    required this.userId,
     this.propertyToEdit,
   });
 
@@ -30,6 +30,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
   final priceController = TextEditingController();
+  final securityDepositController = TextEditingController();
   final superAreaController = TextEditingController();
   final carpetAreaController = TextEditingController();
   final addressController = TextEditingController();
@@ -260,7 +261,13 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                 prefix: Icons.currency_rupee,
                 isPrice: true,
               ),
-
+              _field(
+                isRent ? "Security Deposit" : "Price *",
+                securityDepositController,
+                keyboard: TextInputType.number,
+                prefix: Icons.currency_rupee,
+                isPrice: true,
+              ),
               const SizedBox(height: 20),
 
               /// AREA
@@ -587,28 +594,58 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _loading = true);
+
     final price =
     double.tryParse(priceController.text.replaceAll(",", ""));
-
+    final securityDeposit = double.tryParse(securityDepositController.text.replaceAll(",", ""));
     final property = PropertyModel(
       title: titleController.text,
       description: descriptionController.text,
       price: price,
+      securityDeposit: securityDeposit,
       superArea: double.tryParse(superAreaController.text),
       carpetArea: double.tryParse(carpetAreaController.text),
+
       address: addressController.text,
       location: locationController.text,
+
       city: selectedCity,
       state: selectedState?.value,
+
       type: propertyType,
       category: category,
       rentOrSale: rentOrSale.toUpperCase(),
+
       postedBy: postedByType,
       constructionStatus: constructionStatus,
+
       bedrooms: bedrooms,
       bathrooms: bathrooms,
+
+      floorNumber: floorNumber,
+      totalFloors: totalFloors,
+
+      furnishing: furnishing,
+      facing: facing,
+      propertyAge: propertyAge,
+
+      parkingCount: parking ,
+
       amenities: amenities.join(","),
+
       contactNumber: contactController.text,
+
+      currency: "INR",
+
+
+
+      postDate: DateTime.now().toIso8601String(),
+
+      // default flags
+      verified: true,
+      negotiable: true,
+      loanAvailable: true,
     );
 
     try {
@@ -620,7 +657,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PropertyMediaScreen(propertyId: id),
+          builder: (_) => PropertyMediaScreen(propertyId: id,userId : widget.userId),
         ),
       );
 
@@ -629,6 +666,10 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
+
+    } finally {
+
+      setState(() => _loading = false);
 
     }
   }

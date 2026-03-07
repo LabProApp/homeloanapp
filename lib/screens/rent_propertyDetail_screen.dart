@@ -322,10 +322,7 @@ class _RentalPropertyDetailScreenState
       _DetailRow("Notice Period", widget.property.noticePeriod ?? "-"),
       _DetailRow("Preferred Tenants",
           widget.property.preferredTenants ?? "Any"),
-      _DetailRow(
-          "Pets Allowed", widget.property.petsAllowed == true ? "Yes" : "No"),
-      _DetailRow(
-          "Non Veg Allowed", widget.property.nonVegAllowed == true ? "Yes" : "No"),
+
       _DetailRow(
           "Maintenance Included",
           widget.property.maintenanceIncluded == true ? "Yes" : "No"),

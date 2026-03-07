@@ -9,13 +9,16 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../theme/app_colors.dart';
 import '../services/document_service.dart';
 import '../commons/common_widget.dart';
+import '../screens/dashboard.dart';
 
 class PropertyMediaScreen extends StatefulWidget {
   final int propertyId;
+  final int userId;
 
   const PropertyMediaScreen({
     super.key,
     required this.propertyId,
+    required this.userId,
   });
 
   @override
@@ -24,10 +27,13 @@ class PropertyMediaScreen extends StatefulWidget {
 
 class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
   final ImagePicker _picker = ImagePicker();
+
   bool _uploading = false;
   double _progress = 0;
+
   bool _picking = false;
   double _pickProgress = 0;
+
   String _appName = "App";
 
   final List<_MediaItem> _mediaList = [];
@@ -57,8 +63,8 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
     setState(() => _appName = info.appName);
   }
 
-  /// -------- MEDIA PICKER (IMAGE OR VIDEO) ----------
-  void _pickMedia() async {
+  /// MEDIA PICKER
+  void _pickMedia() {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -90,8 +96,10 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
     );
   }
 
+  /// IMAGE PICK
   Future<void> _pickImages() async {
     final files = await _picker.pickMultiImage(imageQuality: 95);
+
     if (files.isEmpty) return;
 
     setState(() {
@@ -104,7 +112,11 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
       imgFile = await _addWatermark(imgFile);
 
       _mediaList.add(
-        _MediaItem(file: imgFile, caption: captions.first, isVideo: false),
+        _MediaItem(
+          file: imgFile,
+          caption: captions.first,
+          isVideo: false,
+        ),
       );
 
       setState(() {
@@ -117,40 +129,67 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
     });
   }
 
+  /// VIDEO PICK
   Future<void> _pickVideo() async {
     final file = await _picker.pickVideo(source: ImageSource.gallery);
+
     if (file == null) return;
-    final compressed = await _compressVideo(File(file.path));
+
+    File compressed = await _compressVideo(File(file.path));
+
     _mediaList.add(
-      _MediaItem(file: compressed, caption: captions.first, isVideo: true),
+      _MediaItem(
+        file: compressed,
+        caption: captions.first,
+        isVideo: true,
+      ),
     );
+
     setState(() {});
   }
 
+  /// IMAGE COMPRESS
   Future<File> _compressImage(File file) async {
     final bytes = await file.readAsBytes();
+
     final original = img.decodeImage(bytes);
+
     if (original == null) return file;
 
     final resized =
     original.width > 1920 ? img.copyResize(original, width: 1920) : original;
 
-    final compressedBytes = img.encodeJpg(resized, quality: 90);
-    final newFile = File(file.path)..writeAsBytesSync(compressedBytes);
+    final jpg = img.encodeJpg(resized, quality: 90);
+
+    final newPath = "${file.path}_compressed.jpg";
+
+    final newFile = File(newPath)..writeAsBytesSync(jpg);
+
     return newFile;
   }
 
+  /// VIDEO COMPRESS
   Future<File> _compressVideo(File file) async {
     final info = await VideoCompress.compressVideo(
       file.path,
       quality: VideoQuality.MediumQuality,
     );
-    return File(info!.path!);
+
+    if (info == null || info.path == null) {
+      return file;
+    }
+
+    await VideoCompress.deleteAllCache();
+
+    return File(info.path!);
   }
 
+  /// WATERMARK
   Future<File> _addWatermark(File file) async {
     final bytes = await file.readAsBytes();
+
     final original = img.decodeImage(bytes);
+
     if (original == null) return file;
 
     final font = img.arial24;
@@ -170,6 +209,7 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
     return watermarked;
   }
 
+  /// UPLOAD
   Future<void> _upload() async {
     if (_mediaList.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -178,7 +218,10 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
       return;
     }
 
-    setState(() => _uploading = true);
+    setState(() {
+      _uploading = true;
+      _progress = 0;
+    });
 
     try {
       await DocumentApiService.uploadDocuments(
@@ -189,8 +232,19 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
       );
 
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Upload completed")),
+        const SnackBar(content: Text("Property uploaded successfully")),
+      );
+
+      await Future.delayed(const Duration(seconds: 1));
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DashboardScreen(userId: widget.userId),
+        ),
+            (route) => false,
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -204,7 +258,9 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
   void _openPreview(_MediaItem item) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => FullscreenPreview(item: item)),
+      MaterialPageRoute(
+        builder: (_) => FullscreenPreview(item: item),
+      ),
     );
   }
 
@@ -213,67 +269,56 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Upload Photos / Videos"),
-        foregroundColor: Colors.white,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primary,
-                AppColors.secondary,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+        backgroundColor: AppColors.primary,
       ),
 
-      /// -------- BOTTOM BUTTONS ----------
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (_uploading) LinearProgressIndicator(value: _progress),
-              const SizedBox(height: 8),
+
+              if (_uploading)
+                LinearProgressIndicator(value: _progress),
+
+              const SizedBox(height: 10),
 
               AppButton(
                 text: "Add Photos / Videos",
-
                 onTap: _pickMedia,
               ),
-              const SizedBox(height: 8),
+
+              const SizedBox(height: 10),
 
               AppButton(
-                isLoading: _uploading,
                 text: "Finalize Property",
-                onTap: () {
-                  if (_mediaList.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Please add at least one image or video"),
-                      ),
-                    );
-                    return;
-                  }
-                  _upload();
-                },
+                isLoading: _uploading,
+                onTap: _upload,
               ),
             ],
           ),
         ),
       ),
 
-      /// -------- GRID ----------
-      body: _mediaList.isEmpty
+      body: _picking
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Processing media..."),
+            const SizedBox(height: 10),
+            CircularProgressIndicator(value: _pickProgress),
+          ],
+        ),
+      )
+          : _mediaList.isEmpty
           ? const Center(child: Text("No media selected"))
           : GridView.builder(
         padding: const EdgeInsets.all(12),
         itemCount: _mediaList.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate:
+        const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           crossAxisSpacing: 8,
           mainAxisSpacing: 8,
@@ -295,13 +340,16 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
                           color: Colors.black12,
                           width: double.infinity,
                           child: item.isVideo
-                              ? const Icon(Icons.play_circle_fill, size: 50)
-                              : Image.file(item.file, fit: BoxFit.cover),
+                              ? const Icon(Icons.play_circle_fill,
+                              size: 50)
+                              : Image.file(
+                            item.file,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
 
-                    // ❌ DELETE BUTTON
                     Positioned(
                       top: 6,
                       right: 6,
@@ -328,9 +376,9 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
                   ],
                 ),
               ),
+
               const SizedBox(height: 4),
 
-              // Caption BELOW media
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 decoration: BoxDecoration(
@@ -341,14 +389,21 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
                   child: DropdownButton<String>(
                     value: item.caption,
                     isExpanded: true,
-                    icon: const Icon(Icons.keyboard_arrow_down),
+                    icon:
+                    const Icon(Icons.keyboard_arrow_down),
                     items: captions
-                        .map((e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(e, style: const TextStyle(fontSize: 12)),
-                    ))
+                        .map(
+                          (e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(
+                          e,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    )
                         .toList(),
-                    onChanged: (v) => setState(() => item.caption = v!),
+                    onChanged: (v) =>
+                        setState(() => item.caption = v!),
                   ),
                 ),
               ),
@@ -372,10 +427,13 @@ class _MediaItem {
   });
 }
 
-/// ---------- FULLSCREEN PREVIEW ----------
 class FullscreenPreview extends StatefulWidget {
   final _MediaItem item;
-  const FullscreenPreview({super.key, required this.item});
+
+  const FullscreenPreview({
+    super.key,
+    required this.item,
+  });
 
   @override
   State<FullscreenPreview> createState() => _FullscreenPreviewState();
@@ -387,6 +445,7 @@ class _FullscreenPreviewState extends State<FullscreenPreview> {
   @override
   void initState() {
     super.initState();
+
     if (widget.item.isVideo) {
       _controller = VideoPlayerController.file(widget.item.file)
         ..initialize().then((_) {
