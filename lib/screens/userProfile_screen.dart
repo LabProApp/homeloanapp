@@ -8,7 +8,7 @@ import '../commons/common_widget.dart';
 import '../services/document_service.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final int userId; // email or mobile
+  final int userId;
 
   const ProfileScreen({
     super.key,
@@ -21,67 +21,104 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<UserModel> _futureUser;
+
   File? _selectedImage;
   bool _loading = false;
 
-  late TextEditingController _nameCtrl;
-  late TextEditingController _addressCtrl;
+  TextEditingController? _nameCtrl;
+  TextEditingController? _addressCtrl;
 
-  String? _profileImageUrl; // 👈 from documents API
+  String? _profileImageUrl;
+
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
-    _futureUser = UserApiService.getProfile(widget.userId);
+    debugPrint("📌 ProfileScreen INIT | userId: ${widget.userId}");
+
+    _futureUser = _loadUser();
   }
 
-  /// 🔽 Fetch user documents and get image
+  Future<UserModel> _loadUser() async {
+    try {
+      debugPrint("🔄 Fetching user profile...");
+
+      final user = await UserApiService.getProfile(widget.userId);
+
+      debugPrint("✅ User loaded: ${user.name}");
+
+      return user;
+    } catch (e) {
+      debugPrint("❌ Error loading user: $e");
+      rethrow;
+    }
+  }
+
+  /// PROFILE IMAGE
   Future<void> _loadProfileImage(int userId) async {
     try {
+      debugPrint("🔄 Loading profile image...");
+
       final docs = await DocumentApiService.getDocuments(
         objectType: "USER",
         objectId: userId,
       );
 
       if (docs.isNotEmpty) {
+        debugPrint("✅ Profile image loaded");
+
         setState(() {
-          _profileImageUrl = docs.first.fileUrl; // assuming backend sends fileUrl
+          _profileImageUrl = docs.first.fileUrl;
         });
+      } else {
+        debugPrint("⚠️ No profile image found");
       }
     } catch (e) {
-      debugPrint("Failed to load profile image: $e");
+      debugPrint("❌ Image load error: $e");
     }
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    debugPrint("📷 Picking image from $source");
+
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: source, imageQuality: 70);
 
     if (picked != null) {
+      debugPrint("✅ Image selected: ${picked.path}");
+
       setState(() {
         _selectedImage = File(picked.path);
       });
+    } else {
+      debugPrint("⚠️ Image not selected");
     }
   }
 
+  /// SAVE PROFILE
   Future<void> _saveProfile(UserModel user) async {
     try {
+      debugPrint("💾 Saving profile...");
+
       setState(() => _loading = true);
 
       await UserApiService.updateProfile(
         userId: user.id,
-        name: _nameCtrl.text,
-        address: _addressCtrl.text,
+        name: _nameCtrl!.text.trim(),
+        address: _addressCtrl!.text.trim(),
       );
+      debugPrint("✅ Profile updated");
 
       if (_selectedImage != null) {
+        debugPrint("📤 Uploading profile image...");
+
         await DocumentApiService.uploadDocuments(
           objectType: "USER",
           objectId: user.id,
           files: [_selectedImage!],
         );
 
-        // reload image
         await _loadProfileImage(user.id);
       }
 
@@ -92,9 +129,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
       setState(() {
-        _futureUser = UserApiService.getProfile(widget.userId);
+        _futureUser = _loadUser();
       });
     } catch (e) {
+      debugPrint("❌ Save failed: $e");
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Update failed: $e")),
       );
@@ -104,11 +143,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showImagePickerSheet() {
+    debugPrint("📂 Opening image picker sheet");
+
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (_) {
         return SafeArea(
           child: Column(
@@ -145,23 +183,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
         future: _futureUser,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
+            debugPrint("⏳ Waiting for profile...");
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
+            debugPrint("❌ Snapshot error: ${snapshot.error}");
             return _errorView(snapshot.error.toString());
           }
 
           if (!snapshot.hasData) {
+            debugPrint("⚠️ No data received");
             return const Center(child: Text("No profile data"));
           }
 
           final user = snapshot.data!;
 
-          _nameCtrl = TextEditingController(text: user.name);
-          _addressCtrl = TextEditingController(text: user.address);
+          /// FIXED: initialize once
+          if (!_initialized) {
+            debugPrint("🧠 Initializing controllers");
 
-          // 👇 load image once
+            _nameCtrl = TextEditingController(text: user.name);
+            _addressCtrl = TextEditingController(text: user.address);
+
+            _initialized = true;
+          }
+
           if (_profileImageUrl == null) {
             _loadProfileImage(user.id);
           }
@@ -172,19 +219,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 expandedHeight: 180,
                 pinned: true,
                 backgroundColor: AppColors.primary,
-                flexibleSpace: FlexibleSpaceBar(
+                flexibleSpace: const FlexibleSpaceBar(
                   centerTitle: true,
-                  title: const Text("My Profile",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.secondary],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                  ),
+                  title: Text("My Profile"),
                 ),
               ),
 
@@ -209,15 +246,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             const SizedBox(height: 12),
                             _InfoField(
-                              label: "Email Address",
+                              label: "Email",
                               value: user.email,
-                              readOnly: true,
                             ),
                             const SizedBox(height: 12),
                             _InfoField(
-                              label: "Mobile Number",
+                              label: "Mobile",
                               value: user.mobile,
-                              readOnly: true,
                             ),
                             const SizedBox(height: 12),
                             _InfoField(
@@ -236,20 +271,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         isLoading: _loading,
                         onTap: () => _saveProfile(user),
                       ),
-
-                      const SizedBox(height: 12),
-
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text("Sign Out",
-                            style: TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.w600)),
-                      ),
-
-                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -276,58 +297,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         GestureDetector(
           onTap: _showImagePickerSheet,
-          child: Stack(
-            children: [
-              CircleAvatar(radius: 54, backgroundImage: imageProvider),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  height: 34,
-                  width: 34,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.camera_alt,
-                      color: Colors.white, size: 18),
-                ),
-              ),
-            ],
-          ),
+          child: CircleAvatar(radius: 54, backgroundImage: imageProvider),
         ),
         const SizedBox(height: 12),
-        Text(user.name,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        Text(user.name),
       ],
     );
   }
 
   Widget _errorView(String msg) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 60, color: Colors.red),
-            const SizedBox(height: 12),
-            const Text("Failed to load profile",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text(msg, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _futureUser = UserApiService.getProfile(widget.userId);
-                });
-              },
-              child: const Text("Retry"),
-            )
-          ],
-        ),
-      ),
+      child: Text("Error: $msg"),
     );
   }
 
@@ -338,31 +318,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 4))
-        ],
-      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text(title,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
+        children: [child],
       ),
     );
   }
@@ -383,26 +340,10 @@ class _InfoField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller ?? TextEditingController(text: value),
-          readOnly: readOnly,
-          decoration: InputDecoration(
-            suffixIcon: readOnly ? null : const Icon(Icons.edit, size: 18),
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-      ],
+    return TextField(
+      controller: controller ?? TextEditingController(text: value),
+      readOnly: readOnly,
+      decoration: InputDecoration(labelText: label),
     );
   }
 }

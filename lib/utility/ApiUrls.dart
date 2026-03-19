@@ -29,7 +29,7 @@ class ApiUrls {
   static const String calculateAffordability  = "$baseUrl/tools/calculateAffordability";
   static const String state_list  = "$baseUrl/master/getMasterValues?type=STATE";
   // Dynamic city URL based on state ID
-  static String city_list(int stateId) =>
+  static String master_child_list(int stateId) =>
       "$baseUrl/master/$stateId/cities";
 
   //Property services URLs

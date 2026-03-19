@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-
 import '../models/property_model.dart';
 import '../services/property_api_service.dart';
 import '../services/state_api_service.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
-import '../screens/property_media_screen.dart';
+import 'property_media_screen.dart';
 
 class PostPropertyScreen extends StatefulWidget {
   final int userId;
@@ -24,6 +21,21 @@ class PostPropertyScreen extends StatefulWidget {
 }
 
 class _PostPropertyScreenState extends State<PostPropertyScreen> {
+  @override
+  void dispose() {
+    titleController.dispose();
+    descriptionController.dispose();
+    priceController.dispose();
+    securityDepositController.dispose();
+    superAreaController.dispose();
+    carpetAreaController.dispose();
+    addressController.dispose();
+    locationController.dispose();
+    contactController.dispose();
+    super.dispose();
+  }
+
+
   final _formKey = GlobalKey<FormState>();
 
   /// Controllers
@@ -36,8 +48,8 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   final addressController = TextEditingController();
   final locationController = TextEditingController();
   final contactController = TextEditingController();
-
-  /// Core
+  Key localityKey = UniqueKey();
+  /// Property Info
   String rentOrSale = "Sale";
   String category = "Residential";
   String propertyType = "APARTMENT";
@@ -49,7 +61,6 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   int? floorNumber;
   int? totalFloors;
 
-  /// Smart attributes
   String furnishing = "Unfurnished";
   String parking = "None";
   String facing = "North";
@@ -58,16 +69,20 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
   /// Location
   MasterValue? selectedState;
-  String? selectedCity;
-  List<MasterValue> states = [];
-  List<String> cities = [];
+  MasterValue? selectedCity;
 
-  /// Amenities
-  final List<String> amenities = [];
+  List<MasterValue> states = [];
+  List<MasterValue> cities = [];
+  List<MasterValue> localities = [];
+
+  /// Local Cache (speed optimization)
+  final Map<int, List<MasterValue>> cityCache = {};
+  final Map<int, List<MasterValue>> localityCache = {};
 
   bool _loading = false;
   bool _loadingStates = true;
   bool _loadingCities = false;
+  bool _loadingLocalities = false;
 
   bool get isResidential => category == "Residential";
   bool get isRent => rentOrSale == "Rent";
@@ -90,11 +105,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     "CO WORKING"
   ];
 
-  final postedByOptions = [
-    "Owner",
-    "Broker",
-    "Builder"
-  ];
+  final postedByOptions = ["Owner", "Broker", "Builder"];
 
   final constructionStatusOptions = [
     "Ready to Move",
@@ -108,19 +119,9 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     "Unfurnished"
   ];
 
-  final parkingOptions = [
-    "None",
-    "1",
-    "2",
-    "3+"
-  ];
+  final parkingOptions = ["None", "1", "2", "3+"];
 
-  final facingOptions = [
-    "North",
-    "South",
-    "East",
-    "West"
-  ];
+  final facingOptions = ["North", "South", "East", "West"];
 
   final propertyAgeOptions = [
     "0-1 Years",
@@ -147,272 +148,285 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     "CCTV"
   ];
 
+  final List<String> amenities = [];
+
   @override
   void initState() {
     super.initState();
     _loadStates();
   }
 
-  /// Load States
+  /// LOAD STATES
   Future<void> _loadStates() async {
     try {
       states = await MasterService.getStates();
     } catch (_) {}
 
-    setState(() {
-      _loadingStates = false;
-    });
+    setState(() => _loadingStates = false);
   }
 
-  /// Load Cities
+  /// LOAD CITIES
   Future<void> _loadCities(int stateId) async {
+
+    if (cityCache.containsKey(stateId)) {
+      setState(() {
+        cities = cityCache[stateId]!;
+      });
+      return;
+    }
+
     setState(() {
       _loadingCities = true;
       cities = [];
       selectedCity = null;
+      localities = [];
+      locationController.clear();
     });
 
     try {
-      cities = await MasterService.getCities(stateId);
+
+      final data = await MasterService.getCities(stateId);
+
+      cityCache[stateId] = data;
+
+      cities = data;
+
     } catch (_) {}
 
+    setState(() => _loadingCities = false);
+    FocusScope.of(context).requestFocus(FocusNode());
+  }
+
+  /// LOAD LOCALITIES
+  /// LOAD LOCALITIES
+  Future<void> _loadLocalities(int cityId) async {
+
+    /// If cached, use instantly (fast UX)
+    if (localityCache.containsKey(cityId)) {
+
+      if (!mounted) return;
+
+      setState(() {
+        localities = localityCache[cityId]!;
+        _loadingLocalities = false;
+      });
+
+      return;
+    }
+
+    if (!mounted) return;
+
     setState(() {
-      _loadingCities = false;
+      _loadingLocalities = true;
+      localities = [];
+      locationController.clear();
     });
+
+    try {
+
+      final data = await MasterService.getLocalities(cityId);
+
+      /// Save to cache
+      localityCache[cityId] = data;
+
+      if (!mounted) return;
+
+      setState(() {
+        localities = data;
+      });
+
+    } catch (e) {
+
+      debugPrint("Locality loading error: $e");
+
+    } finally {
+
+      if (!mounted) return;
+
+      setState(() {
+        _loadingLocalities = false;
+      });
+
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+
     final propertyTypes =
     isResidential ? propertyTypesResidential : propertyTypesCommercial;
 
-    if (!propertyTypes.contains(propertyType)) {
-      propertyType = propertyTypes.first;
-    }
-
     return Scaffold(
+
       appBar: AppBar(
         title: const Text("Post Property"),
         backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
 
-              /// BASIC
-              _sectionTitle("Basic Details"),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
 
-              _field("Title *", titleController),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
 
-              const SizedBox(height: 10),
+                _section("Basic Details"),
+                _field("Title *", titleController),
+                _field("Description *", descriptionController, maxLines: 5),
 
-              _field("Description *", descriptionController, maxLines: 3),
+                _section("Location"),
 
-              const SizedBox(height: 20),
-
-              /// TYPE
-              _sectionTitle("Property Type"),
-
-              _chipSelector(rentSaleOptions, rentOrSale,
-                      (v) => setState(() => rentOrSale = v)),
-
-              const SizedBox(height: 10),
-
-              _chipSelector(categoryOptions, category, (v) {
-                setState(() {
-                  category = v;
-                  propertyType = isResidential
-                      ? propertyTypesResidential.first
-                      : propertyTypesCommercial.first;
-                });
-              }),
-
-              const SizedBox(height: 10),
-
-              _dropdown(
-                "Property Type *",
-                propertyType,
-                propertyTypes,
-                    (v) => setState(() => propertyType = v),
-              ),
-
-              const SizedBox(height: 10),
-
-              _dropdown(
-                "Posted By *",
-                postedByType,
-                postedByOptions,
-                    (v) => setState(() => postedByType = v),
-              ),
-
-              const SizedBox(height: 20),
-
-              /// PRICE
-              _sectionTitle("Price"),
-
-              _field(
-                isRent ? "Monthly Rent *" : "Price *",
-                priceController,
-                keyboard: TextInputType.number,
-                prefix: Icons.currency_rupee,
-                isPrice: true,
-              ),
-              if (isRent)
-                _field(
-                  "Security Deposit",
-                  securityDepositController,
-                  keyboard: TextInputType.number,
-                  prefix: Icons.currency_rupee,
-                  isPrice: true,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: IgnorePointer(
+                    ignoring: _loadingStates,
+                    child: _stateDropdown(),
+                  ),
                 ),
-              const SizedBox(height: 20),
 
-              /// AREA
-              _sectionTitle("Area"),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: IgnorePointer(
+                    ignoring: _loadingCities,
+                    child: _cityDropdown(),
+                  ),
+                ),
 
-              _field("Super Area (sqft) *", superAreaController,
-                  keyboard: TextInputType.number),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: IgnorePointer(
+                    ignoring: _loadingLocalities,
+                    child: _localityAutocomplete(),
+                  ),
+                ),
 
-              const SizedBox(height: 10),
+                _field("Full Address", addressController, maxLines: 4),
 
-              _field("Carpet Area", carpetAreaController,
-                  keyboard: TextInputType.number),
 
-              /// ROOMS
-              if (isResidential) ...[
-                const SizedBox(height: 20),
-                _sectionTitle("Rooms"),
 
-                _slider("Bedrooms", bedrooms,
-                        (v) => setState(() => bedrooms = v)),
+                _section("Property Type"),
 
-                _slider("Bathrooms", bathrooms,
-                        (v) => setState(() => bathrooms = v)),
-              ],
+                _chipSelector(rentSaleOptions, rentOrSale,
+                        (v) => setState(() => rentOrSale = v)),
 
-              /// FLOOR
-              if (propertyType == "APARTMENT" ||
-                  propertyType == "OFFICE") ...[
-                const SizedBox(height: 20),
-                _sectionTitle("Floor Details"),
+                _chipSelector(categoryOptions, category, (v) {
+                  setState(() {
+                    category = v;
+                    propertyType = propertyTypes.first;
+                  });
+                }),
 
-                _slider("Floor Number", floorNumber,
-                        (v) => setState(() => floorNumber = v)),
+                _dropdown(
+                    "Property Type",
+                    propertyType,
+                    propertyTypes,
+                        (v) => setState(() => propertyType = v)),
 
-                _slider("Total Floors", totalFloors,
-                        (v) => setState(() => totalFloors = v)),
-              ],
+                _dropdown(
+                    "Posted By",
+                    postedByType,
+                    postedByOptions,
+                        (v) => setState(() => postedByType = v)),
 
-              const SizedBox(height: 20),
+                _section("Price"),
 
-              /// PROPERTY DETAILS
-              _sectionTitle("Property Details"),
+                _field(isRent ? "Monthly Rent *" : "Price *",
+                    priceController,
+                    keyboard: TextInputType.number),
 
-              _dropdown("Furnishing", furnishing, furnishingOptions,
-                      (v) => setState(() => furnishing = v)),
+                if (isRent)
+                  _field("Security Deposit",
+                      securityDepositController,
+                      keyboard: TextInputType.number),
 
-              const SizedBox(height: 10),
+                _section("Area"),
 
-              _dropdown("Parking", parking, parkingOptions,
-                      (v) => setState(() => parking = v)),
+                Row(
+                  children: [
+                    Expanded(child: _field("Super Area", superAreaController)),
+                    const SizedBox(width: 10),
+                    Expanded(child: _field("Carpet Area", carpetAreaController)),
+                  ],
+                ),
 
-              const SizedBox(height: 10),
+                if (isResidential) ...[
+                  _section("Rooms"),
+                  _slider("Bedrooms", bedrooms, (v) => setState(() => bedrooms = v)),
+                  _slider("Bathrooms", bathrooms, (v) => setState(() => bathrooms = v)),
+                ],
 
-              _dropdown("Facing", facing, facingOptions,
-                      (v) => setState(() => facing = v)),
+                _section("Property Details"),
 
-              const SizedBox(height: 10),
+                _dropdown("Furnishing", furnishing, furnishingOptions,
+                        (v) => setState(() => furnishing = v)),
 
-              _dropdown("Property Age", propertyAge, propertyAgeOptions,
-                      (v) => setState(() => propertyAge = v)),
+                _dropdown("Parking", parking, parkingOptions,
+                        (v) => setState(() => parking = v)),
 
-              const SizedBox(height: 10),
+                _dropdown("Facing", facing, facingOptions,
+                        (v) => setState(() => facing = v)),
 
-              _dropdown(
-                "Construction Status *",
-                constructionStatus,
-                constructionStatusOptions,
-                    (v) => setState(() => constructionStatus = v),
-              ),
+                _dropdown("Property Age", propertyAge, propertyAgeOptions,
+                        (v) => setState(() => propertyAge = v)),
 
-              if (isRent) ...[
-                const SizedBox(height: 10),
-                _dropdown("Available From", availableFrom,
-                    availableFromOptions,
-                        (v) => setState(() => availableFrom = v)),
-              ],
+                _dropdown("Construction Status", constructionStatus,
+                    constructionStatusOptions,
+                        (v) => setState(() => constructionStatus = v)),
 
-              const SizedBox(height: 20),
+                if (isRent)
+                  _dropdown("Available From", availableFrom,
+                      availableFromOptions,
+                          (v) => setState(() => availableFrom = v)),
 
-              /// AMENITIES
-              _sectionTitle("Amenities"),
+                _section("Amenities"),
 
-              Wrap(
-                spacing: 8,
-                children: amenityOptions.map((a) {
-                  final selected = amenities.contains(a);
+                Wrap(
+                  spacing: 6,
+                  children: amenityOptions.map((a) {
 
-                  return FilterChip(
-                    label: Text(a),
-                    selected: selected,
-                    selectedColor: AppColors.primary,
-                    onSelected: (v) {
-                      setState(() {
-                        v ? amenities.add(a) : amenities.remove(a);
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
+                    final selected = amenities.contains(a);
 
-              const SizedBox(height: 20),
+                    return FilterChip(
+                      label: Text(a),
+                      selected: selected,
+                      selectedColor: AppColors.primary,
+                      onSelected: (v) {
+                        setState(() {
+                          v ? amenities.add(a) : amenities.remove(a);
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
 
-              /// LOCATION
-              _sectionTitle("Location"),
 
-              _field("Full Address *", addressController, maxLines: 2),
+                _section("Contact"),
 
-              const SizedBox(height: 10),
+                _field("Phone *", contactController,
+                    keyboard: TextInputType.phone),
 
-              _field("Locality / Area *", locationController),
-
-              const SizedBox(height: 10),
-
-              _loadingStates
-                  ? const CircularProgressIndicator()
-                  : _stateDropdown(),
-
-              const SizedBox(height: 10),
-
-              _loadingCities
-                  ? const CircularProgressIndicator()
-                  : _cityDropdown(),
-
-              const SizedBox(height: 20),
-
-              /// CONTACT
-              _sectionTitle("Contact"),
-
-              _field(
-                "Phone *",
-                contactController,
-                keyboard: TextInputType.phone,
-                prefix: Icons.phone,
-              ),
-
-              const SizedBox(height: 80)
-            ],
-          ),
-        ),
+              ]),
+            ),
+          )
+        ],
       ),
 
-      /// SAVE
-      bottomNavigationBar: Padding(
+      /// Sticky Save Button
+      bottomNavigationBar: Container(
         padding: const EdgeInsets.all(12),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 8,
+              color: Colors.black12,
+              offset: Offset(0, -2),
+            )
+          ],
+        ),
         child: AppButton(
           text: "Save Property",
           isLoading: _loading,
@@ -422,56 +436,65 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     );
   }
 
-  /// ---------------- UI WIDGETS ----------------
+  /// UI Widgets
 
-  Widget _sectionTitle(String text) {
+  Widget _section(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(text,
-          style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold)),
+      padding: const EdgeInsets.only(top: 16, bottom: 6),
+      child: Text(
+        title,
+        style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold),
+      ),
     );
   }
+  Widget _field(String label, TextEditingController controller,
+      {int maxLines = 1, TextInputType keyboard = TextInputType.text}) {
 
-  Widget _field(
-      String label,
-      TextEditingController controller, {
-        int maxLines = 1,
-        TextInputType keyboard = TextInputType.text,
-        IconData? prefix,
-        bool isPrice = false,
-      }) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboard,
-      validator: (v) {
-        if (label.contains("*") && (v == null || v.isEmpty)) {
-          return "Required";
-        }
-        return null;
-      },
-      onChanged: isPrice
-          ? (v) {
-        final clean = v.replaceAll(",", "");
-        final num? value = num.tryParse(clean);
-        if (value != null) {
-          final formatted = NumberFormat("#,##,###").format(value);
-          controller.value = TextEditingValue(
-            text: formatted,
-            selection:
-            TextSelection.collapsed(offset: formatted.length),
-          );
-        }
-      }
-          : null,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: prefix != null ? Icon(prefix) : null,
-        filled: true,
-        fillColor: AppColors.textBoxbackground,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboard,
+        style: const TextStyle(fontSize: 14),
+        validator: (v) {
+          if (label.contains("*") && (v == null || v.isEmpty)) {
+            return "Required";
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          hintText: label,
+          hintStyle: const TextStyle(fontSize: 13),
+
+          filled: true,
+          fillColor: AppColors.white,
+
+          isDense: true,
+
+          /// ✅ THIS is what actually reduces height
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+
+          /// ✅ EXTRA COMPACT CONTROL (important)
+          visualDensity: const VisualDensity(
+            horizontal: 0,
+            vertical: -1, // 🔥 key line
+          ),
+
+          /// ✅ optional hard limit (safe)
+          constraints: const BoxConstraints(
+            minHeight: 40,
+          ),
+
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );
@@ -480,27 +503,27 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   Widget _chipSelector(
       List<String> options,
       String selected,
-      Function(String) onSelected,
-      ) {
-    return Wrap(
-      spacing: 8,
-      children: options.map((e) {
+      Function(String) onSelected) {
 
-        final isSelected = selected == e;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Wrap(
+        spacing: 6,
+        children: options.map((e) {
 
-        return ChoiceChip(
-          label: Text(
-            e,
-            style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.primary,
-            ),
-          ),
-          selected: isSelected,
-          onSelected: (_) => onSelected(e),
-          selectedColor: AppColors.primary,
-          backgroundColor: AppColors.secondary.withOpacity(0.15),
-        );
-      }).toList(),
+          final isSelected = selected == e;
+
+          return ChoiceChip(
+            label: Text(e),
+            selected: isSelected,
+            selectedColor: AppColors.primary,
+            backgroundColor: AppColors.white.withOpacity(.15),
+            labelStyle: TextStyle(
+                color: isSelected ? Colors.white : AppColors.primary),
+            onSelected: (_) => onSelected(e),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -508,88 +531,229 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       String label,
       String value,
       List<String> items,
-      Function(String) onChanged,
-      ) {
-    return DropdownButtonFormField<String>(
-      value: items.contains(value) ? value : null,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: AppColors.textBoxbackground,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+      Function(String) onChanged) {
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: DropdownButtonFormField<String>(
+        value: items.contains(value) ? value : null,
+        isDense: true,
+        itemHeight: 48,
+        items: items
+            .map((e) => DropdownMenuItem(
+          value: e,
+          child: Text(e, style: const TextStyle(fontSize: 14)),
+        ))
+            .toList(),
+        onChanged: (v) {
+          if (v != null) onChanged(v);
+        },
+        decoration: InputDecoration(
+          hintText: label,
+          filled: true,
+          fillColor: AppColors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 6, // reduce height here
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
-      items: items
-          .map((e) =>
-          DropdownMenuItem(value: e, child: Text(e)))
-          .toList(),
-      onChanged: (v) {
-        if (v != null) onChanged(v);
-      },
     );
   }
 
   Widget _slider(String label, int? value, Function(int) onChanged) {
 
-    final int currentValue = value ?? 0;
+    final v = value ?? 0;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label),
-            Text(currentValue.toString()),
+            Text(v.toString()),
           ],
         ),
-
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: AppColors.primary,
-            inactiveTrackColor: AppColors.primary.withAlpha(60),
-            thumbColor: AppColors.primary,
-          ),
-          child: Slider(
-            value: currentValue.toDouble(),
-            min: 0,
-            max: 10,
-            divisions: 10,
-            label: currentValue.toString(),
-            onChanged: (v) => onChanged(v.toInt()),
-          ),
-        ),
+        Slider(
+          value: v.toDouble(),
+          min: 0,
+          max: 10,
+          divisions: 10,
+          activeColor: AppColors.primary,
+          onChanged: (x) => onChanged(x.toInt()),
+        )
       ],
+    );
+  }
+
+  Widget _localityAutocomplete() {
+    return Autocomplete<String>(
+      key: localityKey,
+      initialValue: TextEditingValue(text: locationController.text),
+
+      optionsBuilder: (TextEditingValue text) {
+
+        if (text.text.isEmpty) {
+          return localities.map((e) => e.value);
+        }
+
+        return localities
+            .map((e) => e.value)
+            .where((l) =>
+            l.toLowerCase().contains(text.text.toLowerCase()));
+      },
+
+      onSelected: (value) {
+        locationController.text = value;
+      },
+
+      fieldViewBuilder: (context, controller, focusNode, onSubmit) {
+
+        /// IMPORTANT → sync only once
+        controller.addListener(() {
+          locationController.text = controller.text;
+        });
+
+        return TextFormField(
+          controller: controller,
+          focusNode: focusNode,
+          decoration: InputDecoration(
+            hintText: "Locality / Area *",
+            filled: true,
+            fillColor: AppColors.white,
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 6),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          validator: (v) {
+            if (v == null || v.isEmpty) {
+              return "Required";
+            }
+            return null;
+          },
+        );
+      },
     );
   }
 
   Widget _stateDropdown() {
     return DropdownButtonFormField<MasterValue>(
       hint: const Text("Select State"),
-      value: selectedState,
+      value: states.contains(selectedState) ? selectedState : null,
+      isDense: true, // ✅ reduces height
+      itemHeight: 48, // ✅ compact dropdown list
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 6, // ✅ reduced from default
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+      ),
       items: states
-          .map((s) =>
-          DropdownMenuItem(value: s, child: Text(s.value)))
+          .map((s) => DropdownMenuItem(
+        value: s,
+        child: Text(
+          s.value,
+          style: const TextStyle(fontSize: 14), // optional tighter text
+        ),
+      ))
           .toList(),
       onChanged: (v) {
-        setState(() => selectedState = v);
-        if (v != null) _loadCities(v.id);
+        setState(() {
+          selectedState = v;
+
+          selectedCity = null;
+          cities = [];
+          localities = [];
+
+          locationController.clear();
+
+          /// force rebuild locality field
+          localityKey = UniqueKey();
+        });
+
+        if (v != null) {
+          _loadCities(v.id);
+        }
       },
     );
   }
 
   Widget _cityDropdown() {
-    return DropdownButtonFormField<String>(
+    return DropdownButtonFormField<MasterValue>(
       hint: const Text("Select City"),
-      value: selectedCity,
+      value: cities.contains(selectedCity) ? selectedCity : null,
+      isDense: true, // ✅ reduces height
+      itemHeight: 48, // ✅ compact dropdown list
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 6, // ✅ reduced
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+      ),
       items: cities
-          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+          .map((c) => DropdownMenuItem(
+        value: c,
+        child: Text(
+          c.value,
+          style: const TextStyle(fontSize: 14),
+        ),
+      ))
           .toList(),
-      onChanged: (v) => setState(() => selectedCity = v),
+      onChanged: selectedState == null
+          ? null
+          : (v) async {
+        setState(() {
+          selectedCity = v;
+
+          localities = [];
+          locationController.clear();
+
+          /// force rebuild autocomplete
+          localityKey = UniqueKey();
+        });
+
+        if (v != null) {
+          await _loadLocalities(v.id);
+        }
+      },
     );
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   Future<void> _submit() async {
 
@@ -597,56 +761,34 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
     setState(() => _loading = true);
 
-    final price =
-    double.tryParse(priceController.text.replaceAll(",", ""));
-    final securityDeposit = double.tryParse(securityDepositController.text.replaceAll(",", ""));
     final property = PropertyModel(
       title: titleController.text,
       description: descriptionController.text,
-      price: price,
-      securityDeposit: securityDeposit,
+      price: double.tryParse(priceController.text),
       superArea: double.tryParse(superAreaController.text),
       carpetArea: double.tryParse(carpetAreaController.text),
-
       address: addressController.text,
       location: locationController.text,
-
-      city: selectedCity,
+      city: selectedCity?.value,
       state: selectedState?.value,
-
       type: propertyType,
       category: category,
       rentOrSale: rentOrSale.toUpperCase(),
-
       postedBy: postedByType,
       constructionStatus: constructionStatus,
-
       bedrooms: bedrooms,
       bathrooms: bathrooms,
-
       floorNumber: floorNumber,
       totalFloors: totalFloors,
-
       furnishing: furnishing,
       facing: facing,
       propertyAge: propertyAge,
-
-      parkingCount: parking ,
-
+      parkingCount: parking,
       amenities: amenities.join(","),
-
       contactNumber: contactController.text,
-
       currency: "INR",
-
-
-
       postDate: DateTime.now().toIso8601String(),
-
-      // default flags
       verified: true,
-      negotiable: true,
-      loanAvailable: true,
     );
 
     try {
@@ -658,20 +800,19 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PropertyMediaScreen(propertyId: id,userId : widget.userId),
+          builder: (_) => PropertyMediaScreen(
+              propertyId: id,
+              userId: widget.userId),
         ),
       );
 
     } catch (e) {
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-
-    } finally {
-
-      setState(() => _loading = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error: $e")));
 
     }
+
+    setState(() => _loading = false);
   }
 }

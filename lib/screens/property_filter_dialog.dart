@@ -3,7 +3,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../services/state_api_service.dart';
-
+import '../commons/common_widget.dart';
 class PropertyFilterDialog extends StatefulWidget {
   final Function(Map<String, dynamic>) onApply;
   final Map<String, dynamic>? initialFilters;
@@ -34,13 +34,16 @@ class PropertyFilterDialog extends StatefulWidget {
       _PropertyFilterBottomSheetState();
 }
 
-class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
+class _PropertyFilterBottomSheetState
+    extends State<PropertyFilterDialog> {
   static const double vGap = 6;
 
   final locationController = TextEditingController();
 
-  RangeValues priceRange = const RangeValues(1000.0, 100000000.0);
-  RangeValues areaRange = const RangeValues(100.0, 10000.0);
+  RangeValues priceRange =
+  const RangeValues(1000.0, 100000000.0);
+  RangeValues areaRange =
+  const RangeValues(100.0, 10000.0);
 
   double bedrooms = 1.0;
   double bathrooms = 1.0;
@@ -48,21 +51,27 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
   String? selectedType;
   String? selectedStatus;
 
+  String? selectedCategory;
+  String? selectedListingType;
+
   MasterValue? selectedState;
-  String? selectedCity;
+  MasterValue? selectedCity;
 
   List<MasterValue> states = [];
-  List<String> cities = [];
+  List<MasterValue> cities = [];
 
-  final List<String> propertyTypes = [
+  final List<String> residentialTypes = [
     "HOUSE",
     "PLOT",
     "APARTMENT",
     "BUILDER FLOOR",
+    "PG",
+  ];
+
+  final List<String> commercialTypes = [
     "SHOP",
     "OFFICE",
     "SHOWROOM",
-    "PG",
     "CO WORKING",
     "AGRICULTURAL",
   ];
@@ -103,6 +112,12 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
     return fallback;
   }
 
+  List<String> get filteredTypes {
+    if (selectedCategory == "Residential") return residentialTypes;
+    if (selectedCategory == "Commercial") return commercialTypes;
+    return [...residentialTypes, ...commercialTypes];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -110,9 +125,12 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
 
     if (widget.initialFilters != null) {
       final f = widget.initialFilters!;
+
       locationController.text = f["location"] ?? "";
       selectedType = f["type"];
       selectedStatus = f["constructionStatus"];
+      selectedCategory = f["category"];
+      selectedListingType = f["rentOrSale"];
 
       priceRange = RangeValues(
         _toDouble(f["minPrice"], 1000.0),
@@ -127,8 +145,9 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
       bedrooms = _toDouble(f["bedrooms"], 1.0);
       bathrooms = _toDouble(f["bathrooms"], 1.0);
 
-      if (f["amenity"] != null) {
-        selectedAmenities.addAll(f["amenity"].split(","));
+      if (f["amenity"] != null && f["amenity"] is String) {
+        selectedAmenities.addAll(
+            (f["amenity"] as String).split(","));
       }
     }
   }
@@ -147,7 +166,9 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
       _loadingCities = true;
       cities = [];
       selectedCity = null;
+      locationController.clear();
     });
+
     try {
       cities = await MasterService.getCities(stateId);
     } finally {
@@ -165,11 +186,9 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
     return SliderTheme.of(context).copyWith(
       thumbColor: Colors.orange,
       activeTrackColor: AppColors.primary,
-      inactiveTrackColor: AppColors.primary.withOpacity(0.3),
-      tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 3),
-      activeTickMarkColor: Colors.orange,
-      inactiveTickMarkColor: Colors.grey.shade300,
-      overlayColor: Colors.orange.withOpacity(0.15),
+      inactiveTrackColor:
+      AppColors.primary,
+      overlayColor: Colors.orange,
     );
   }
 
@@ -225,21 +244,13 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
       maxChildSize: 0.95,
       builder: (_, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration:  BoxDecoration(
+            color: AppColors.primary.withOpacity(0.05),
+            borderRadius:
+            BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 40,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade400,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
               const SizedBox(height: 8),
 
               Expanded(
@@ -248,6 +259,43 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
                   padding: const EdgeInsets.all(12),
                   child: Column(
                     children: [
+
+                      _section("Category"),
+                      Wrap(
+                        spacing: 6,
+                        children: ["Residential", "Commercial"]
+                            .map((e) {
+                          return ChoiceChip(
+                            label: Text(e),
+                            selected: selectedCategory == e,
+                            onSelected: (_) {
+                              setState(() {
+                                selectedCategory = e;
+                                final list =
+                                e == "Residential"
+                                    ? residentialTypes
+                                    : commercialTypes;
+                                selectedType = list.first;
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+
+                      _section("Listing Type"),
+                      Wrap(
+                        spacing: 6,
+                        children: ["Sale", "Rent"].map((e) {
+                          return ChoiceChip(
+                            label: Text(e),
+                            selected:
+                            selectedListingType == e,
+                            onSelected: (_) => setState(
+                                    () => selectedListingType = e),
+                          );
+                        }).toList(),
+                      ),
+
                       _loadingStates
                           ? const CircularProgressIndicator()
                           : _fancyDropdown<MasterValue>(
@@ -256,30 +304,44 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
                         hint: "State",
                         itemLabel: (s) => s.value,
                         onChanged: (v) {
-                          setState(() => selectedState = v);
-                          if (v != null) _loadCities(v.id);
+                          setState(() {
+                            selectedState = v;
+                            selectedCity = null;
+                            cities = [];
+                            locationController.clear();
+                          });
+                          if (v != null) {
+                            _loadCities(v.id);
+                          }
                         },
                       ),
 
                       _loadingCities
                           ? const CircularProgressIndicator()
-                          : _fancyDropdown<String>(
+                          : _fancyDropdown<MasterValue>(
                         items: cities,
                         value: selectedCity,
                         hint: "City",
-                        itemLabel: (c) => c,
-                        onChanged: (v) =>
-                            setState(() => selectedCity = v),
+                        itemLabel: (c) => c.value,
+                        onChanged: (v) {
+                          setState(() {
+                            selectedCity = v;
+                            locationController.clear();
+                          });
+                        },
                       ),
 
                       _textField("Location", locationController),
 
                       _fancyDropdown<String>(
-                        items: propertyTypes,
+                        items: filteredTypes,
                         value: selectedType,
                         hint: "Type",
                         itemLabel: (t) => t,
-                        onChanged: (v) => setState(() => selectedType = v),
+                        onChanged: selectedCategory == null
+                            ? null
+                            : (v) => setState(
+                                () => selectedType = v),
                       ),
 
                       _section("Price"),
@@ -288,7 +350,7 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
                         min: 0,
                         max: 100000000,
                         divisions: 1000,
-                        labelFormatter: (v) => _fmtCurrency(v),
+                        labelFormatter: _fmtCurrency,
                         onChanged: (v) =>
                             setState(() => priceRange = v),
                       ),
@@ -299,7 +361,8 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
                         min: 0,
                         max: 10000,
                         divisions: 100,
-                        labelFormatter: (v) => v.toInt().toString(),
+                        labelFormatter: (v) =>
+                            v.toInt().toString(),
                         onChanged: (v) =>
                             setState(() => areaRange = v),
                       ),
@@ -329,11 +392,8 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
                         spacing: 6,
                         children: statusList.map((s) {
                           return ChoiceChip(
-                            label:
-                            Text(s, style: const TextStyle(fontSize: 11)),
+                            label: Text(s),
                             selected: selectedStatus == s,
-                            selectedColor:
-                            AppColors.primary.withOpacity(0.2),
                             onSelected: (_) =>
                                 setState(() => selectedStatus = s),
                           );
@@ -345,16 +405,15 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
                         spacing: 6,
                         children: amenities.map((a) {
                           return FilterChip(
-                            label: Text(a,
-                                style: const TextStyle(fontSize: 11)),
-                            selected: selectedAmenities.contains(a),
-                            selectedColor:
-                            AppColors.primary.withOpacity(0.2),
+                            label: Text(a),
+                            selected:
+                            selectedAmenities.contains(a),
                             onSelected: (v) {
                               setState(() {
                                 v
                                     ? selectedAmenities.add(a)
-                                    : selectedAmenities.remove(a);
+                                    : selectedAmenities
+                                    .remove(a);
                               });
                             },
                           );
@@ -367,38 +426,9 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
 
               Padding(
                 padding: const EdgeInsets.all(10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          side: BorderSide.none,
-                        ),
-                        child: const Text("Close"),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        onPressed: _apply,
-                        child: const Text("Search"),
-                      ),
-                    ),
-                  ],
+                child: AppButton(
+                  text: "Search",
+                  onTap: _apply,
                 ),
               )
             ],
@@ -411,9 +441,11 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
   void _apply() {
     widget.onApply({
       "state": selectedState?.value,
-      "city": selectedCity,
+      "city": selectedCity?.value,
       "location": locationController.text.trim(),
       "type": selectedType,
+      "category": selectedCategory,
+      "rentOrSale": selectedListingType,
       "constructionStatus": selectedStatus,
       "minPrice": priceRange.start,
       "maxPrice": priceRange.end,
@@ -422,8 +454,11 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
       "bedrooms": bedrooms.toInt(),
       "bathrooms": bathrooms.toInt(),
       "amenity":
-      selectedAmenities.isNotEmpty ? selectedAmenities.join(",") : null,
+      selectedAmenities.isNotEmpty
+          ? selectedAmenities.join(",")
+          : null,
     });
+
     Navigator.pop(context);
   }
 
@@ -431,9 +466,7 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
     padding: const EdgeInsets.symmetric(vertical: vGap),
     child: Align(
       alignment: Alignment.centerLeft,
-      child: Text(title,
-          style:
-          const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      child: Text(title),
     ),
   );
 
@@ -442,19 +475,7 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
       padding: const EdgeInsets.symmetric(vertical: vGap),
       child: TextField(
         controller: c,
-        style: const TextStyle(fontSize: 13),
-        decoration: InputDecoration(
-          hintText: hint,
-          isDense: true,
-          contentPadding:
-          const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-          filled: true,
-          fillColor: AppColors.primary.withOpacity(0.06),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-        ),
+        decoration: InputDecoration(hintText: hint),
       ),
     );
   }
@@ -464,47 +485,19 @@ class _PropertyFilterBottomSheetState extends State<PropertyFilterDialog> {
     required T? value,
     required String hint,
     required String Function(T) itemLabel,
-    required ValueChanged<T?> onChanged,
+    required ValueChanged<T?>? onChanged,
   }) {
-    const double itemH = 38;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: vGap),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton2<T>(
-          isExpanded: true,
-          value: value,
-          hint: Text(hint, style: const TextStyle(fontSize: 13)),
-          items: items
-              .map((e) => DropdownMenuItem<T>(
-            value: e,
-            child: Text(itemLabel(e),
-                style: const TextStyle(fontSize: 13)),
-          ))
-              .toList(),
-          onChanged: onChanged,
-          buttonStyleData: ButtonStyleData(
-            height: itemH,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: AppColors.primary.withOpacity(0.06),
-            ),
-          ),
-          dropdownStyleData: DropdownStyleData(
-            maxHeight: itemH * 5,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.white,
-            ),
-          ),
-          menuItemStyleData: const MenuItemStyleData(height: itemH),
-          iconStyleData: const IconStyleData(
-            icon: Icon(Icons.keyboard_arrow_down),
-            iconSize: 20,
-          ),
-        ),
-      ),
+    return DropdownButton2<T>(
+      isExpanded: true,
+      value: value,
+      hint: Text(hint),
+      items: items
+          .map((e) => DropdownMenuItem<T>(
+        value: e,
+        child: Text(itemLabel(e)),
+      ))
+          .toList(),
+      onChanged: onChanged,
     );
   }
 }
