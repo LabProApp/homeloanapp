@@ -36,13 +36,35 @@ class _PropertyCardState extends State<PropertyCard> {
   bool _sendingLead = false;
 
   List<String> get _images {
-    if (widget.property.documentList != null &&
-        widget.property.documentList!.isNotEmpty) {
-      return widget.property.documentList!
-          .map((e) => e.fileUrl)
-          .whereType<String>()
+    final docs = widget.property.documentList;
+
+    debugPrint("Fetching property images...");
+
+    if (docs != null && docs.isNotEmpty) {
+      debugPrint("Document list found with ${docs.length} items");
+
+      final imageUrls = docs
+          .map((e) {
+        debugPrint("Raw fileUrl: ${e.docUrl}");
+        return e.docUrl;
+      })
+          .where((url) {
+        final isValid = url != null && url.isNotEmpty;
+        if (!isValid) {
+          debugPrint("Filtered invalid URL: $url");
+        }
+        return isValid;
+      })
+          .cast<String>()
           .toList();
+
+      debugPrint("Final valid image count: ${imageUrls.length}");
+      debugPrint("Image URLs: $imageUrls");
+
+      return imageUrls;
     }
+
+    debugPrint("No document images found, using fallback assets");
 
     return [
       "assets/images/house1.jpg",

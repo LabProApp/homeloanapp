@@ -1,6 +1,6 @@
 class ApiUrls {
 
-  static const String baseUrl = "http://15.206.9.70:8080/api";
+  static const String baseUrl = "http://13.60.26.92:8080/api";
 
   static const String uploadDocuments="$baseUrl/documents/uploadDocuments";
   static const String downloadDocuments="$baseUrl/documents";

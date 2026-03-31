@@ -38,7 +38,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
     if (widget.property.documentList != null &&
         widget.property.documentList!.isNotEmpty) {
       final urls = widget.property.documentList!
-          .map((doc) => doc.fileUrl)
+          .map((doc) => doc.docUrl)
           .whereType<String>()
           .toList();
       if (urls.isNotEmpty) return urls;

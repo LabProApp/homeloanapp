@@ -31,7 +31,7 @@ class _RentalPropertyDetailScreenState
   List<String> get _images {
     if (widget.property.documentList != null &&
         widget.property.documentList!.isNotEmpty) {
-      return widget.property.documentList!.map((e) => e.fileUrl).toList();
+      return widget.property.documentList!.map((e) => e.docUrl).toList();
     }
     return [
       'assets/images/house1.jpg',

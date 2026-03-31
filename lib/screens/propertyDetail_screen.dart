@@ -1,4 +1,3 @@
-import 'package:KeyBricks/commons/commonutil.dart';
 import 'package:flutter/material.dart';
 import '../models/property_model.dart';
 import '../theme/app_colors.dart';
@@ -6,7 +5,9 @@ import '../utility/amenity_icon.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
-import '../screens/propertyAdd_screen.dart';
+import '../commons/common_widget.dart';
+import '../commons/commonutil.dart';
+import 'propertyAdd_screen.dart'; // ✅ IMPORTANT
 
 class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
@@ -19,28 +20,24 @@ class PropertyDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<PropertyDetailScreen> createState() => _PropertyDetailScreenState();
+  State<PropertyDetailScreen> createState() =>
+      _PropertyDetailScreenState();
 }
 
 class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   int currentIndex = 0;
-  bool isFavourite = false;
+  /// ✅ OWNER CHECK
+  bool get isOwner =>
+      widget.property.postedByUser != null &&
+          widget.property.postedByUser == widget.userId;
 
-  /// Detect commercial property
-  bool get _isCommercial {
-    final type = widget.property.type?.toLowerCase() ?? "";
-    return type.contains("commercial");
-  }
-
-  /// Images
+  /// 📸 Images
   List<String> get _images {
     if (widget.property.documentList != null &&
         widget.property.documentList!.isNotEmpty) {
-      final urls = widget.property.documentList!
-          .map((doc) => doc.fileUrl)
-          .whereType<String>()
+      return widget.property.documentList!
+          .map((e) => e.docUrl ?? "")
           .toList();
-      if (urls.isNotEmpty) return urls;
     }
     return [
       'assets/images/house1.jpg',
@@ -49,72 +46,141 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     ];
   }
 
-  /// Amenities
+  /// 🧩 Amenities
   List<String> get _amenities {
-    if (widget.property.amenitiesAsList != null &&
-        widget.property.amenitiesAsList!.isNotEmpty) {
-      return widget.property.amenitiesAsList!.map((e) => e.toString()).toList();
+    if (widget.property.amenitiesAsList != null) {
+      return widget.property.amenitiesAsList!
+          .map((e) => e.toString())
+          .toList();
     }
     return [];
   }
 
-  bool get _isOwner {
-    return widget.property.postedByUser == widget.userId;
+  /// 💰 Price Logic (Sale + Rent handled)
+  String get priceText {
+    if (widget.property.rentOrSale == "RENT") {
+      return widget.property.monthlyRent != null
+          ? "₹ ${NumberFormat('#,##,###').format(widget.property.monthlyRent)} / month"
+          : "-";
+    } else {
+      return widget.property.price != null
+          ? "₹ ${NumberFormat('#,##,###').format(widget.property.price)}"
+          : "-";
+    }
+  }
+
+  /// 🗑️ DELETE CONFIRMATION
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Delete Property"),
+        content: const Text("Are you sure you want to delete this property?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context);
+
+              // 🔥 TODO: Call your delete API here
+              // await PropertyApiService.deleteProperty(widget.property.id);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Property deleted")),
+              );
+
+              Navigator.pop(context); // go back
+            },
+            child: const Text("Delete"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.scaffoldBg,
+      bottomNavigationBar: _bottomButtons(),
       body: CustomScrollView(
         slivers: [
-          /// IMAGE SLIDER
+
+          /// 🔥 IMAGE HEADER
           SliverAppBar(
-            expandedHeight: 280,
+            expandedHeight: 300,
             pinned: true,
-            backgroundColor: AppColors.primary,
+            backgroundColor: Colors.transparent,
             iconTheme: const IconThemeData(color: Colors.white),
+            actions: [
+              if (isOwner)
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: _confirmDelete,
+                ),
+              IconButton(
+                icon: const Icon(Icons.share),
+                onPressed: () {
+                  Share.share(
+                      "${widget.property.title}\n$priceText\n${widget.property.address}");
+                },
+              )
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
                 children: [
+
                   PageView.builder(
                     itemCount: _images.length,
                     onPageChanged: (i) => setState(() => currentIndex = i),
                     itemBuilder: (_, i) {
                       final img = _images[i];
-                      if (img.startsWith('assets/')) {
-                        return Image.asset(img, fit: BoxFit.cover);
-                      } else {
-                        return Image.network(
-                          img,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _placeholderImage(),
-                        );
-                      }
+                      return img.startsWith('assets/')
+                          ? Image.asset(img, fit: BoxFit.cover)
+                          : Image.network(
+                        img,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            Image.asset('assets/images/house1.jpg',
+                                fit: BoxFit.cover),
+                      );
                     },
                   ),
 
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 12,
-                    right: 12,
-                    child: Column(
-                      children: [
-                        _imageActionIcon(icon: Icons.message, onTap: _shareWhatsApp),
-                        const SizedBox(height: 10),
-                        _imageActionIcon(icon: Icons.share, onTap: _shareProperty),
-                        const SizedBox(height: 10),
-                        _imageActionIcon(
-                          icon: isFavourite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          onTap: () =>
-                              setState(() => isFavourite = !isFavourite),
-                        ),
-                      ],
+                  /// Gradient overlay
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black.withOpacity(0.4),
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.7),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                     ),
                   ),
 
+                  /// Price
+                  Positioned(
+                    bottom: 40,
+                    left: 16,
+                    child: Text(
+                      priceText,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+
+                  /// Indicator
                   Positioned(
                     bottom: 12,
                     left: 0,
@@ -142,242 +208,253 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             ),
           ),
 
-          /// CONTENT
+          /// 🔽 CONTENT
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// PRICE
-                  Text(
-                    widget.property.price != null
-                        ? "₹ ${NumberFormat('#,##,###.##').format(widget.property.price)}"
-                        : "-",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
 
-                  const SizedBox(height: 6),
-
-                  /// TITLE
+                  /// TITLE + LOCATION
                   Text(
                     widget.property.title ?? "-",
                     style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
+                        fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "${widget.property.address ?? ""}, ${widget.property.city ?? ""}",
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
 
-                  if (widget.property.address != null)
-                    Text(
-                      widget.property.address!,
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
+                  const SizedBox(height: 16),
 
-                  if (_isOwner) ...[
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.edit),
-                        label: const Text("Modify Property"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: _openEditProperty,
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 20),
+                  /// FEATURES
                   _featureRow(),
 
-                  const SizedBox(height: 24),
-                  _sectionTitle("About This Property"),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 20),
+
+                  /// DESCRIPTION
+                  _sectionTitle("Description"),
+                  const SizedBox(height: 8),
                   ReadMoreText(
-                    widget.property.description ??
-                        "Property details will be updated soon.",
+                    widget.property.description ?? "-",
                     trimLines: 3,
                     trimMode: TrimMode.Line,
-                    trimCollapsedText: " Read More",
-                    trimExpandedText: " Read Less",
-                    moreStyle: TextStyle(color: AppColors.primary),
-                    lessStyle: TextStyle(color: AppColors.primary),
                   ),
 
                   const SizedBox(height: 24),
+
+                  /// LOCATION SECTION
+                  _sectionTitle("Location"),
+                  _card([
+                    _DetailRow("Address", widget.property.address ?? "-"),
+                    _DetailRow("City", widget.property.city ?? "-"),
+                    _DetailRow("State", widget.property.state ?? "-"),
+                    _DetailRow("Landmark", widget.property.landmark ?? "-"),
+                  ]),
+
+                  const SizedBox(height: 20),
+
+                  /// AREA SECTION
+                  _sectionTitle("Area"),
+                  _card([
+                    _DetailRow("Carpet Area",
+                        "${widget.property.carpetArea ?? "-"} sqft"),
+                    _DetailRow("Super Area",
+                        "${widget.property.superArea ?? "-"} sqft"),
+                  ]),
+
+                  const SizedBox(height: 20),
+
+                  /// PROPERTY DETAILS
+                  _sectionTitle("Property Details"),
+                  _card([
+                    _DetailRow("Type", widget.property.type ?? "-"),
+                    _DetailRow("Category", widget.property.category ?? "-"),
+                    _DetailRow("Bedrooms",
+                        widget.property.bedrooms?.toString() ?? "-"),
+                    _DetailRow("Bathrooms",
+                        widget.property.bathrooms?.toString() ?? "-"),
+                    _DetailRow("Floor",
+                        "${widget.property.floorNumber ?? "-"} / ${widget.property.totalFloors ?? "-"}"),
+                    _DetailRow("Facing", widget.property.facing ?? "-"),
+                    _DetailRow("Furnishing", widget.property.furnishing ?? "-"),
+                    _DetailRow("Age", widget.property.propertyAge ?? "-"),
+                  ]),
+
+                  const SizedBox(height: 20),
+
+                  /// EXTRA DETAILS
+                  _sectionTitle("Other Details"),
+                  _card([
+                    _DetailRow("Construction",
+                        widget.property.constructionStatus ?? "-"),
+                    _DetailRow("Ownership",
+                        widget.property.ownershipType ?? "-"),
+                    _DetailRow("RERA Approved",
+                        widget.property.reraApproved == true ? "Yes" : "No"),
+                    _DetailRow("RERA Number",
+                        widget.property.reraNumber ?? "-"),
+                  ]),
+
+                  const SizedBox(height: 20),
+
+                  /// AMENITIES
                   if (_amenities.isNotEmpty) ...[
                     _sectionTitle("Amenities"),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     Wrap(
-                      spacing: 20,
-                      runSpacing: 16,
-                      children: _amenities.map((amenity) {
-                        return SizedBox(
-                          width: 70,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: _amenities.map((a) {
+                        final data = AmenityIcon.getAmenity(a);
+                        return Container(
+                          width: 90,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black12, blurRadius: 4)
+                            ],
+                          ),
                           child: Column(
                             children: [
-                              Icon(
-                                AmenityIcon.getAmenity(amenity).icon,
-                                size: 26,
-                                color: AppColors.primary,
-                              ),
+                              Icon(data.icon, color: AppColors.primary),
                               const SizedBox(height: 6),
-                              Text(
-                                AmenityIcon.getAmenity(amenity).label,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 12),
-                              ),
+                              Text(data.label,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 11)),
                             ],
                           ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 24),
                   ],
 
-                  _sectionTitle("Property Details"),
-                  const SizedBox(height: 10),
-                  _detailsCard(),
+                  const SizedBox(height: 20),
 
-                  const SizedBox(height: 80),
+                  /// OWNER
+                  _sectionTitle("Owner Details"),
+                  _card([
+                    _DetailRow("Posted By", widget.property.postedBy ?? "-"),
+                    _DetailRow("Contact",
+                        widget.property.contactNumber ?? "-"),
+                    _DetailRow(
+                        "Verified",
+                        widget.property.verified == true ? "Yes" : "No"),
+                    _DetailRow("Posted On",
+                        AppUtils.formatDate(widget.property.postDate) ?? "-"),
+                  ]),
+
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
-          ),
+          )
         ],
       ),
     );
   }
 
-  /// ---------------- ACTIONS ----------------
-
-  void _openEditProperty() async {
-    final updated = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PostPropertyScreen(
-          userId: widget.userId,
-          propertyToEdit: widget.property,
-        ),
-      ),
-    );
-
-    if (updated == true) {
-      Navigator.pop(context, true);
-    }
-  }
-
-  void _shareProperty() {
-    Share.share(
-      "${widget.property.title}\n"
-          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}\n"
-          "Address: ${widget.property.address ?? "-"}",
-    );
-  }
-
-  void _shareWhatsApp() {
-    Share.share(
-      "Check out this property:\n"
-          "${widget.property.title}\n"
-          "Price: ₹${widget.property.price?.toStringAsFixed(2) ?? "-"}",
-    );
-  }
-
-  /// ---------------- UI HELPERS ----------------
-
-  Widget _imageActionIcon({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.35),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: Colors.white, size: 22),
-      ),
-    );
-  }
-
-  Widget _placeholderImage() {
-    final img = [
-      'assets/images/house1.jpg',
-      'assets/images/house2.jpg',
-      'assets/images/house3.jpg',
-    ][currentIndex % 3];
-
-    return Image.asset(img, fit: BoxFit.cover);
-  }
-
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-    );
-  }
-
-  /// ✅ Feature row with commercial check
+  /// FEATURES
   Widget _featureRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        if (!_isCommercial)
-          _Feature(Icons.bed, "${widget.property.bedrooms ?? '-'} Beds"),
-        if (!_isCommercial)
-          _Feature(Icons.bathtub, "${widget.property.bathrooms ?? '-'} Baths"),
-        _Feature(
-          Icons.square_foot,
-          "${widget.property.superArea?.toStringAsFixed(0) ?? '-'} Sqft",
-        ),
+        _Feature(Icons.bed, "${widget.property.bedrooms ?? '-'} Beds"),
+        _Feature(Icons.bathtub, "${widget.property.bathrooms ?? '-'} Baths"),
+        _Feature(Icons.square_foot,
+            "${widget.property.superArea?.toStringAsFixed(0) ?? '-'} sqft"),
       ],
     );
   }
 
-  Widget _detailsCard() {
+  /// COMMON CARD
+  Widget _card(List<Widget> children) {
     return Container(
+      margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 4)
+        ],
       ),
-      child: Column(
+      child: Column(children: children),
+    );
+  }
+
+  /// BUTTONS
+  Widget _bottomButtons() {
+    final phone = widget.property.contactNumber ?? "";
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      color: Colors.white,
+      child: Row(
         children: [
-          _DetailRow("Type", widget.property.type ?? "-"),
-          _DetailRow(
-              "Construction Status",
-              widget.property.constructionStatus ?? "-"),
-          _DetailRow(
-              "Carpet Area",
-              widget.property.carpetArea?.toString() ?? "-"),
-          _DetailRow(
-              "Super Area",
-              widget.property.superArea?.toString() ?? "-"),
-          _DetailRow("Posted By", widget.property.postedBy ?? "-"),
-          _DetailRow("Contact", widget.property.contactNumber ?? "-"),
-          _DetailRow("Posted On", AppUtils.formatDate(widget.property.postDate) ?? "-"),
+          /// OWNER BUTTONS
+          if (isOwner) ...[
+            Expanded(
+              child: AppButton(
+                text: "Modify",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PostPropertyScreen(
+                        userId: widget.userId,
+                        propertyToEdit: widget.property, // ✅ prefilled
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: AppButton(
+                text: "Delete",
+                onTap: _confirmDelete,
+              ),
+            ),
+          ] else ...[
+            Expanded(
+              child: AppButton(
+                text: "Call",
+                onTap: phone.isEmpty ? null : () => AppUtils.call(phone),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: AppButton(
+                text: "WhatsApp",
+                onTap: phone.isEmpty
+                    ? null
+                    : () => AppUtils.whatsapp(
+                  phone,
+                  "Hi, I'm interested in ${widget.property.title}",
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
+
+  Widget _sectionTitle(String title) {
+    return Text(title,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
+  }
 }
 
-/// ---------------- SMALL WIDGETS ----------------
+/// SMALL WIDGETS
 
 class _Feature extends StatelessWidget {
   final IconData icon;

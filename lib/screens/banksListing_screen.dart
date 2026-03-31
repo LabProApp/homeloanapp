@@ -77,8 +77,17 @@ class _BankPageState extends State<BankPage> {
 
       appBar: AppBar(
         title: const Text("Home Loans & Banks"),
-        backgroundColor: AppColors.primary,
+
         foregroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary, AppColors.secondary],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),

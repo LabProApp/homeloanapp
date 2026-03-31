@@ -112,8 +112,17 @@ class _LegalServicePageState extends State<LegalServicePage> {
       backgroundColor: AppColors.listingbackground,
       appBar: AppBar(
         title: const Text("Legal & Documentation"),
-        backgroundColor: AppColors.primary,
+
         foregroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary, AppColors.secondary],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),

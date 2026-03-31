@@ -69,7 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         debugPrint("✅ Profile image loaded");
 
         setState(() {
-          _profileImageUrl = docs.first.fileUrl;
+          _profileImageUrl = docs.first.docUrl;
         });
       } else {
         debugPrint("⚠️ No profile image found");
@@ -218,10 +218,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SliverAppBar(
                 expandedHeight: 180,
                 pinned: true,
-                backgroundColor: AppColors.primary,
-                flexibleSpace: const FlexibleSpaceBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
+                ),
+                flexibleSpace: FlexibleSpaceBar(
+                  collapseMode: CollapseMode.parallax,
                   centerTitle: true,
-                  title: Text("My Profile"),
+                  title: const Text("My Profile"),
+
+                  background: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.primary, AppColors.secondary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                  ),
                 ),
               ),
 
