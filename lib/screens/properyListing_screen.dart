@@ -155,7 +155,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     if (f["bedrooms"] != null) parts.add("${f["bedrooms"]}BHK");
     if (f["minPrice"] != null) parts.add("₹${f["minPrice"]}+");
 
-    parts.add(search["isResidential"] ? "Res" : "Com");
+   // parts.add(search["isResidential"] ? "Res" : "Com");
 
     return parts.join(" • ");
   }
@@ -271,27 +271,76 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     if (_savedSearches.isEmpty) return const SizedBox();
 
     return SizedBox(
-      height: 55,
+      height: 60,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: _savedSearches.length,
         itemBuilder: (context, i) {
           final s = _savedSearches[i];
+          final isPinned = s["pinned"] == true;
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: GestureDetector(
-              onLongPress: () => _deleteSearch(i),
+              /// 🔥 Long press = Pin/Unpin (better UX)
+              onLongPress: () {
+                _togglePin(i);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      isPinned
+                          ? "Removed from pinned"
+                          : "Pinned search",
+                    ),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              },
+
               child: InputChip(
-                label: Text(
-                  _summarizeSearch(s),
-                  style: const TextStyle(fontSize: 12),
+                /// 🔥 Text with overflow handling
+                label: SizedBox(
+                  width: 130,
+                  child: Text(
+                    _summarizeSearch(s),
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
-                avatar: s["pinned"] == true
-                    ? const Icon(Icons.push_pin, size: 16)
-                    : null,
+
+                /// 🔥 Visual polish
+                backgroundColor: isPinned
+                    ? Colors.orange.withOpacity(0.12)
+                    : Colors.white,
+
+                side: BorderSide(
+                  color: isPinned
+                      ? Colors.orange
+                      : Colors.grey.shade300,
+                ),
+
+                elevation: 2,
+                shadowColor: Colors.black.withOpacity(0.05),
+
+                /// 🔥 Icon improves clarity
+                avatar: Icon(
+                  isPinned ? Icons.push_pin : Icons.history,
+                  size: 16,
+                  color: isPinned ? Colors.orange : Colors.grey,
+                ),
+
+                /// 🔥 Apply search
                 onPressed: () => _applySavedSearch(s),
-                onDeleted: () => _togglePin(i),
+
+                /// 🔥 Delete (actual delete now)
+                onDeleted: () => _deleteSearch(i),
+
+                deleteIcon: const Icon(Icons.close, size: 18),
+                deleteButtonTooltipMessage: "Remove search",
               ),
             ),
           );

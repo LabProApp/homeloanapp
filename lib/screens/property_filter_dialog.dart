@@ -1,9 +1,12 @@
+// ✅ ONLY ADDITIONS MARKED WITH 🔥
+
 import 'package:flutter/material.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../services/state_api_service.dart';
 import '../commons/common_widget.dart';
+
 class PropertyFilterDialog extends StatefulWidget {
   final Function(Map<String, dynamic>) onApply;
   final Map<String, dynamic>? initialFilters;
@@ -45,8 +48,13 @@ class _PropertyFilterBottomSheetState
   RangeValues areaRange =
   const RangeValues(100.0, 10000.0);
 
-  double bedrooms = 1.0;
-  double bathrooms = 1.0;
+  /// ✅ Optional filters
+  double bedrooms = 0.0;
+  double bathrooms = 0.0;
+
+  /// ✅ NEW FLAGS
+  bool isPriceChanged = false;
+  bool isAreaChanged = false;
 
   String? selectedType;
   String? selectedStatus;
@@ -59,6 +67,13 @@ class _PropertyFilterBottomSheetState
 
   List<MasterValue> states = [];
   List<MasterValue> cities = [];
+
+  /// 🔥 NEW FILTER VARIABLES
+  String? selectedFurnishing;
+  String? selectedOwnership;
+
+  String? selectedPreferredTenants;
+  String? selectedAvailability;
 
   final List<String> residentialTypes = [
     "HOUSE",
@@ -90,6 +105,33 @@ class _PropertyFilterBottomSheetState
     "Garden",
     "Security",
     "Pool"
+  ];
+
+  /// 🔥 NEW DROPDOWN LISTS
+  final List<String> furnishingList = [
+    "Furnished",
+    "Semi-Furnished",
+    "Unfurnished"
+  ];
+
+  final List<String> ownershipList = [
+    "Freehold",
+    "Leasehold"
+  ];
+
+
+
+
+  final List<String> preferredTenantList = [
+    "Family",
+    "Bachelors",
+    "Anyone"
+  ];
+
+  final List<String> availabilityList = [
+    "Immediate",
+    "15 Days",
+    "30 Days"
   ];
 
   final Set<String> selectedAmenities = {};
@@ -125,7 +167,6 @@ class _PropertyFilterBottomSheetState
 
     if (widget.initialFilters != null) {
       final f = widget.initialFilters!;
-
       locationController.text = f["location"] ?? "";
       selectedType = f["type"];
       selectedStatus = f["constructionStatus"];
@@ -142,8 +183,12 @@ class _PropertyFilterBottomSheetState
         _toDouble(f["maxArea"], 10000.0),
       );
 
-      bedrooms = _toDouble(f["bedrooms"], 1.0);
-      bathrooms = _toDouble(f["bathrooms"], 1.0);
+      /// if values came from API → mark as changed
+      isPriceChanged = f["minPrice"] != null || f["maxPrice"] != null;
+      isAreaChanged = f["minArea"] != null || f["maxArea"] != null;
+
+      bedrooms = _toDouble(f["bedrooms"], 0.0);
+      bathrooms = _toDouble(f["bathrooms"], 0.0);
 
       if (f["amenity"] != null && f["amenity"] is String) {
         selectedAmenities.addAll(
@@ -152,25 +197,51 @@ class _PropertyFilterBottomSheetState
     }
   }
 
+  /// 🔥 FIXED STATE LOADING
   Future<void> _loadStates() async {
     setState(() => _loadingStates = true);
+
     try {
       states = await MasterService.getStates();
+
+      final f = widget.initialFilters;
+
+      if (f != null && f["state"] != null) {
+        selectedState = states.firstWhere(
+              (s) => s.value == f["state"],
+          orElse: () => states.first,
+        );
+
+        await _loadCities(selectedState!.id, applyInitial: true);
+      }
     } finally {
       if (mounted) setState(() => _loadingStates = false);
     }
   }
 
-  Future<void> _loadCities(int stateId) async {
+  /// 🔥 FIXED CITY LOADING
+  Future<void> _loadCities(int stateId,
+      {bool applyInitial = false}) async {
     setState(() {
       _loadingCities = true;
       cities = [];
       selectedCity = null;
-      locationController.clear();
     });
 
     try {
       cities = await MasterService.getCities(stateId);
+
+      if (applyInitial && widget.initialFilters != null) {
+        final f = widget.initialFilters!;
+        if (f["city"] != null) {
+          final match = cities.where(
+                (c) => c.value.toLowerCase().trim() ==
+                f["city"].toString().toLowerCase().trim(),
+          );
+
+          selectedCity = match.isNotEmpty ? match.first : null;
+        }
+      }
     } finally {
       if (mounted) setState(() => _loadingCities = false);
     }
@@ -186,8 +257,7 @@ class _PropertyFilterBottomSheetState
     return SliderTheme.of(context).copyWith(
       thumbColor: Colors.orange,
       activeTrackColor: AppColors.primary,
-      inactiveTrackColor:
-      AppColors.primary,
+      inactiveTrackColor: AppColors.primary,
       overlayColor: Colors.orange,
     );
   }
@@ -234,7 +304,6 @@ class _PropertyFilterBottomSheetState
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -244,7 +313,7 @@ class _PropertyFilterBottomSheetState
       maxChildSize: 0.95,
       builder: (_, scrollController) {
         return Container(
-          decoration:  BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.primary.withOpacity(0.05),
             borderRadius:
             BorderRadius.vertical(top: Radius.circular(20)),
@@ -260,6 +329,7 @@ class _PropertyFilterBottomSheetState
                   child: Column(
                     children: [
 
+                      /// CATEGORY
                       _section("Category"),
                       Wrap(
                         spacing: 6,
@@ -282,20 +352,21 @@ class _PropertyFilterBottomSheetState
                         }).toList(),
                       ),
 
+                      /// LISTING TYPE
                       _section("Listing Type"),
                       Wrap(
                         spacing: 6,
                         children: ["Sale", "Rent"].map((e) {
                           return ChoiceChip(
                             label: Text(e),
-                            selected:
-                            selectedListingType == e,
+                            selected: selectedListingType == e,
                             onSelected: (_) => setState(
                                     () => selectedListingType = e),
                           );
                         }).toList(),
                       ),
 
+                      /// STATE
                       _loadingStates
                           ? const CircularProgressIndicator()
                           : _fancyDropdown<MasterValue>(
@@ -316,6 +387,7 @@ class _PropertyFilterBottomSheetState
                         },
                       ),
 
+                      /// CITY
                       _loadingCities
                           ? const CircularProgressIndicator()
                           : _fancyDropdown<MasterValue>(
@@ -333,6 +405,7 @@ class _PropertyFilterBottomSheetState
 
                       _textField("Location", locationController),
 
+                      /// TYPE
                       _fancyDropdown<String>(
                         items: filteredTypes,
                         value: selectedType,
@@ -340,22 +413,75 @@ class _PropertyFilterBottomSheetState
                         itemLabel: (t) => t,
                         onChanged: selectedCategory == null
                             ? null
-                            : (v) => setState(
-                                () => selectedType = v),
+                            : (v) =>
+                            setState(() => selectedType = v),
                       ),
 
-                      _section("Price"),
+                      /// 🔥 NEW FILTERS (MERGED)
+                      if (selectedCategory == "Residential")
+                        _fancyDropdown(
+                          items: furnishingList,
+                          value: selectedFurnishing,
+                          hint: "Furnishing",
+                          itemLabel: (e) => e,
+                          onChanged: (v) =>
+                              setState(() => selectedFurnishing = v),
+                        ),
+
+                      _fancyDropdown(
+                        items: ownershipList,
+                        value: selectedOwnership,
+                        hint: "Ownership",
+                        itemLabel: (e) => e,
+                        onChanged: (v) =>
+                            setState(() => selectedOwnership = v),
+                      ),
+
+                      if (selectedListingType == "Rent")
+                        _fancyDropdown(
+                          items: preferredTenantList,
+                          value: selectedPreferredTenants,
+                          hint: "Preferred Tenants",
+                          itemLabel: (e) => e,
+                          onChanged: (v) => setState(
+                                  () => selectedPreferredTenants = v),
+                        ),
+
+                      _fancyDropdown(
+                        items: availabilityList,
+                        value: selectedAvailability,
+                        hint: "Availability",
+                        itemLabel: (e) => e,
+                        onChanged: (v) =>
+                            setState(() => selectedAvailability = v),
+                      ),
+
+                      /// PRICE
+                      _section(
+                        isPriceChanged
+                            ? "Price: ${_fmtCurrency(priceRange.start)} - ${_fmtCurrency(priceRange.end)}"
+                            : "Price: Any",
+                      ),
                       _buildRangeSlider(
                         values: priceRange,
                         min: 0,
                         max: 100000000,
                         divisions: 1000,
                         labelFormatter: _fmtCurrency,
-                        onChanged: (v) =>
-                            setState(() => priceRange = v),
+                        onChanged: (v) {
+                          setState(() {
+                            priceRange = v;
+                            isPriceChanged = true;
+                          });
+                        },
                       ),
 
-                      _section("Area"),
+                      /// AREA
+                      _section(
+                        isAreaChanged
+                            ? "Area: ${areaRange.start.toInt()} - ${areaRange.end.toInt()}"
+                            : "Area: Any",
+                      ),
                       _buildRangeSlider(
                         values: areaRange,
                         min: 0,
@@ -363,11 +489,17 @@ class _PropertyFilterBottomSheetState
                         divisions: 100,
                         labelFormatter: (v) =>
                             v.toInt().toString(),
-                        onChanged: (v) =>
-                            setState(() => areaRange = v),
+                        onChanged: (v) {
+                          setState(() {
+                            areaRange = v;
+                            isAreaChanged = true;
+                          });
+                        },
                       ),
 
-                      _section("Bedrooms: ${bedrooms.toInt()}"),
+                      /// BEDROOMS
+                      _section(
+                          "Bedrooms: ${bedrooms == 0 ? "Any" : bedrooms.toInt()}"),
                       _buildSlider(
                         value: bedrooms,
                         min: 0,
@@ -377,7 +509,9 @@ class _PropertyFilterBottomSheetState
                             setState(() => bedrooms = v),
                       ),
 
-                      _section("Bathrooms: ${bathrooms.toInt()}"),
+                      /// BATHROOMS
+                      _section(
+                          "Bathrooms: ${bathrooms == 0 ? "Any" : bathrooms.toInt()}"),
                       _buildSlider(
                         value: bathrooms,
                         min: 0,
@@ -387,6 +521,7 @@ class _PropertyFilterBottomSheetState
                             setState(() => bathrooms = v),
                       ),
 
+                      /// STATUS
                       _section("Status"),
                       Wrap(
                         spacing: 6,
@@ -400,6 +535,7 @@ class _PropertyFilterBottomSheetState
                         }).toList(),
                       ),
 
+                      /// AMENITIES
                       _section("Amenities"),
                       Wrap(
                         spacing: 6,
@@ -412,8 +548,7 @@ class _PropertyFilterBottomSheetState
                               setState(() {
                                 v
                                     ? selectedAmenities.add(a)
-                                    : selectedAmenities
-                                    .remove(a);
+                                    : selectedAmenities.remove(a);
                               });
                             },
                           );
@@ -438,23 +573,40 @@ class _PropertyFilterBottomSheetState
     );
   }
 
+
   void _apply() {
     widget.onApply({
       "state": selectedState?.value,
       "city": selectedCity?.value,
-      "location": locationController.text.trim(),
+      "location": locationController.text.trim().isEmpty
+          ? null
+          : locationController.text.trim(),
       "type": selectedType,
       "category": selectedCategory,
       "rentOrSale": selectedListingType,
       "constructionStatus": selectedStatus,
-      "minPrice": priceRange.start,
-      "maxPrice": priceRange.end,
-      "minArea": areaRange.start,
-      "maxArea": areaRange.end,
-      "bedrooms": bedrooms.toInt(),
-      "bathrooms": bathrooms.toInt(),
-      "amenity":
-      selectedAmenities.isNotEmpty
+
+      /// ✅ FIXED PRICE
+      "minPrice": isPriceChanged ? priceRange.start : null,
+      "maxPrice": isPriceChanged ? priceRange.end : null,
+
+      /// ✅ FIXED AREA
+      "minArea": isAreaChanged ? areaRange.start : null,
+      "maxArea": isAreaChanged ? areaRange.end : null,
+
+      "bedrooms": bedrooms == 0 ? null : bedrooms.toInt(),
+      "bathrooms": bathrooms == 0 ? null : bathrooms.toInt(),
+
+      "category": selectedCategory,
+      "type": selectedType,
+
+      /// 🔥 NEW FILTER VALUES
+      "furnishing": selectedFurnishing,
+      "ownershipType": selectedOwnership,
+
+      "preferredTenants": selectedPreferredTenants,
+      "availability": selectedAvailability,
+      "amenity": selectedAmenities.isNotEmpty
           ? selectedAmenities.join(",")
           : null,
     });
@@ -487,17 +639,99 @@ class _PropertyFilterBottomSheetState
     required String Function(T) itemLabel,
     required ValueChanged<T?>? onChanged,
   }) {
-    return DropdownButton2<T>(
-      isExpanded: true,
-      value: value,
-      hint: Text(hint),
-      items: items
-          .map((e) => DropdownMenuItem<T>(
-        value: e,
-        child: Text(itemLabel(e)),
-      ))
-          .toList(),
-      onChanged: onChanged,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: vGap),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton2<T>(
+          isExpanded: true,
+          value: items.contains(value) ? value : null,
+
+          /// 🔥 Button Style (Main UI)
+          buttonStyleData: ButtonStyleData(
+            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14), // 🔥 Rounded
+              border: Border.all(
+                color: Colors.grey.shade300,
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+
+          /// 🔥 Icon Style
+          iconStyleData: const IconStyleData(
+            icon: Icon(Icons.keyboard_arrow_down_rounded),
+            iconSize: 22,
+          ),
+
+          /// 🔥 Dropdown Style
+          dropdownStyleData: DropdownStyleData(
+            maxHeight: 250,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14), // 🔥 Rounded dropdown
+            ),
+            elevation: 4,
+          ),
+
+          /// 🔥 Menu Item Style
+          menuItemStyleData: const MenuItemStyleData(
+            height: 30,
+            padding: EdgeInsets.symmetric(horizontal: 14),
+          ),
+
+          /// 🔥 Hint
+          hint: Text(
+            hint,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 14,
+            ),
+          ),
+
+          /// 🔥 Selected Value Style
+          selectedItemBuilder: (context) {
+            return items.map((e) {
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  itemLabel(e),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            }).toList();
+          },
+
+          /// 🔥 Items
+          items: items
+              .map((e) => DropdownMenuItem<T>(
+            value: e,
+            child: Text(
+              itemLabel(e),
+              style: const TextStyle(fontSize: 14),
+            ),
+          ))
+              .toList(),
+
+          onChanged: onChanged,
+        ),
+      ),
     );
   }
+
+
+
+
 }
