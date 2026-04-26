@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/bank_model.dart';
 import '../screens/emi_calculator_screen.dart';
-import '../screens/bank_applyLoan_dialog.dart';
+import '../screens/bank_apply_loan_dialog.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart'; // For AppButton
 
@@ -46,7 +46,7 @@ class BankDetailPage extends StatelessWidget {
     final List<BankInterestRate> interestRates = bank.interestRates ?? [];
 
     return Scaffold(
-      backgroundColor: const Color(0xffFFF7F0),
+      backgroundColor: AppColors.listingbackground,
 
       /// -------------------- BOTTOM BUTTON --------------------
       bottomNavigationBar: SafeArea(
@@ -171,24 +171,24 @@ class BankDetailPage extends StatelessWidget {
                         )
                       else
                         Table(
-                          border: TableBorder.all(color: Colors.orange.shade200),
+                          border: TableBorder.all(color: AppColors.border),
                           children: [
-                            const TableRow(
-                              decoration: BoxDecoration(color: Colors.orange),
-                              children: [
+                            TableRow(
+                              decoration: const BoxDecoration(color: AppColors.primary),
+                              children: const [
                                 Padding(
                                   padding: EdgeInsets.all(8),
                                   child: Text('Cibil Score Range',
                                       style: TextStyle(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.bold)),
+                                          fontWeight: FontWeight.w600)),
                                 ),
                                 Padding(
                                   padding: EdgeInsets.all(8),
                                   child: Text('Rate',
                                       style: TextStyle(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.bold)),
+                                          fontWeight: FontWeight.w600)),
                                 ),
                               ],
                             ),
@@ -319,17 +319,20 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.orange.shade50,
+        color: AppColors.primary.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.shade200),
+        border: Border.all(color: AppColors.primary.withOpacity(0.18)),
       ),
       child: Column(
         children: [
-          Icon(icon, color: Colors.orange),
+          Icon(icon, color: AppColors.primary),
           const SizedBox(height: 6),
-          Text(title, textAlign: TextAlign.center),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(subtitle, style: const TextStyle(fontSize: 11)),
+          Text(title, textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Text(value,
+              style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text(subtitle,
+              style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
         ],
       ),
     );
@@ -352,9 +355,13 @@ class _SectionCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.star, color: Colors.orange),
+                const Icon(Icons.star_rounded, color: AppColors.primary),
                 const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary)),
               ],
             ),
           ),
@@ -379,7 +386,7 @@ class _DetailRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.orange),
+          Icon(icon, size: 16, color: AppColors.primary),
           const SizedBox(width: 10),
           Expanded(child: Text(value)),
         ],

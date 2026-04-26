@@ -6,8 +6,8 @@ import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import '../commons/common_widget.dart';
-import '../commons/commonutil.dart';
-import 'propertyAdd_screen.dart'; // ✅ IMPORTANT
+import '../commons/common_util.dart';
+import 'property_add_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;

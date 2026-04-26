@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../commons/common_widget.dart';
 import '../services/user_service.dart';
 import '../theme/app_colors.dart';
 
@@ -13,17 +15,16 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-
-  final passwordController = TextEditingController();
-  final confirmController = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
 
   bool _loading = false;
   bool _obscure = true;
 
   @override
   void dispose() {
-    passwordController.dispose();
-    confirmController.dispose();
+    _passwordCtrl.dispose();
+    _confirmCtrl.dispose();
     super.dispose();
   }
 
@@ -35,25 +36,36 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     try {
       await UserApiService.resetPassword(
         value: widget.value,
-        password: passwordController.text.trim(),
+        password: _passwordCtrl.text.trim(),
       );
-
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           backgroundColor: AppColors.success,
-          content: Text("Password reset successfully"),
+          content: const Text(
+            'Password reset successfully',
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
+          ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
 
-      Navigator.popUntil(context, (route) => route.isFirst);
+      Navigator.popUntil(context, (r) => r.isFirst);
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(backgroundColor: AppColors.error, content: Text(e.toString())),
+        SnackBar(
+          backgroundColor: AppColors.error,
+          content: Text(
+            e.toString(),
+            style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
+          ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -62,96 +74,71 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Reset Password"),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: const Text('Reset Password')),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// 🔹 NEW PASSWORD
+              Text(
+                'Create a new password for',
+                style: textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.value,
+                style: textTheme.titleMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
               TextFormField(
-                controller: passwordController,
+                controller: _passwordCtrl,
                 obscureText: _obscure,
                 decoration: InputDecoration(
-                  labelText: "New Password",
-                  filled: true,
-                  fillColor: AppColors.textBoxbackground,
+                  labelText: 'New Password',
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscure ? Icons.visibility_off : Icons.visibility,
+                      _obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                      color: AppColors.textMuted,
                     ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                 ),
                 validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return "Enter new password";
-                  }
-                  if (v.length < 6) {
-                    return "Password must be at least 6 characters";
-                  }
+                  if (v == null || v.isEmpty) return 'Enter new password';
+                  if (v.length < 6) return 'Minimum 6 characters';
                   return null;
                 },
               ),
 
               const SizedBox(height: 16),
 
-              /// 🔹 CONFIRM PASSWORD
               TextFormField(
-                controller: confirmController,
+                controller: _confirmCtrl,
                 obscureText: _obscure,
-                decoration: InputDecoration(
-                  labelText: "Confirm Password",
-                  filled: true,
-                  fillColor: AppColors.textBoxbackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                decoration: const InputDecoration(labelText: 'Confirm Password'),
                 validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return "Confirm your password";
-                  }
-                  if (v != passwordController.text) {
-                    return "Passwords do not match";
-                  }
+                  if (v == null || v.isEmpty) return 'Confirm your password';
+                  if (v != _passwordCtrl.text) return 'Passwords do not match';
                   return null;
                 },
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 32),
 
-              /// 🔹 RESET BUTTON
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: _loading ? null : _resetPassword,
-                  child: _loading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          "Reset Password",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                ),
+              AppButton(
+                text: 'Reset Password',
+                isLoading: _loading,
+                onTap: _loading ? null : _resetPassword,
               ),
             ],
           ),

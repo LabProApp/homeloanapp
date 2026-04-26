@@ -6,8 +6,8 @@ import '../models/property_model.dart';
 import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
 import '../cards/property_card.dart';
-import '../screens/propertyDetail_screen.dart';
-import '../screens/propertyAdd_screen.dart';
+import '../screens/property_detail_screen.dart';
+import '../screens/property_add_screen.dart';
 import '../screens/property_filter_dialog.dart';
 
 class PropertyListingScreen extends StatefulWidget {
@@ -314,23 +314,20 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
 
                 /// 🔥 Visual polish
                 backgroundColor: isPinned
-                    ? Colors.orange.withOpacity(0.12)
+                    ? AppColors.primary.withOpacity(0.10)
                     : Colors.white,
 
                 side: BorderSide(
-                  color: isPinned
-                      ? Colors.orange
-                      : Colors.grey.shade300,
+                  color: isPinned ? AppColors.primary : AppColors.border,
                 ),
 
                 elevation: 2,
                 shadowColor: Colors.black.withOpacity(0.05),
 
-                /// 🔥 Icon improves clarity
                 avatar: Icon(
                   isPinned ? Icons.push_pin : Icons.history,
                   size: 16,
-                  color: isPinned ? Colors.orange : Colors.grey,
+                  color: isPinned ? AppColors.primary : AppColors.textMuted,
                 ),
 
                 /// 🔥 Apply search
@@ -394,33 +391,101 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
 
   Widget _buildList() {
     return Expanded(
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error.isNotEmpty
-          ? Center(child: Text(_error))
-          : _properties.isEmpty
-          ? const Center(child: Text("No properties found"))
-          : ListView.builder(
-        itemCount: _properties.length,
-        itemBuilder: (_, i) {
-          final p = _properties[i];
-          return InkWell(
-            onTap: () async {
-              final updated = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PropertyDetailScreen(
-                    property: p,
-                    userId: widget.userId,
-                  ),
-                ),
-              );
-              if (updated == true) _refreshFromApi();
-            },
-            child: PropertyCard(property: p, userId: widget.userId),
-          );
-        },
+      child: RefreshIndicator(
+        onRefresh: () async => _refreshFromApi(),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error.isNotEmpty
+                ? _buildErrorState()
+                : _properties.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: _properties.length,
+                        itemBuilder: (_, i) {
+                          final p = _properties[i];
+                          return InkWell(
+                            onTap: () async {
+                              final updated = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PropertyDetailScreen(
+                                    property: p,
+                                    userId: widget.userId,
+                                  ),
+                                ),
+                              );
+                              if (updated == true) _refreshFromApi();
+                            },
+                            child: PropertyCard(property: p, userId: widget.userId),
+                          );
+                        },
+                      ),
       ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off_rounded, size: 64, color: AppColors.textMuted),
+              const SizedBox(height: 16),
+              const Text(
+                "Couldn't load properties",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Check your connection and try again.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text("Retry"),
+                onPressed: _refreshFromApi,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        const Padding(
+          padding: EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.home_work_outlined, size: 72, color: AppColors.textMuted),
+              SizedBox(height: 16),
+              Text(
+                "No properties found",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Try adjusting your filters or search term.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -495,13 +560,3 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   }
 }
 
-/// Removes Android glow
-class _NoGlowScrollBehavior extends ScrollBehavior {
-  const _NoGlowScrollBehavior();
-
-  @override
-  Widget buildOverscrollIndicator(
-      BuildContext context, Widget child, ScrollableDetails details) {
-    return child;
-  }
-}

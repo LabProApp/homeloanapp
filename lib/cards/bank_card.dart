@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/bank_model.dart';
-import '../screens/bankDetails_screen.dart';
-import '../screens/bank_applyLoan_dialog.dart';
+import '../screens/bank_details_screen.dart';
+import '../screens/bank_apply_loan_dialog.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart'; // For AppButton
 

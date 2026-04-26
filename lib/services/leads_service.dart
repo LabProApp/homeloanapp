@@ -1,11 +1,10 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../utility/ApiUrls.dart';
-import '../models/ClientLead_model.dart';
+
+import '../models/client_lead_model.dart';
+import '../network/api_client.dart';
+import '../utility/api_urls.dart';
 
 class LeadApiService {
-
-  /// ================= FETCH LEADS =================
   static Future<List<dynamic>> fetchBrokerLeads({
     required int brokerId,
     List<String>? status,
@@ -14,73 +13,41 @@ class LeadApiService {
   }) async {
     final query = <String, String>{};
 
-    if (status != null && status.isNotEmpty) {
-      query["status"] = status.join(",");
-    }
-
-    if (startDate != null) {
-      query["startDate"] = startDate.toIso8601String();
-    }
-
-    if (endDate != null) {
-      query["endDate"] = endDate.toIso8601String();
-    }
+    if (status != null && status.isNotEmpty) query['status'] = status.join(',');
+    if (startDate != null) query['startDate'] = startDate.toIso8601String();
+    if (endDate != null) query['endDate'] = endDate.toIso8601String();
 
     final uri = Uri.parse(
-      ApiUrls.getBrokerLeads.replaceFirst("{brokerId}", brokerId.toString()),
+      ApiUrls.getBrokerLeads.replaceFirst('{brokerId}', brokerId.toString()),
     ).replace(queryParameters: query);
 
-    final response = await http.get(uri);
+    final response = await ApiClient.get(uri);
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception("Failed to load leads");
-    }
+    if (response.statusCode == 200) return json.decode(response.body);
+    throw Exception('Failed to load leads (${response.statusCode})');
   }
 
-  /// ================= CREATE LEAD =================
   static Future<bool> createLead(ClientLeadModel lead) async {
-    final uri = Uri.parse(ApiUrls.postBrokerLeads);
-
-    final response = await http.post(
-      uri,
-      headers: {
-        "Content-Type": "application/json",
-      },
+    final response = await ApiClient.post(
+      Uri.parse(ApiUrls.postBrokerLeads),
       body: jsonEncode(lead.toJson()),
     );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return true;
-    } else {
-      throw Exception(
-        "Failed to create lead (${response.statusCode}) : ${response.body}",
-      );
-    }
+    if (response.statusCode == 200 || response.statusCode == 201) return true;
+    throw Exception('Failed to create lead (${response.statusCode}): ${response.body}');
   }
 
-  /// ================= UPDATE LEAD =================
   static Future<bool> updateLead({
     required String leadId,
     required Map<String, dynamic> payload,
   }) async {
     final uri = Uri.parse(
-      ApiUrls.updateBrokerLeads.replaceFirst("{leadId}", leadId),
+      ApiUrls.updateBrokerLeads.replaceFirst('{leadId}', leadId),
     );
 
-    final response = await http.put(
-      uri,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode(payload),
-    );
+    final response = await ApiClient.put(uri, body: jsonEncode(payload));
 
-    if (response.statusCode == 200 || response.statusCode == 204) {
-      return true;
-    } else {
-      throw Exception("Failed to update lead (${response.statusCode})");
-    }
+    if (response.statusCode == 200 || response.statusCode == 204) return true;
+    throw Exception('Failed to update lead (${response.statusCode})');
   }
 }

@@ -5,11 +5,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/property_model.dart';
-import '../models/ClientLead_model.dart';
+import '../models/client_lead_model.dart';
 import '../services/leads_service.dart';
 import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
-import '../commons/commonutil.dart';
+import '../commons/common_util.dart';
 import '../utility/amenity_icon.dart';
 
 class PropertyCard extends StatefulWidget {

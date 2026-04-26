@@ -1,5 +1,5 @@
-import 'package:KeyBricks/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import '../services/leads_service.dart';
 import '../cards/lead_card.dart';
 
@@ -120,7 +120,7 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
                 _selectedStatus = status;
                 _applyFilters();
               },
-              selectedColor: Colors.blue.shade100,
+              selectedColor: AppColors.primary.withOpacity(0.18),
             ),
           );
         },
@@ -185,12 +185,7 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Customer Inquiries"),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: AppColors.primary, // icon + text color
-        elevation: 2,
-      ),
+      appBar: AppBar(title: const Text('Customer Inquiries')),
       body: SafeArea(
         child: Column(
           children: [

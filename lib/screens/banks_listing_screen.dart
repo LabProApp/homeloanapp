@@ -4,7 +4,7 @@ import '../services/bank_service.dart';
 import '../theme/app_colors.dart';
 import '../cards/bank_card.dart';
 import '../screens/bank_rates_compare_dialog.dart';
-import '../screens/bank_applyLoan_dialog.dart';
+import '../screens/bank_apply_loan_dialog.dart';
 
 class BankPage extends StatefulWidget {
   final int? userId;
@@ -44,6 +44,10 @@ class _BankPageState extends State<BankPage> {
   }
 
   Future<void> _loadBanks() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final data = await _bankService.fetchBanks();
       setState(() {
@@ -91,21 +95,17 @@ class _BankPageState extends State<BankPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: TextButton.icon(
-              onPressed: () {
-                LoanApplySheet.show(context);
-              },
-              icon:
-              const Icon(Icons.support_agent, color: AppColors.primary),
-              label: const Text(
-                "Inquiry",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
+            child: OutlinedButton.icon(
+              onPressed: () => LoanApplySheet.show(context),
+              icon: const Icon(Icons.support_agent_rounded, size: 18),
+              label: const Text('Inquiry'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white70),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              style:
-              TextButton.styleFrom(backgroundColor: Colors.white),
             ),
           ),
         ],
@@ -122,24 +122,26 @@ class _BankPageState extends State<BankPage> {
                   Expanded(child: _searchBar()),
                   const SizedBox(width: 8),
                   if (_selectedBankIds.length >= 2)
-                    ElevatedButton.icon(
+                    OutlinedButton.icon(
                       onPressed: _showCompareDialog,
-                      icon:
-                      const Icon(Icons.compare_arrows, size: 18),
-                      label: const Text("Compare"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                      icon: const Icon(Icons.compare_arrows_rounded, size: 18),
+                      label: const Text('Compare'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
                 ],
               ),
             ),
 
-            Expanded(child: _buildBody()),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _loadBanks,
+                child: _buildBody(),
+              ),
+            ),
           ],
         ),
       ),
@@ -156,17 +158,37 @@ class _BankPageState extends State<BankPage> {
     }
 
     if (_filteredBanks.isEmpty) {
-      return const Center(
-        child: Text(
-          "No banks found",
-          style: TextStyle(color: Colors.white),
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+          const Padding(
+            padding: EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.account_balance_outlined, size: 72, color: AppColors.textMuted),
+                SizedBox(height: 16),
+                Text(
+                  "No banks found",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Try a different search term.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
     }
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-      physics: const BouncingScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: _filteredBanks.length,
       itemBuilder: (_, index) {
         final bank = _filteredBanks[index];
@@ -227,31 +249,37 @@ class _BankPageState extends State<BankPage> {
   }
 
   Widget _errorState(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline,
-              size: 64, color: Colors.white),
-          const SizedBox(height: 12),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white),
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off_rounded, size: 64, color: AppColors.textMuted),
+              const SizedBox(height: 16),
+              const Text(
+                "Couldn't load banks",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Check your connection and try again.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text("Retry"),
+                onPressed: _loadBanks,
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _isLoading = true;
-                _error = null;
-              });
-              _loadBanks();
-            },
-            child: const Text("Retry"),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

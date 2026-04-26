@@ -7,7 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../commons/common_widget.dart';
-import '../commons/commonutil.dart';
+import '../commons/common_util.dart';
 
 class RentalPropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;

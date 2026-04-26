@@ -255,10 +255,10 @@ class _PropertyFilterBottomSheetState
 
   SliderThemeData _sliderTheme(BuildContext context) {
     return SliderTheme.of(context).copyWith(
-      thumbColor: Colors.orange,
+      thumbColor: AppColors.primary,
       activeTrackColor: AppColors.primary,
-      inactiveTrackColor: AppColors.primary,
-      overlayColor: Colors.orange,
+      inactiveTrackColor: AppColors.border,
+      overlayColor: AppColors.primary.withOpacity(0.18),
     );
   }
 

@@ -87,23 +87,26 @@ class _WebViewPageState extends State<WebViewPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.wifi_off, size: 50, color: Colors.grey),
+            const Icon(Icons.wifi_off_rounded, size: 50, color: AppColors.textMuted),
             const SizedBox(height: 12),
             const Text(
-              "Unable to load page",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              'Unable to load page',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 6),
             const Text(
-              "Please check your internet connection or try again.",
+              'Please check your internet connection or try again.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: AppColors.textSecondary, height: 1.5),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-              ),
+            const SizedBox(height: 20),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
               onPressed: () {
                 setState(() {
                   _hasError = false;
@@ -111,7 +114,6 @@ class _WebViewPageState extends State<WebViewPage> {
                 });
                 _controller.reload();
               },
-              child: const Text("Retry"),
             ),
           ],
         ),

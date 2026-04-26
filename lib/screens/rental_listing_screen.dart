@@ -3,8 +3,8 @@ import '../models/property_model.dart';
 import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
 import '../cards/rent_property_card.dart';
-import '../screens/rent_propertyDetail_screen.dart';
-import '../screens/propertyAdd_screen.dart';
+import '../screens/rent_property_detail_screen.dart';
+import '../screens/property_add_screen.dart';
 import '../screens/property_filter_dialog.dart';
 
 class RentalListingScreen extends StatefulWidget {
@@ -197,56 +197,106 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
     return Expanded(
       child: RefreshIndicator(
         onRefresh: () async => _refreshFromApi(),
-        child: ScrollConfiguration(
-          behavior: const _NoGlowScrollBehavior(),
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _error.isNotEmpty
-              ? Center(child: Text(_error))
-              : _properties.isEmpty
-              ? const Center(
-            child: Text(
-              "No rental properties available",
-              style: TextStyle(fontSize: 16),
-            ),
-          )
-              : ListView.builder(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 8, vertical: 4),
-            itemCount: _properties.length,
-            itemBuilder: (context, index) {
-              final property = _properties[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: InkWell(
-                  onTap: () async {
-                    final updated = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => RentalPropertyDetailScreen(
-                          property: property,
-                          userId: widget.userId,
-                        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error.isNotEmpty
+                ? _buildErrorState()
+                : _properties.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        itemCount: _properties.length,
+                        itemBuilder: (context, index) {
+                          final property = _properties[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: InkWell(
+                              onTap: () async {
+                                final updated = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => RentalPropertyDetailScreen(
+                                      property: property,
+                                      userId: widget.userId,
+                                    ),
+                                  ),
+                                );
+                                if (updated == true) _refreshFromApi();
+                              },
+                              child: RentPropertyCard(
+                                property: property,
+                                userId: widget.userId,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
+      ),
+    );
+  }
 
-                    if (updated == true) {
-                      _refreshFromApi();
-                    }
-                  },
-                  child: RentPropertyCard(
-                    property: property,
-                    userId: widget.userId,
-                  ),
-                ),
-              );
-            },
+  Widget _buildErrorState() {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off_rounded, size: 64, color: AppColors.textMuted),
+              const SizedBox(height: 16),
+              const Text(
+                "Couldn't load rentals",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Check your connection and try again.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text("Retry"),
+                onPressed: _refreshFromApi,
+              ),
+            ],
           ),
         ),
-      ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        const Padding(
+          padding: EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.apartment_outlined, size: 72, color: AppColors.textMuted),
+              SizedBox(height: 16),
+              Text(
+                "No rental properties found",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Try adjusting your filters or search for a different area.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -324,13 +374,3 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   }
 }
 
-/// Removes Android glow
-class _NoGlowScrollBehavior extends ScrollBehavior {
-  const _NoGlowScrollBehavior();
-
-  @override
-  Widget buildOverscrollIndicator(
-      BuildContext context, Widget child, ScrollableDetails details) {
-    return child;
-  }
-}

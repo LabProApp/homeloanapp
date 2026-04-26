@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/property_model.dart';
-import '../models/ClientLead_model.dart';
+import '../models/client_lead_model.dart';
 import '../services/leads_service.dart';
 import '../theme/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';

@@ -40,7 +40,7 @@ class LoanApplySheet {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.orange.shade50,
+      backgroundColor: AppColors.listingbackground,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -70,8 +70,8 @@ class LoanApplySheet {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -298,9 +298,9 @@ class LoanApplySheet {
       isDense: true,
       contentPadding:
       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      labelStyle: const TextStyle(color: Colors.grey),
+      labelStyle: const TextStyle(color: AppColors.textMuted),
       prefixIcon: icon != null
-          ? Icon(icon, size: 20, color: Colors.grey)
+          ? Icon(icon, size: 20, color: AppColors.textMuted)
           : null,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

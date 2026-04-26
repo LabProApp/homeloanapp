@@ -69,9 +69,9 @@ class _InquiryDialogState extends State<InquiryDialog> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.orange.shade50,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: const BoxDecoration(
+        color: AppColors.listingbackground,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.only(
         left: 16,
@@ -90,8 +90,12 @@ class _InquiryDialogState extends State<InquiryDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    "Raise an Inquiry",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    'Raise an Inquiry',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),

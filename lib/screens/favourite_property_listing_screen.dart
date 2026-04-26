@@ -3,7 +3,7 @@ import '../models/property_model.dart';
 import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
 import '../cards/property_card.dart';
-import '../screens/propertyDetail_screen.dart';
+import '../screens/property_detail_screen.dart';
 
 class FavouritePropertyListingScreen extends StatefulWidget {
   final int userId;

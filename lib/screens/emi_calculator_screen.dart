@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import '../models/calcLoanRequest.dart';
-import '../models/calcLoanResponse.dart';
+import '../models/calc_loan_request.dart';
+import '../models/calc_loan_response.dart';
 import '../services/emi_service.dart';
 import '../commons/common_widget.dart'; // 👈 AppButton
 
@@ -83,9 +83,12 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "EMI Calculator",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              'EMI Calculator',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 12),
 

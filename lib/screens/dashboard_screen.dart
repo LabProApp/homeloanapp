@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'userLogin_screen.dart';
-import 'properyListing_screen.dart';
-import 'rental_Listing_screen.dart';
-import 'legalServiceProviders_listing.dart';
-import 'banksListing_screen.dart';
+import 'user_login_screen.dart';
+import 'property_listing_screen.dart';
+import 'rental_listing_screen.dart';
+import 'legal_service_providers_listing.dart';
+import 'banks_listing_screen.dart';
 import 'emi_calculator_screen.dart';
 import 'favourite_property_listing_screen.dart';
 import 'interested_users_screen.dart';
-import 'userProfile_screen.dart';
+import 'user_profile_screen.dart';
 
 import '../theme/app_colors.dart';
 
@@ -107,11 +107,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         elevation: 0,
         backgroundColor: AppColors.listingbackground,
         foregroundColor: AppColors.primary,
-        title: const Text(
-          "KeyBricks",
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 22,
+        title: Text(
+          'KeyBricks',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             letterSpacing: 1.2,
             color: AppColors.primary,
           ),
@@ -145,13 +143,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           Text(
                             _userName,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 15),
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                           Text(
                             _userEmail,
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey),
+                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: AppColors.textMuted,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -246,7 +247,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.only(left: 16),
                       child: Text(
                         _appVersion,
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppColors.textMuted,
+                        ),
                       ),
                     ),
 
@@ -274,8 +277,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       /// BOTTOM NAVIGATION
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.secondary,
-        unselectedItemColor: AppColors.textSecondary,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textMuted,
         type: BottomNavigationBarType.fixed,
 
         onTap: (index) {
@@ -325,11 +328,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: ListTile(
         leading: Icon(icon,
-            color: isSelected ? AppColors.primary : Colors.black87),
+            color: isSelected ? AppColors.primary : AppColors.textPrimary),
         title: Text(
           title,
           style: TextStyle(
-            color: isSelected ? AppColors.primary : Colors.black87,
+            color: isSelected ? AppColors.primary : AppColors.textPrimary,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
@@ -359,13 +362,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
             ),
             onPressed: () async {
               Navigator.pop(context);
               await _logout();
             },
-            child: const Text("Logout"),
+            child: const Text('Logout'),
           ),
         ],
       ),

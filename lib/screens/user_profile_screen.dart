@@ -125,7 +125,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile updated successfully")),
+        const SnackBar(
+          backgroundColor: AppColors.success,
+          content: Text("Profile updated successfully"),
+        ),
       );
 
       setState(() {
@@ -135,7 +138,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       debugPrint("❌ Save failed: $e");
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Update failed: $e")),
+        SnackBar(
+          backgroundColor: AppColors.error,
+          content: Text("Update failed: $e"),
+        ),
       );
     } finally {
       setState(() => _loading = false);
@@ -178,34 +184,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: AppColors.listingbackground,
       body: FutureBuilder<UserModel>(
         future: _futureUser,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            debugPrint("⏳ Waiting for profile...");
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            debugPrint("❌ Snapshot error: ${snapshot.error}");
             return _errorView(snapshot.error.toString());
           }
 
           if (!snapshot.hasData) {
-            debugPrint("⚠️ No data received");
-            return const Center(child: Text("No profile data"));
+            return _errorView("No profile data found.");
           }
 
           final user = snapshot.data!;
 
-          /// FIXED: initialize once
           if (!_initialized) {
-            debugPrint("🧠 Initializing controllers");
-
             _nameCtrl = TextEditingController(text: user.name);
             _addressCtrl = TextEditingController(text: user.address);
-
             _initialized = true;
           }
 
@@ -317,14 +316,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: CircleAvatar(radius: 54, backgroundImage: imageProvider),
         ),
         const SizedBox(height: 12),
-        Text(user.name),
+        Text(
+          user.name,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+        ),
       ],
     );
   }
 
   Widget _errorView(String msg) {
     return Center(
-      child: Text("Error: $msg"),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.person_off_outlined, size: 64, color: AppColors.textMuted),
+            const SizedBox(height: 16),
+            const Text(
+              "Couldn't load profile",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Check your connection and try again.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 20),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text("Retry"),
+              onPressed: () {
+                setState(() {
+                  _initialized = false;
+                  _futureUser = _loadUser();
+                });
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -333,10 +365,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required IconData icon,
     required Widget child,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [child],
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: AppColors.primary, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
       ),
     );
   }

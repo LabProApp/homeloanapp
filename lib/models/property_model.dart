@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'DocumentModel.dart';
+import 'document_model.dart';
 
 class PropertyModel {
   final String? code;

@@ -1,10 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'userLogin_screen.dart';
-import '../theme/app_colors.dart';
-import '../screens/dashBoard.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../screens/dashboard_screen.dart';
+import '../theme/app_colors.dart';
+import 'user_login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,68 +15,141 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnim;
-  late Animation<double> _fadeTextAnim;
+    with TickerProviderStateMixin {
+  // Master controller for the whole intro sequence (1 800 ms)
+  late final AnimationController _introCtrl;
+
+  // Logo: scale-in with spring bounce
+  late final Animation<double> _logoScale;
+  late final Animation<double> _logoFade;
+
+  // Glow ring that pulses behind the logo
+  late final Animation<double> _glowScale;
+  late final Animation<double> _glowFade;
+
+  // Brand text slides up & fades in
+  late final Animation<double> _titleFade;
+  late final Animation<Offset> _titleSlide;
+
+  // Tagline trails behind the title
+  late final Animation<double> _taglineFade;
+  late final Animation<Offset> _taglineSlide;
+
+  // Progress indicator appears last
+  late final Animation<double> _progressFade;
 
   @override
   void initState() {
     super.initState();
-
-    /// REMOVE NATIVE SPLASH
     FlutterNativeSplash.remove();
 
-    _controller = AnimationController(
+    _introCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1800),
     );
 
-    _scaleAnim = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    // Logo: 0 ms → 600 ms, easeOutBack (bounces slightly past 1.0)
+    _logoScale = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _introCtrl,
+        curve: const Interval(0.0, 0.33, curve: Curves.easeOutBack),
+      ),
+    );
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _introCtrl,
+        curve: const Interval(0.0, 0.22, curve: Curves.easeIn),
+      ),
     );
 
-    _fadeTextAnim = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.3, 1.0, curve: Curves.easeIn),
+    // Glow: 0 ms → 700 ms, expands and fades out (like a ripple)
+    _glowScale = Tween<double>(begin: 1.0, end: 1.7).animate(
+      CurvedAnimation(
+        parent: _introCtrl,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+      ),
+    );
+    _glowFade = Tween<double>(begin: 0.5, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _introCtrl,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+      ),
     );
 
-    _controller.forward();
+    // Title: 400 ms → 900 ms
+    _titleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _introCtrl,
+        curve: const Interval(0.22, 0.5, curve: Curves.easeOut),
+      ),
+    );
+    _titleSlide = Tween<Offset>(
+      begin: const Offset(0, 0.35),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _introCtrl,
+        curve: const Interval(0.22, 0.5, curve: Curves.easeOut),
+      ),
+    );
+
+    // Tagline: 550 ms → 1 050 ms
+    _taglineFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _introCtrl,
+        curve: const Interval(0.3, 0.58, curve: Curves.easeOut),
+      ),
+    );
+    _taglineSlide = Tween<Offset>(
+      begin: const Offset(0, 0.4),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _introCtrl,
+        curve: const Interval(0.3, 0.58, curve: Curves.easeOut),
+      ),
+    );
+
+    // Progress indicator: 900 ms → 1 200 ms
+    _progressFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _introCtrl,
+        curve: const Interval(0.5, 0.67, curve: Curves.easeIn),
+      ),
+    );
+
+    _introCtrl.forward();
     _navigateNext();
   }
 
   Future<void> _navigateNext() async {
-    await Future.delayed(const Duration(milliseconds: 1400));
+    // Wait for animation + a brief moment to let the progress bar show
+    await Future.delayed(const Duration(milliseconds: 2400));
 
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt("user_id");
+    final userId = prefs.getInt('user_id');
 
     if (!mounted) return;
 
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (_, animation, __) {
-          return userId == null
-              ? const LoginScreen()
-              : DashboardScreen(userId: userId);
-        },
+        transitionDuration: const Duration(milliseconds: 700),
+        pageBuilder: (_, __, ___) =>
+            userId == null ? const LoginScreen() : DashboardScreen(userId: userId),
         transitionsBuilder: (_, animation, __, child) {
-          final fade = CurvedAnimation(
+          // Fade + subtle upward slide — feels like the content "arrives"
+          final curved = CurvedAnimation(
             parent: animation,
-            curve: Curves.easeInOut,
+            curve: Curves.easeOutCubic,
           );
-
-          final slide = Tween<Offset>(
-            begin: const Offset(0, 0.08),
-            end: Offset.zero,
-          ).animate(fade);
-
           return FadeTransition(
-            opacity: fade,
+            opacity: curved,
             child: SlideTransition(
-              position: slide,
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.06),
+                end: Offset.zero,
+              ).animate(curved),
               child: child,
             ),
           );
@@ -86,7 +160,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _controller.dispose();
+    _introCtrl.dispose();
     super.dispose();
   }
 
@@ -96,67 +170,135 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          /// Background image
-          Image.asset(
-            'assets/images/splash_bg.jpg',
-            fit: BoxFit.cover,
-          ),
+          // Background photo
+          Image.asset('assets/images/splash_bg.jpg', fit: BoxFit.cover),
 
-          /// 🔹 Blur layer
+          // Blur + dark tint
           BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              color: Colors.black.withOpacity(0.25),
-            ),
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(color: Colors.black.withOpacity(0.30)),
           ),
 
-          /// Foreground content
+          // Centre content
           Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedBuilder(
-                  animation: _controller,
-                  builder: (_, __) {
-                    return Transform.scale(
-                      scale: _scaleAnim.value,
-                      child: const CircleAvatar(
-                        radius: 55,
-                        backgroundImage:
-                        AssetImage('assets/images/ic_launcher.png'),
+            child: AnimatedBuilder(
+              animation: _introCtrl,
+              builder: (_, __) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ── Logo with glow ripple ───────────────────────────────
+                    SizedBox(
+                      width: 140,
+                      height: 140,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Glow ring
+                          Opacity(
+                            opacity: _glowFade.value,
+                            child: Transform.scale(
+                              scale: _glowScale.value,
+                              child: Container(
+                                width: 110,
+                                height: 110,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.primary.withOpacity(0.35),
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Logo
+                          Opacity(
+                            opacity: _logoFade.value,
+                            child: Transform.scale(
+                              scale: _logoScale.value,
+                              child: Container(
+                                width: 110,
+                                height: 110,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary.withOpacity(0.4),
+                                      blurRadius: 24,
+                                      spreadRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                                child: const CircleAvatar(
+                                  radius: 55,
+                                  backgroundImage:
+                                      AssetImage('assets/images/ic_launcher.png'),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 24),
-
-                FadeTransition(
-                  opacity: _fadeTextAnim,
-                  child: const Text(
-                    "KeyBricks",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1.2,
                     ),
-                  ),
-                ),
 
-                const SizedBox(height: 6),
+                    const SizedBox(height: 28),
 
-                FadeTransition(
-                  opacity: _fadeTextAnim,
-                  child: const Text(
-                    "Find. Finance. Finalize.",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
+                    // ── Brand name ─────────────────────────────────────────
+                    FadeTransition(
+                      opacity: _titleFade,
+                      child: SlideTransition(
+                        position: _titleSlide,
+                        child: const Text(
+                          'KeyBricks',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
+
+                    const SizedBox(height: 6),
+
+                    // ── Tagline ────────────────────────────────────────────
+                    FadeTransition(
+                      opacity: _taglineFade,
+                      child: SlideTransition(
+                        position: _taglineSlide,
+                        child: const Text(
+                          'Find. Finance. Finalize.',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white70,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 56),
+
+                    // ── Progress indicator ─────────────────────────────────
+                    FadeTransition(
+                      opacity: _progressFade,
+                      child: SizedBox(
+                        width: 140,
+                        child: LinearProgressIndicator(
+                          backgroundColor: Colors.white24,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.primary,
+                          ),
+                          minHeight: 3,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ],

@@ -5,14 +5,6 @@ import '../services/emi_service.dart';
 final GetIt sl = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
-  /// 🌐 HTTP CLIENT (Singleton)
   sl.registerLazySingleton<http.Client>(() => http.Client());
-
-
-
-
-  /// 💰 EMI CALCULATOR SERVICE
-  sl.registerLazySingleton<LoanApiService>(
-        () => LoanApiService(client: sl()),
-  );
+  sl.registerLazySingleton<LoanApiService>(() => LoanApiService(client: sl()));
 }
