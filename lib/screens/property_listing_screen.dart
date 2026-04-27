@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/property_model.dart';
@@ -38,6 +39,22 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
 
   List<Map<String, dynamic>> _savedSearches = [];
 
+  // ---------- sort label map ----------
+  static const Map<String, String> _sortLabels = {
+    'latest': 'Default (Latest)',
+    'date_new': 'Newest Posted',
+    'date_old': 'Oldest Posted',
+    'price_low': 'Price: Low → High',
+    'price_high': 'Price: High → Low',
+  };
+
+  static const Map<String, String> _sortChipLabels = {
+    'date_new': 'Newest',
+    'date_old': 'Oldest',
+    'price_low': 'Price ↑',
+    'price_high': 'Price ↓',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -45,12 +62,13 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     _refreshFromApi();
   }
 
-  /// ---------------- STORAGE ----------------
+  // ============================================================
+  // STORAGE
+  // ============================================================
 
   Future<void> _loadSavedSearches() async {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString("saved_searches");
-
     if (data != null) {
       final decoded = jsonDecode(data) as List;
       _savedSearches =
@@ -65,12 +83,14 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     await prefs.setString("saved_searches", jsonEncode(_savedSearches));
   }
 
-  /// ---------------- SAVE / APPLY ----------------
+  // ============================================================
+  // SAVE / APPLY
+  // ============================================================
 
   void _saveCurrentSearch() {
     final search = {
       "searchText": _searchController.text.trim(),
-      "filters": Map<String, dynamic>.from(_filters), // ✅ FIXED
+      "filters": Map<String, dynamic>.from(_filters),
       "isResidential": isResidential,
       "sortBy": _sortBy,
       "usage": 1,
@@ -79,22 +99,21 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     };
 
     int index = _savedSearches.indexWhere((e) =>
-    e["searchText"] == search["searchText"] &&
-        jsonEncode(e["filters"]) == jsonEncode(search["filters"])); // ✅ FIXED
+        e["searchText"] == search["searchText"] &&
+        jsonEncode(e["filters"]) == jsonEncode(search["filters"]));
 
     if (index != -1) {
       _savedSearches[index]["usage"] =
           (_savedSearches[index]["usage"] ?? 0) + 1;
-      _savedSearches[index]["time"] =
-          DateTime.now().millisecondsSinceEpoch;
+      _savedSearches[index]["time"] = DateTime.now().millisecondsSinceEpoch;
     } else {
       _savedSearches.add(search);
     }
 
     _sortSavedSearches();
 
-    if (_savedSearches.length > 5) {
-      _savedSearches = _savedSearches.take(5).toList();
+    if (_savedSearches.length > 6) {
+      _savedSearches = _savedSearches.take(6).toList();
     }
 
     _persistSavedSearches();
@@ -104,8 +123,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   void _applySavedSearch(Map<String, dynamic> search) {
     setState(() {
       _searchController.text = search["searchText"] ?? "";
-      _filters =
-      Map<String, dynamic>.from(search["filters"] ?? {}); // ✅ SAFE
+      _filters = Map<String, dynamic>.from(search["filters"] ?? {});
       isResidential = search["isResidential"] ?? true;
       _sortBy = search["sortBy"] ?? "latest";
     });
@@ -115,7 +133,6 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
 
     _sortSavedSearches();
     _persistSavedSearches();
-
     _refreshFromApi();
   }
 
@@ -127,7 +144,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
 
   void _togglePin(int index) {
     _savedSearches[index]["pinned"] =
-    !(_savedSearches[index]["pinned"] ?? false);
+        !(_savedSearches[index]["pinned"] ?? false);
     _sortSavedSearches();
     _persistSavedSearches();
     setState(() {});
@@ -142,26 +159,42 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     });
   }
 
-  /// ---------------- SUMMARY ----------------
+  // ============================================================
+  // SUMMARY
+  // ============================================================
 
   String _summarizeSearch(Map<String, dynamic> search) {
     final f = search["filters"] ?? {};
     List<String> parts = [];
 
-    if ((search["searchText"] ?? "").isNotEmpty) {
-      parts.add(search["searchText"]);
-    }
+    if ((search["searchText"] ?? "").isNotEmpty) parts.add(search["searchText"]);
     if (f["city"] != null) parts.add(f["city"]);
     if (f["type"] != null) parts.add(f["type"]);
     if (f["bedrooms"] != null) parts.add("${f["bedrooms"]}BHK");
     if (f["minPrice"] != null) parts.add("₹${f["minPrice"]}+");
 
-   // parts.add(search["isResidential"] ? "Res" : "Com");
-
     return parts.join(" • ");
   }
 
-  /// ---------------- API ----------------
+  // ============================================================
+  // ACTIVE FILTER COUNT
+  // ============================================================
+
+  int get _activeFilterCount {
+    const keys = [
+      'state', 'city', 'type', 'bedrooms', 'bathrooms',
+      'minPrice', 'maxPrice', 'minArea', 'maxArea',
+      'furnishing', 'constructionStatus', 'preferredTenants',
+    ];
+    return keys.where((k) {
+      final v = _filters[k];
+      return v != null && v.toString().isNotEmpty;
+    }).length;
+  }
+
+  // ============================================================
+  // API
+  // ============================================================
 
   int? _toInt(dynamic v) =>
       v is int ? v : v is double ? v.toInt() : null;
@@ -179,12 +212,11 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       final service = PropertyApiService();
       final searchText = _searchController.text.trim();
 
-      /// ✅ FIXED LOGIC (IMPORTANT)
       String? city;
       String? location;
 
       if (searchText.isNotEmpty) {
-        location = searchText; // search everything
+        location = searchText;
         city = _filters["city"];
       } else {
         city = _filters["city"];
@@ -194,7 +226,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       final data = await service.fetchProperties(
         postedByUserId: widget.postedbyuserId,
         city: city,
-        location: location, // ✅ RESTORED
+        location: location,
         rentOrSale: "SALE",
         category: isResidential ? "Residential" : "Commercial",
         type: _filters["type"],
@@ -213,6 +245,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
         _isLoading = false;
       });
 
+      _sortResults();
       _saveCurrentSearch();
     } catch (e) {
       if (!mounted) return;
@@ -226,7 +259,33 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
 
   void _refreshFromApi() => _loadProperties();
 
-  /// ---------------- UI ----------------
+  // ============================================================
+  // SORT
+  // ============================================================
+
+  void _sortResults() {
+    switch (_sortBy) {
+      case 'price_low':
+        _properties.sort((a, b) =>
+            (a.price ?? double.maxFinite).compareTo(b.price ?? double.maxFinite));
+      case 'price_high':
+        _properties.sort((a, b) =>
+            (b.price ?? 0).compareTo(a.price ?? 0));
+      case 'date_new':
+        _properties.sort((a, b) =>
+            (b.postDate ?? '').compareTo(a.postDate ?? ''));
+      case 'date_old':
+        _properties.sort((a, b) =>
+            (a.postDate ?? '').compareTo(b.postDate ?? ''));
+      default:
+        break;
+    }
+    if (mounted) setState(() {});
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -247,6 +306,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       body: Column(
         children: [
           _buildSearchBar(),
+          _buildActiveFilterChips(),
           _buildSavedSearchChips(),
           _buildToggles(),
           _buildList(),
@@ -254,6 +314,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         onPressed: () async {
           final added = await Navigator.push(
             context,
@@ -268,75 +329,9 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     );
   }
 
-  Widget _buildSavedSearchChips() {
-    if (_savedSearches.isEmpty) return const SizedBox();
-
-    return SizedBox(
-      height: 60,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _savedSearches.length,
-        itemBuilder: (context, i) {
-          final s = _savedSearches[i];
-          final isPinned = s["pinned"] == true;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: GestureDetector(
-              /// 🔥 Long press = Pin/Unpin (better UX)
-              onLongPress: () {
-                _togglePin(i);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      isPinned
-                          ? "Removed from pinned"
-                          : "Pinned search",
-                    ),
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
-              },
-
-              child: InputChip(
-                label: SizedBox(
-                  width: 130,
-                  child: Text(
-                    _summarizeSearch(s),
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: isPinned ? AppColors.primary : AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                backgroundColor: isPinned
-                    ? AppColors.primary.withOpacity(0.12)
-                    : Colors.white,
-                side: BorderSide(
-                  color: isPinned ? AppColors.primary : AppColors.border,
-                  width: isPinned ? 1.5 : 1.0,
-                ),
-                elevation: 2,
-                shadowColor: Colors.black.withOpacity(0.06),
-                avatar: Icon(
-                  isPinned ? Icons.push_pin : Icons.history,
-                  size: 16,
-                  color: isPinned ? AppColors.primary : AppColors.textMuted,
-                ),
-                onPressed: () => _applySavedSearch(s),
-                onDeleted: () => _deleteSearch(i),
-                deleteIcon: Icon(Icons.close, size: 16, color: isPinned ? AppColors.primary : AppColors.textMuted),
-                deleteButtonTooltipMessage: "Remove search",
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+  // ============================================================
+  // SEARCH BAR
+  // ============================================================
 
   Widget _buildSearchBar() {
     return Padding(
@@ -351,13 +346,330 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          _iconBtn(Icons.sort, _openSortSheet),
+          // Sort button — highlighted when not "latest"
+          _sortIconBtn(),
           const SizedBox(width: 8),
-          _iconBtn(Icons.filter_alt_outlined, _openFilterDialog),
+          // Filter button — badge when filters active
+          _filterIconBtn(),
         ],
       ),
     );
   }
+
+  // ============================================================
+  // ACTIVE FILTER CHIPS
+  // ============================================================
+
+  Widget _buildActiveFilterChips() {
+    final fmt = NumberFormat('#,##,###');
+    final chips = <Widget>[];
+
+    // Sort chip at the START (if sort is not default)
+    if (_sortBy != 'latest') {
+      final sortLabel = _sortChipLabels[_sortBy] ?? _sortBy;
+      chips.add(
+        Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: InputChip(
+            avatar: const Icon(Icons.sort_rounded, size: 14),
+            label: Text(sortLabel),
+            labelStyle: const TextStyle(fontSize: 12, color: AppColors.primary),
+            backgroundColor: AppColors.primary.withOpacity(0.1),
+            side: const BorderSide(color: AppColors.primary, width: 1),
+            deleteIcon: const Icon(Icons.close, size: 14),
+            onDeleted: () {
+              setState(() => _sortBy = 'latest');
+              _refreshFromApi();
+            },
+          ),
+        ),
+      );
+    }
+
+    // Filter chips
+    void addChip(String key, String label) {
+      chips.add(
+        Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: InputChip(
+            label: Text(label),
+            labelStyle: const TextStyle(fontSize: 12, color: AppColors.primary),
+            backgroundColor: AppColors.primary.withOpacity(0.1),
+            side: const BorderSide(color: AppColors.primary, width: 1),
+            deleteIcon: const Icon(Icons.close, size: 14),
+            onDeleted: () {
+              setState(() => _filters.remove(key));
+              _refreshFromApi();
+            },
+          ),
+        ),
+      );
+    }
+
+    final f = _filters;
+    if (f['city'] != null && f['city'].toString().isNotEmpty)
+      addChip('city', 'City: ${f['city']}');
+    if (f['type'] != null && f['type'].toString().isNotEmpty)
+      addChip('type', '${f['type']}');
+    if (f['bedrooms'] != null && f['bedrooms'].toString().isNotEmpty)
+      addChip('bedrooms', '${f['bedrooms']}+ BHK');
+    if (f['bathrooms'] != null && f['bathrooms'].toString().isNotEmpty)
+      addChip('bathrooms', '${f['bathrooms']}+ Bath');
+
+    // Price range: show combined chip if either min or max present
+    final hasMinPrice = f['minPrice'] != null && f['minPrice'].toString().isNotEmpty;
+    final hasMaxPrice = f['maxPrice'] != null && f['maxPrice'].toString().isNotEmpty;
+    if (hasMinPrice || hasMaxPrice) {
+      final min = hasMinPrice ? fmt.format(num.tryParse(f['minPrice'].toString()) ?? 0) : '0';
+      final max = hasMaxPrice ? fmt.format(num.tryParse(f['maxPrice'].toString()) ?? 0) : '∞';
+      chips.add(
+        Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: InputChip(
+            label: Text('₹$min–₹$max'),
+            labelStyle: const TextStyle(fontSize: 12, color: AppColors.primary),
+            backgroundColor: AppColors.primary.withOpacity(0.1),
+            side: const BorderSide(color: AppColors.primary, width: 1),
+            deleteIcon: const Icon(Icons.close, size: 14),
+            onDeleted: () {
+              setState(() {
+                _filters.remove('minPrice');
+                _filters.remove('maxPrice');
+              });
+              _refreshFromApi();
+            },
+          ),
+        ),
+      );
+    }
+
+    // Area range
+    final hasMinArea = f['minArea'] != null && f['minArea'].toString().isNotEmpty;
+    final hasMaxArea = f['maxArea'] != null && f['maxArea'].toString().isNotEmpty;
+    if (hasMinArea || hasMaxArea) {
+      final min = f['minArea']?.toString() ?? '0';
+      final max = f['maxArea']?.toString() ?? '∞';
+      chips.add(
+        Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: InputChip(
+            label: Text('$min–$max sqft'),
+            labelStyle: const TextStyle(fontSize: 12, color: AppColors.primary),
+            backgroundColor: AppColors.primary.withOpacity(0.1),
+            side: const BorderSide(color: AppColors.primary, width: 1),
+            deleteIcon: const Icon(Icons.close, size: 14),
+            onDeleted: () {
+              setState(() {
+                _filters.remove('minArea');
+                _filters.remove('maxArea');
+              });
+              _refreshFromApi();
+            },
+          ),
+        ),
+      );
+    }
+
+    if (f['furnishing'] != null && f['furnishing'].toString().isNotEmpty)
+      addChip('furnishing', '${f['furnishing']}');
+    if (f['constructionStatus'] != null && f['constructionStatus'].toString().isNotEmpty)
+      addChip('constructionStatus', '${f['constructionStatus']}');
+    if (f['state'] != null && f['state'].toString().isNotEmpty)
+      addChip('state', '${f['state']}');
+
+    final hasAny = chips.isNotEmpty;
+    if (!hasAny) return const SizedBox();
+
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        children: [
+          ...chips,
+          // Clear all button at the end
+          Center(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.error,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onPressed: () {
+                setState(() {
+                  _filters.clear();
+                  _sortBy = 'latest';
+                });
+                _refreshFromApi();
+              },
+              child: const Text("Clear all", style: TextStyle(fontSize: 12)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // SAVED SEARCH CHIPS
+  // ============================================================
+
+  Widget _buildSavedSearchChips() {
+    if (_savedSearches.isEmpty) return const SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 4, 8, 0),
+          child: Row(
+            children: [
+              const Icon(Icons.bookmark_rounded, size: 14, color: AppColors.textMuted),
+              const SizedBox(width: 4),
+              const Text(
+                "Recent Filters",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  textStyle: const TextStyle(fontSize: 11),
+                ),
+                onPressed: _showManageSearchesDialog,
+                child: const Text("Manage"),
+              ),
+            ],
+          ),
+        ),
+        // Chip row
+        SizedBox(
+          height: 52,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemCount: _savedSearches.length,
+            itemBuilder: (context, i) {
+              final s = _savedSearches[i];
+              final isPinned = s["pinned"] == true;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                child: GestureDetector(
+                  onLongPress: () {
+                    _togglePin(i);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isPinned ? "Removed from pinned" : "Pinned search",
+                        ),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  child: InputChip(
+                    label: SizedBox(
+                      width: 130,
+                      child: Text(
+                        _summarizeSearch(s),
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isPinned
+                              ? AppColors.primary
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    backgroundColor: isPinned
+                        ? AppColors.primary.withOpacity(0.12)
+                        : Colors.white,
+                    side: BorderSide(
+                      color: isPinned ? AppColors.primary : AppColors.border,
+                      width: isPinned ? 1.5 : 1.0,
+                    ),
+                    elevation: 2,
+                    shadowColor: Colors.black.withOpacity(0.06),
+                    avatar: Icon(
+                      isPinned ? Icons.push_pin : Icons.history,
+                      size: 16,
+                      color:
+                          isPinned ? AppColors.primary : AppColors.textMuted,
+                    ),
+                    onPressed: () => _applySavedSearch(s),
+                    onDeleted: () => _deleteSearch(i),
+                    deleteIcon: Icon(Icons.close,
+                        size: 16,
+                        color: isPinned
+                            ? AppColors.primary
+                            : AppColors.textMuted),
+                    deleteButtonTooltipMessage: "Remove search",
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showManageSearchesDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setDlgState) {
+          return AlertDialog(
+            title: const Text("Saved Searches"),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: _savedSearches.isEmpty
+                  ? const Text("No saved searches.")
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _savedSearches.length,
+                      itemBuilder: (_, i) {
+                        final s = _savedSearches[i];
+                        return ListTile(
+                          dense: true,
+                          title: Text(
+                            _summarizeSearch(s),
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline,
+                                color: AppColors.error),
+                            onPressed: () {
+                              _deleteSearch(i);
+                              setDlgState(() {});
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("Close"),
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+
+  // ============================================================
+  // TOGGLES / LIST / ERROR / EMPTY
+  // ============================================================
 
   Widget _buildToggles() {
     return Padding(
@@ -380,7 +692,8 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                 : _properties.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
-                        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                        physics: const BouncingScrollPhysics(
+                            parent: AlwaysScrollableScrollPhysics()),
                         cacheExtent: 400,
                         itemCount: _properties.length,
                         itemBuilder: (_, i) {
@@ -398,7 +711,8 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                               );
                               if (updated == true) _refreshFromApi();
                             },
-                            child: PropertyCard(property: p, userId: widget.userId),
+                            child: PropertyCard(
+                                property: p, userId: widget.userId),
                           );
                         },
                       ),
@@ -416,11 +730,15 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.wifi_off_rounded, size: 64, color: AppColors.textMuted),
+              const Icon(Icons.wifi_off_rounded,
+                  size: 64, color: AppColors.textMuted),
               const SizedBox(height: 16),
               const Text(
                 "Couldn't load properties",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -451,11 +769,15 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.home_work_outlined, size: 72, color: AppColors.textMuted),
+              Icon(Icons.home_work_outlined,
+                  size: 72, color: AppColors.textMuted),
               SizedBox(height: 16),
               Text(
                 "No properties found",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary),
               ),
               SizedBox(height: 8),
               Text(
@@ -469,6 +791,10 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       ],
     );
   }
+
+  // ============================================================
+  // DIALOGS
+  // ============================================================
 
   void _openFilterDialog() {
     showModalBottomSheet(
@@ -493,28 +819,99 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _sortTile("Latest", "latest"),
-          _sortTile("Price: Low to High", "price_low"),
-          _sortTile("Price: High to Low", "price_high"),
-        ],
-      ),
-    );
-  }
+      builder: (sheetCtx) {
+        return StatefulBuilder(builder: (sheetCtx, setSheetState) {
+          Widget sortTile(IconData icon, String label, String value) {
+            final isSelected = _sortBy == value;
+            return ListTile(
+              leading: Icon(icon,
+                  color: isSelected ? AppColors.primary : AppColors.textMuted),
+              title: Text(
+                label,
+                style: TextStyle(
+                  fontWeight:
+                      isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.textPrimary,
+                ),
+              ),
+              trailing: isSelected
+                  ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                  : null,
+              onTap: () {
+                setState(() => _sortBy = value);
+                Navigator.pop(sheetCtx);
+                _sortResults();
+              },
+            );
+          }
 
-  Widget _sortTile(String label, String value) {
-    return ListTile(
-      title: Text(label),
-      trailing: _sortBy == value ? const Icon(Icons.check) : null,
-      onTap: () {
-        setState(() => _sortBy = value);
-        Navigator.pop(context);
-        _refreshFromApi();
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Title row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const Text(
+                      "Sort By",
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    if (_sortBy != 'latest')
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: AppColors.primary, width: 1),
+                        ),
+                        child: Text(
+                          _sortLabels[_sortBy] ?? _sortBy,
+                          style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              sortTile(Icons.access_time_rounded, "Default (Latest)", "latest"),
+              sortTile(Icons.calendar_today_rounded, "Newest Posted", "date_new"),
+              sortTile(Icons.history_rounded, "Oldest Posted", "date_old"),
+              sortTile(Icons.trending_up_rounded, "Price: Low → High", "price_low"),
+              sortTile(Icons.trending_down_rounded, "Price: High → Low", "price_high"),
+              const SizedBox(height: 16),
+            ],
+          );
+        });
       },
     );
   }
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
 
   Widget _toggle(List<String> labels, bool first, Function(bool) onTap) {
     return ToggleButtons(
@@ -528,11 +925,93 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       selectedBorderColor: AppColors.primary,
       onPressed: (i) => onTap(i == 0),
       children: labels
-          .map((e) => Text(e, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)))
+          .map((e) => Text(e,
+              style: const TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w500)))
           .toList(),
     );
   }
 
+  /// Standard icon button (used for sort, highlighted when sort != latest)
+  Widget _sortIconBtn() {
+    final isActive = _sortBy != 'latest';
+    return Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        color: isActive
+            ? AppColors.primary.withOpacity(0.1)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: isActive
+            ? Border.all(color: AppColors.primary, width: 1)
+            : null,
+      ),
+      child: IconButton(
+        icon: Icon(
+          Icons.sort,
+          color: isActive ? AppColors.primary : null,
+        ),
+        onPressed: _openSortSheet,
+      ),
+    );
+  }
+
+  /// Filter icon button with amber badge when filters are active
+  Widget _filterIconBtn() {
+    final count = _activeFilterCount;
+    final isActive = count > 0;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          height: 40,
+          width: 40,
+          decoration: BoxDecoration(
+            color: isActive
+                ? AppColors.primary.withOpacity(0.1)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: isActive
+                ? Border.all(color: AppColors.primary, width: 1)
+                : null,
+          ),
+          child: IconButton(
+            icon: Icon(
+              Icons.filter_alt_outlined,
+              color: isActive ? AppColors.primary : null,
+            ),
+            onPressed: _openFilterDialog,
+          ),
+        ),
+        if (isActive)
+          Positioned(
+            top: -4,
+            right: -4,
+            child: Container(
+              width: 16,
+              height: 16,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  '$count',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Plain icon button (kept for potential reuse)
   Widget _iconBtn(IconData icon, VoidCallback onTap) {
     return Container(
       height: 40,
@@ -545,4 +1024,3 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     );
   }
 }
-
