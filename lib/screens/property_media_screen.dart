@@ -9,7 +9,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../theme/app_colors.dart';
 import '../services/document_service.dart';
 import '../commons/common_widget.dart';
-import '../screens/dashboard.dart';
+import '../screens/dashboard_screen.dart';
 
 class PropertyMediaScreen extends StatefulWidget {
   final int propertyId;
