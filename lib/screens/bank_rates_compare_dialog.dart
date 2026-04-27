@@ -78,9 +78,9 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
         const Divider(height: 1),
         Expanded(
           child: SingleChildScrollView(
-            controller: widget.scrollController,
             scrollDirection: Axis.horizontal,
             child: SingleChildScrollView(
+              controller: widget.scrollController,
               child: _table(),
             ),
           ),
