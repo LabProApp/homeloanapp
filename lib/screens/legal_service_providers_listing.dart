@@ -28,6 +28,13 @@ class _LegalServicePageState extends State<LegalServicePage> {
   bool _isLastPage = false;
   int _page = 0;
   String? _error;
+  String? _selectedCategory;
+
+  static const Map<String, String> _categoryLabels = {
+    'DOCUMENT_SERVICES': 'Document Services',
+    'PROPERTY_REGISTRATION': 'Property Registration',
+    'RENT_AGREEMENT': 'Rent Agreement',
+  };
 
   @override
   void initState() {
@@ -87,14 +94,47 @@ class _LegalServicePageState extends State<LegalServicePage> {
   }
 
   List<LegalService> get _filteredProviders {
-    final q = _searchController.text.trim().toLowerCase();
-    if (q.isEmpty) return _providers;
+    var list = _providers;
 
-    return _providers.where((p) {
+    if (_selectedCategory != null) {
+      list = list.where((p) => p.services.contains(_selectedCategory)).toList();
+    }
+
+    final q = _searchController.text.trim().toLowerCase();
+    if (q.isEmpty) return list;
+
+    return list.where((p) {
       return p.legalName.toLowerCase().contains(q) ||
           p.city.toLowerCase().contains(q) ||
           p.services.any((s) => s.toLowerCase().contains(q));
     }).toList();
+  }
+
+  Widget _buildFilterChip(String? value, String label) {
+    final selected = _selectedCategory == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => setState(() => _selectedCategory = value),
+        backgroundColor: Colors.white,
+        selectedColor: AppColors.primary.withOpacity(0.15),
+        checkmarkColor: AppColors.primary,
+        labelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+          color: selected ? AppColors.primary : AppColors.textSecondary,
+        ),
+        side: BorderSide(
+          color: selected ? AppColors.primary : Colors.grey.shade300,
+        ),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+      ),
+    );
   }
 
   Widget _buildList() {
@@ -237,6 +277,35 @@ class _LegalServicePageState extends State<LegalServicePage> {
               onChanged: (_) => setState(() {}),
             ),
           ),
+
+          // ── Category filter chips ──────────────────────────────────
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+            child: Row(
+              children: [
+                _buildFilterChip(null, 'All'),
+                ..._categoryLabels.entries
+                    .map((e) => _buildFilterChip(e.key, e.value)),
+              ],
+            ),
+          ),
+
+          // ── Result count ──────────────────────────────────────────
+          if (!_isLoading || _providers.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${_filteredProviders.length} provider${_filteredProviders.length == 1 ? '' : 's'} found',
+                  style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
 
           Expanded(
             child: RefreshIndicator(

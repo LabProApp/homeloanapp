@@ -5,7 +5,14 @@ import '../models/inquiry_request.dart';
 import '../commons/common_widget.dart';
 
 class InquiryDialog extends StatefulWidget {
-  const InquiryDialog({super.key});
+  final String? providerName;
+  final String? preselectedService;
+
+  const InquiryDialog({
+    super.key,
+    this.providerName,
+    this.preselectedService,
+  });
 
   @override
   State<InquiryDialog> createState() => _InquiryDialogState();
@@ -18,13 +25,23 @@ class _InquiryDialogState extends State<InquiryDialog> {
   final _messageController = TextEditingController();
 
   bool _loading = false;
-  String _selectedService = 'DOCUMENT_SERVICES';
+  late String _selectedService;
 
   static const Map<String, String> _serviceLabels = {
     'DOCUMENT_SERVICES': 'Document Services',
     'PROPERTY_REGISTRATION': 'Property Registration',
     'RENT_AGREEMENT': 'Rent Agreement',
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedService =
+        (widget.preselectedService != null &&
+                _serviceLabels.containsKey(widget.preselectedService))
+            ? widget.preselectedService!
+            : 'DOCUMENT_SERVICES';
+  }
 
   @override
   void dispose() {
@@ -39,14 +56,20 @@ class _InquiryDialogState extends State<InquiryDialog> {
 
     setState(() => _loading = true);
 
+    final commentParts = <String>[];
+    if ((widget.providerName ?? '').isNotEmpty) {
+      commentParts.add('Provider: ${widget.providerName}');
+    }
+    if (_messageController.text.trim().isNotEmpty) {
+      commentParts.add(_messageController.text.trim());
+    }
+
     try {
       await LegalServiceApi.submitInquiry(Inquiry(
         applicantName: _nameController.text.trim(),
         mobileNumber: _phoneController.text.trim(),
         inquiryType: _selectedService,
-        comments: _messageController.text.trim().isEmpty
-            ? null
-            : _messageController.text.trim(),
+        comments: commentParts.isEmpty ? null : commentParts.join(' | '),
         leadSource: 'APP',
       ));
 
@@ -84,29 +107,42 @@ class _InquiryDialogState extends State<InquiryDialog> {
           // ── Colored header band ─────────────────────────────────────
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.fromLTRB(16, 14, 4, 14),
             decoration: const BoxDecoration(
               color: AppColors.primary,
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-            child: Stack(
-              alignment: Alignment.center,
+            child: Row(
               children: [
-                const Text(
-                  'Raise an Inquiry',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600),
-                ),
-                Positioned(
-                  right: 4,
-                  child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white70),
-                    onPressed: () => Navigator.pop(context),
-                    padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
+                const Icon(Icons.support_agent_rounded,
+                    color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Raise an Inquiry',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600),
+                      ),
+                      if ((widget.providerName ?? '').isNotEmpty)
+                        Text(
+                          widget.providerName!,
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 12),
+                        ),
+                    ],
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white70),
+                  onPressed: () => Navigator.pop(context),
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
@@ -130,8 +166,9 @@ class _InquiryDialogState extends State<InquiryDialog> {
                       controller: _nameController,
                       label: 'Full Name',
                       icon: Icons.person_outline_rounded,
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Enter your name'
+                          : null,
                     ),
                     const SizedBox(height: 12),
 
@@ -140,9 +177,13 @@ class _InquiryDialogState extends State<InquiryDialog> {
                       label: 'Mobile Number',
                       icon: Icons.phone_outlined,
                       keyboard: TextInputType.phone,
-                      validator: (v) => (v == null || v.trim().length != 10)
-                          ? 'Enter a valid 10-digit number'
-                          : null,
+                      validator: (v) {
+                        if (v == null) return 'Enter a valid 10-digit number';
+                        final digits = v.replaceAll(RegExp(r'\D'), '');
+                        final valid = digits.length == 10 ||
+                            (digits.length == 12 && digits.startsWith('91'));
+                        return valid ? null : 'Enter a valid 10-digit number';
+                      },
                     ),
                     const SizedBox(height: 12),
 
@@ -150,8 +191,7 @@ class _InquiryDialogState extends State<InquiryDialog> {
                     DropdownButtonFormField<String>(
                       value: _selectedService,
                       decoration: _inputDeco(
-                          label: 'Service Type',
-                          icon: Icons.gavel_rounded),
+                          label: 'Service Type', icon: Icons.gavel_rounded),
                       items: _serviceLabels.entries
                           .map((e) => DropdownMenuItem(
                               value: e.key, child: Text(e.value)))
