@@ -21,134 +21,76 @@ class PostPropertyScreen extends StatefulWidget {
 }
 
 class _PostPropertyScreenState extends State<PostPropertyScreen> {
-  @override
-  void dispose() {
-    titleController.dispose();
-    descriptionController.dispose();
-    priceController.dispose();
-    securityDepositController.dispose();
-    superAreaController.dispose();
-    carpetAreaController.dispose();
-    addressController.dispose();
-    locationController.dispose();
-    contactController.dispose();
-    super.dispose();
-  }
-
-
   final _formKey = GlobalKey<FormState>();
 
-  /// Controllers
-  final titleController = TextEditingController();
-  final descriptionController = TextEditingController();
-  final priceController = TextEditingController();
-  final securityDepositController = TextEditingController();
-  final superAreaController = TextEditingController();
-  final carpetAreaController = TextEditingController();
-  final addressController = TextEditingController();
-  final locationController = TextEditingController();
-  final contactController = TextEditingController();
-  Key localityKey = UniqueKey();
-  /// Property Info
-  String rentOrSale = "Sale";
-  String category = "Residential";
-  String propertyType = "APARTMENT";
-  String postedByType = "Owner";
-  String constructionStatus = "Ready to Move";
+  // ── Controllers ──────────────────────────────────────────────────────────────
+  final _titleCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
+  final _priceCtrl = TextEditingController();
+  final _depositCtrl = TextEditingController();
+  final _superAreaCtrl = TextEditingController();
+  final _carpetAreaCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
+  final _locationCtrl = TextEditingController();
+  final _contactCtrl = TextEditingController();
 
-  int? bedrooms;
-  int? bathrooms;
-  int? floorNumber;
-  int? totalFloors;
+  Key _localityKey = UniqueKey();
 
-  String furnishing = "Unfurnished";
-  String parking = "None";
-  String facing = "North";
-  String propertyAge = "0-1 Years";
-  String availableFrom = "Immediate";
+  // ── Property fields ───────────────────────────────────────────────────────────
+  String rentOrSale = 'Sale';
+  String category = 'Residential';
+  String propertyType = 'APARTMENT';
+  String postedByType = 'Owner';
+  String constructionStatus = 'Ready to Move';
+  String furnishing = 'Unfurnished';
+  String parking = 'None';
+  String facing = 'North';
+  String propertyAge = '0-1 Years';
+  String availableFrom = 'Immediate';
 
-  /// Location
+  int bedrooms = 2;
+  int bathrooms = 2;
+  int floorNumber = 0;
+  int totalFloors = 1;
+
+  // ── Location ──────────────────────────────────────────────────────────────────
   MasterValue? selectedState;
   MasterValue? selectedCity;
-
   List<MasterValue> states = [];
   List<MasterValue> cities = [];
   List<MasterValue> localities = [];
+  final Map<int, List<MasterValue>> _cityCache = {};
+  final Map<int, List<MasterValue>> _localityCache = {};
 
-  /// Local Cache (speed optimization)
-  final Map<int, List<MasterValue>> cityCache = {};
-  final Map<int, List<MasterValue>> localityCache = {};
-
-  bool _loading = false;
+  // ── Loading / state ───────────────────────────────────────────────────────────
+  bool _submitting = false;
   bool _loadingStates = true;
   bool _loadingCities = false;
   bool _loadingLocalities = false;
 
-  bool get isResidential => category == "Residential";
-  bool get isRent => rentOrSale == "Rent";
+  final List<String> _selectedAmenities = [];
 
-  /// Options
-  final rentSaleOptions = ["Rent", "Sale"];
-  final categoryOptions = ["Residential", "Commercial"];
+  bool get _isResidential => category == 'Residential';
+  bool get _isRent => rentOrSale == 'Rent';
 
-  final propertyTypesResidential = [
-    "APARTMENT",
-    "HOUSE",
-    "BUILDER FLOOR",
-    "PLOT"
+  // ── Static option lists ───────────────────────────────────────────────────────
+  static const _rentSaleOptions = ['Sale', 'Rent'];
+  static const _categoryOptions = ['Residential', 'Commercial'];
+  static const _residentialTypes = ['APARTMENT', 'HOUSE', 'BUILDER FLOOR', 'PLOT'];
+  static const _commercialTypes = ['SHOP', 'OFFICE', 'SHOWROOM', 'CO WORKING'];
+  static const _postedByOptions = ['Owner', 'Broker', 'Builder'];
+  static const _constructionOptions = ['Ready to Move', 'Under Construction', 'New Launch'];
+  static const _furnishingOptions = ['Furnished', 'Semi Furnished', 'Unfurnished'];
+  static const _parkingOptions = ['None', '1', '2', '3+'];
+  static const _facingOptions = ['North', 'South', 'East', 'West'];
+  static const _ageOptions = ['0-1 Years', '1-5 Years', '5-10 Years', '10+ Years'];
+  static const _availableFromOptions = ['Immediate', 'Within 15 Days', 'Within 30 Days'];
+  static const _amenityOptions = [
+    'Club House', 'Lift', 'Power Backup', 'Security',
+    'Gym', 'Swimming Pool', 'Garden', 'Parking', 'CCTV',
   ];
 
-  final propertyTypesCommercial = [
-    "SHOP",
-    "OFFICE",
-    "SHOWROOM",
-    "CO WORKING"
-  ];
-
-  final postedByOptions = ["Owner", "Broker", "Builder"];
-
-  final constructionStatusOptions = [
-    "Ready to Move",
-    "Under Construction",
-    "New Launch"
-  ];
-
-  final furnishingOptions = [
-    "Furnished",
-    "Semi Furnished",
-    "Unfurnished"
-  ];
-
-  final parkingOptions = ["None", "1", "2", "3+"];
-
-  final facingOptions = ["North", "South", "East", "West"];
-
-  final propertyAgeOptions = [
-    "0-1 Years",
-    "1-5 Years",
-    "5-10 Years",
-    "10+ Years"
-  ];
-
-  final availableFromOptions = [
-    "Immediate",
-    "Within 15 Days",
-    "Within 30 Days"
-  ];
-
-  final amenityOptions = [
-    "Club House",
-    "Lift",
-    "Power Backup",
-    "Security",
-    "Gym",
-    "Swimming Pool",
-    "Garden",
-    "Parking",
-    "CCTV"
-  ];
-
-  final List<String> amenities = [];
+  // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
   @override
   void initState() {
@@ -157,84 +99,87 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     _loadStates();
   }
 
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _descCtrl.dispose();
+    _priceCtrl.dispose();
+    _depositCtrl.dispose();
+    _superAreaCtrl.dispose();
+    _carpetAreaCtrl.dispose();
+    _addressCtrl.dispose();
+    _locationCtrl.dispose();
+    _contactCtrl.dispose();
+    super.dispose();
+  }
+
+  // ── Pre-fill for edit mode ─────────────────────────────────────────────────
+
   void _prefillFromEdit() {
     final p = widget.propertyToEdit;
     if (p == null) return;
 
-    titleController.text = p.title ?? '';
-    descriptionController.text = p.description ?? '';
     final isEditRent = p.rentOrSale?.toUpperCase() == 'RENT';
-    priceController.text =
-        (isEditRent ? p.monthlyRent : p.price)?.toString() ?? '';
-    securityDepositController.text = p.securityDeposit?.toString() ?? '';
-    superAreaController.text = p.superArea?.toString() ?? '';
-    carpetAreaController.text = p.carpetArea?.toString() ?? '';
-    addressController.text = p.address ?? '';
-    locationController.text = p.location ?? '';
-    contactController.text = p.contactNumber;
+    _titleCtrl.text = p.title ?? '';
+    _descCtrl.text = p.description ?? '';
+    _priceCtrl.text = (isEditRent ? p.monthlyRent : p.price)?.toString() ?? '';
+    _depositCtrl.text = p.securityDeposit?.toString() ?? '';
+    _superAreaCtrl.text = p.superArea?.toString() ?? '';
+    _carpetAreaCtrl.text = p.carpetArea?.toString() ?? '';
+    _addressCtrl.text = p.address ?? '';
+    _locationCtrl.text = p.location ?? '';
+    _contactCtrl.text = p.contactNumber;
 
     rentOrSale = isEditRent ? 'Rent' : 'Sale';
     category = p.category ?? 'Residential';
     propertyType = p.type ?? 'APARTMENT';
     postedByType = p.postedBy ?? 'Owner';
     constructionStatus = p.constructionStatus ?? 'Ready to Move';
-    bedrooms = p.bedrooms;
-    bathrooms = p.bathrooms;
-    floorNumber = p.floorNumber;
-    totalFloors = p.totalFloors;
+    bedrooms = p.bedrooms ?? 2;
+    bathrooms = p.bathrooms ?? 2;
+    floorNumber = p.floorNumber ?? 0;
+    totalFloors = p.totalFloors ?? 1;
     furnishing = p.furnishing ?? 'Unfurnished';
     parking = p.parkingCount ?? 'None';
     facing = p.facing ?? 'North';
     propertyAge = p.propertyAge ?? '0-1 Years';
 
     if (p.amenities != null && p.amenities!.isNotEmpty) {
-      amenities.addAll(
-        p.amenities!
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => amenityOptions.contains(e)),
+      _selectedAmenities.addAll(
+        p.amenities!.split(',').map((e) => e.trim()).where(_amenityOptions.contains),
       );
     }
   }
 
-  /// LOAD STATES
+  // ── Location loaders ──────────────────────────────────────────────────────────
+
   Future<void> _loadStates() async {
     try {
-      states = await MasterService.getStates();
-    } catch (e) {
-      debugPrint('Failed to load states: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load states. Please check your connection.')),
-        );
-      }
+      final data = await MasterService.getStates();
+      if (!mounted) return;
+      setState(() {
+        states = data;
+        _loadingStates = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingStates = false);
+      _showError('Failed to load states. Please check your connection.');
+      return;
     }
 
-    if (!mounted) return;
-    setState(() => _loadingStates = false);
-
-    // Pre-fill state selection for edit mode
     final editState = widget.propertyToEdit?.state;
-    if (editState != null) {
-      MasterValue? match;
-      for (final s in states) {
-        if (s.value == editState) { match = s; break; }
-      }
-      if (match != null) {
-        setState(() => selectedState = match);
-        await _loadCities(match.id);
-      }
+    if (editState == null) return;
+    final match = states.where((s) => s.value == editState).firstOrNull;
+    if (match != null && mounted) {
+      setState(() => selectedState = match);
+      await _loadCities(match.id);
     }
   }
 
-  /// LOAD CITIES
   Future<void> _loadCities(int stateId) async {
-
-    if (cityCache.containsKey(stateId)) {
-      setState(() {
-        cities = cityCache[stateId]!;
-      });
-      // Pre-fill city selection for edit mode
+    if (_cityCache.containsKey(stateId)) {
+      setState(() => cities = _cityCache[stateId]!);
       _prefillCity();
       return;
     }
@@ -244,637 +189,89 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       cities = [];
       selectedCity = null;
       localities = [];
-      locationController.clear();
+      _locationCtrl.clear();
+      _localityKey = UniqueKey();
     });
 
     try {
-
       final data = await MasterService.getCities(stateId);
-
-      cityCache[stateId] = data;
-
-      cities = data;
-
-    } catch (e) {
-      debugPrint('Failed to load cities: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load cities. Please try again.')),
-        );
-      }
+      _cityCache[stateId] = data;
+      if (!mounted) return;
+      setState(() {
+        cities = data;
+        _loadingCities = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingCities = false);
+      _showError('Failed to load cities. Please try again.');
+      return;
     }
 
-    if (!mounted) return;
-    setState(() => _loadingCities = false);
-    FocusScope.of(context).requestFocus(FocusNode());
-
-    // Pre-fill city selection for edit mode
+    FocusScope.of(context).unfocus();
     _prefillCity();
   }
 
   void _prefillCity() {
     final editCity = widget.propertyToEdit?.city;
-    if (editCity == null) return;
-    MasterValue? match;
-    for (final c in cities) {
-      if (c.value == editCity) { match = c; break; }
-    }
-    if (match != null && mounted) {
+    if (editCity == null || !mounted) return;
+    final match = cities.where((c) => c.value == editCity).firstOrNull;
+    if (match != null) {
       setState(() => selectedCity = match);
       _loadLocalities(match.id);
     }
   }
 
-  /// LOAD LOCALITIES
-  /// LOAD LOCALITIES
   Future<void> _loadLocalities(int cityId) async {
-
-    /// If cached, use instantly (fast UX)
-    if (localityCache.containsKey(cityId)) {
-
+    if (_localityCache.containsKey(cityId)) {
       if (!mounted) return;
-
       setState(() {
-        localities = localityCache[cityId]!;
+        localities = _localityCache[cityId]!;
         _loadingLocalities = false;
       });
-
       return;
     }
-
-    if (!mounted) return;
 
     setState(() {
       _loadingLocalities = true;
       localities = [];
-      locationController.clear();
+      _locationCtrl.clear();
+      _localityKey = UniqueKey();
     });
 
     try {
-
       final data = await MasterService.getLocalities(cityId);
-
-      /// Save to cache
-      localityCache[cityId] = data;
-
+      _localityCache[cityId] = data;
       if (!mounted) return;
-
-      setState(() {
-        localities = data;
-      });
-
-    } catch (e) {
-
-      debugPrint("Locality loading error: $e");
-
+      setState(() => localities = data);
+    } catch (_) {
+      if (!mounted) return;
+      _showError('Failed to load localities. You can still type the area name.');
     } finally {
-
-      if (!mounted) return;
-
-      setState(() {
-        _loadingLocalities = false;
-      });
-
+      if (mounted) setState(() => _loadingLocalities = false);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-
-    final propertyTypes =
-    isResidential ? propertyTypesResidential : propertyTypesCommercial;
-
-    return Scaffold(
-
-      appBar: AppBar(
-        title: Text(widget.propertyToEdit != null ? "Edit Property" : "Post Property"),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
-
-      body: Form(
-        key: _formKey,
-        child: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-
-                _section("Basic Details"),
-                _field("Title *", titleController),
-                _field("Description *", descriptionController, maxLines: 5),
-
-                _section("Location"),
-
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: IgnorePointer(
-                    ignoring: _loadingStates,
-                    child: _stateDropdown(),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: IgnorePointer(
-                    ignoring: _loadingCities,
-                    child: _cityDropdown(),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: IgnorePointer(
-                    ignoring: _loadingLocalities,
-                    child: _localityAutocomplete(),
-                  ),
-                ),
-
-                _field("Full Address", addressController, maxLines: 4),
-
-
-
-                _section("Property Type"),
-
-                _chipSelector(rentSaleOptions, rentOrSale,
-                        (v) => setState(() => rentOrSale = v)),
-
-                _chipSelector(categoryOptions, category, (v) {
-                  setState(() {
-                    category = v;
-                    propertyType = propertyTypes.first;
-                  });
-                }),
-
-                _dropdown(
-                    "Property Type",
-                    propertyType,
-                    propertyTypes,
-                        (v) => setState(() => propertyType = v)),
-
-                _dropdown(
-                    "Posted By",
-                    postedByType,
-                    postedByOptions,
-                        (v) => setState(() => postedByType = v)),
-
-                _section("Price"),
-
-                _field(isRent ? "Monthly Rent *" : "Price *",
-                    priceController,
-                    keyboard: TextInputType.number),
-
-                if (isRent)
-                  _field("Security Deposit",
-                      securityDepositController,
-                      keyboard: TextInputType.number),
-
-                _section("Area"),
-
-                Row(
-                  children: [
-                    Expanded(child: _field("Super Area", superAreaController)),
-                    const SizedBox(width: 10),
-                    Expanded(child: _field("Carpet Area", carpetAreaController)),
-                  ],
-                ),
-
-                if (isResidential) ...[
-                  _section("Rooms"),
-                  _slider("Bedrooms", bedrooms, (v) => setState(() => bedrooms = v)),
-                  _slider("Bathrooms", bathrooms, (v) => setState(() => bathrooms = v)),
-                ],
-
-                _section("Floor Info"),
-                _slider("Floor Number", floorNumber, (v) => setState(() => floorNumber = v), max: 50),
-                _slider("Total Floors", totalFloors, (v) => setState(() => totalFloors = v), max: 50),
-
-                _section("Property Details"),
-
-                _dropdown("Furnishing", furnishing, furnishingOptions,
-                        (v) => setState(() => furnishing = v)),
-
-                _dropdown("Parking", parking, parkingOptions,
-                        (v) => setState(() => parking = v)),
-
-                _dropdown("Facing", facing, facingOptions,
-                        (v) => setState(() => facing = v)),
-
-                _dropdown("Property Age", propertyAge, propertyAgeOptions,
-                        (v) => setState(() => propertyAge = v)),
-
-                _dropdown("Construction Status", constructionStatus,
-                    constructionStatusOptions,
-                        (v) => setState(() => constructionStatus = v)),
-
-                if (isRent)
-                  _dropdown("Available From", availableFrom,
-                      availableFromOptions,
-                          (v) => setState(() => availableFrom = v)),
-
-                _section("Amenities"),
-
-                Wrap(
-                  spacing: 6,
-                  children: amenityOptions.map((a) {
-
-                    final selected = amenities.contains(a);
-
-                    return FilterChip(
-                      label: Text(a),
-                      selected: selected,
-                      selectedColor: AppColors.primary,
-                      onSelected: (v) {
-                        setState(() {
-                          v ? amenities.add(a) : amenities.remove(a);
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-
-
-                _section("Contact"),
-
-                _field("Phone *", contactController,
-                    keyboard: TextInputType.phone),
-
-              ]),
-            ),
-          )
-        ],
-      ),
-      ),
-
-      /// Sticky Save Button
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 8,
-              color: Colors.black12,
-              offset: Offset(0, -2),
-            )
-          ],
-        ),
-        child: AppButton(
-          text: widget.propertyToEdit != null ? "Update Property" : "Save & Continue",
-          isLoading: _loading,
-          onTap: _submit,
-        ),
-      ),
-    );
-  }
-
-  /// UI Widgets
-
-  Widget _section(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 6),
-      child: Text(
-        title,
-        style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-  Widget _field(String label, TextEditingController controller,
-      {int maxLines = 1, TextInputType keyboard = TextInputType.text}) {
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: TextFormField(
-        controller: controller,
-        maxLines: maxLines,
-        keyboardType: keyboard,
-        style: const TextStyle(fontSize: 14),
-        validator: (v) {
-          if (label.contains("*") && (v == null || v.isEmpty)) {
-            return "Required";
-          }
-          if (keyboard == TextInputType.number &&
-              v != null &&
-              v.isNotEmpty &&
-              double.tryParse(v) == null) {
-            return "Enter a valid number";
-          }
-          return null;
-        },
-        decoration: InputDecoration(
-          hintText: label,
-          hintStyle: const TextStyle(fontSize: 13),
-
-          filled: true,
-          fillColor: AppColors.white,
-
-          isDense: true,
-
-          /// ✅ THIS is what actually reduces height
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
-
-          /// ✅ EXTRA COMPACT CONTROL (important)
-          visualDensity: const VisualDensity(
-            horizontal: 0,
-            vertical: -1, // 🔥 key line
-          ),
-
-          /// ✅ optional hard limit (safe)
-          constraints: const BoxConstraints(
-            minHeight: 40,
-          ),
-
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _chipSelector(
-      List<String> options,
-      String selected,
-      Function(String) onSelected) {
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Wrap(
-        spacing: 6,
-        children: options.map((e) {
-
-          final isSelected = selected == e;
-
-          return ChoiceChip(
-            label: Text(e),
-            selected: isSelected,
-            selectedColor: AppColors.primary,
-            backgroundColor: AppColors.white.withOpacity(.15),
-            labelStyle: TextStyle(
-                color: isSelected ? Colors.white : AppColors.primary),
-            onSelected: (_) => onSelected(e),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _dropdown(
-      String label,
-      String value,
-      List<String> items,
-      Function(String) onChanged) {
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: DropdownButtonFormField<String>(
-        value: items.contains(value) ? value : null,
-        isDense: true,
-        itemHeight: 48,
-        items: items
-            .map((e) => DropdownMenuItem(
-          value: e,
-          child: Text(e, style: const TextStyle(fontSize: 14)),
-        ))
-            .toList(),
-        onChanged: (v) {
-          if (v != null) onChanged(v);
-        },
-        decoration: InputDecoration(
-          hintText: label,
-          filled: true,
-          fillColor: AppColors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 6, // reduce height here
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _slider(String label, int? value, Function(int) onChanged, {int max = 10}) {
-
-    final v = (value ?? 0).clamp(0, max);
-
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label),
-            Text(v.toString()),
-          ],
-        ),
-        Slider(
-          value: v.toDouble(),
-          min: 0,
-          max: max.toDouble(),
-          divisions: max,
-          activeColor: AppColors.primary,
-          onChanged: (x) => onChanged(x.toInt()),
-        )
-      ],
-    );
-  }
-
-  Widget _localityAutocomplete() {
-    return Autocomplete<String>(
-      key: localityKey,
-      initialValue: TextEditingValue(text: locationController.text),
-
-      optionsBuilder: (TextEditingValue text) {
-
-        if (text.text.isEmpty) {
-          return localities.map((e) => e.value);
-        }
-
-        return localities
-            .map((e) => e.value)
-            .where((l) =>
-            l.toLowerCase().contains(text.text.toLowerCase()));
-      },
-
-      onSelected: (value) {
-        locationController.text = value;
-      },
-
-      fieldViewBuilder: (context, controller, focusNode, onSubmit) {
-
-        /// IMPORTANT → sync only once
-        controller.addListener(() {
-          locationController.text = controller.text;
-        });
-
-        return TextFormField(
-          controller: controller,
-          focusNode: focusNode,
-          decoration: InputDecoration(
-            hintText: "Locality / Area *",
-            filled: true,
-            fillColor: AppColors.white,
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          validator: (v) {
-            if (v == null || v.isEmpty) {
-              return "Required";
-            }
-            return null;
-          },
-        );
-      },
-    );
-  }
-
-  Widget _stateDropdown() {
-    return DropdownButtonFormField<MasterValue>(
-      hint: const Text("Select State"),
-      value: states.contains(selectedState) ? selectedState : null,
-      isDense: true, // ✅ reduces height
-      itemHeight: 48, // ✅ compact dropdown list
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: AppColors.white,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 6, // ✅ reduced from default
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      items: states
-          .map((s) => DropdownMenuItem(
-        value: s,
-        child: Text(
-          s.value,
-          style: const TextStyle(fontSize: 14), // optional tighter text
-        ),
-      ))
-          .toList(),
-      onChanged: (v) {
-        setState(() {
-          selectedState = v;
-
-          selectedCity = null;
-          cities = [];
-          localities = [];
-
-          locationController.clear();
-
-          /// force rebuild locality field
-          localityKey = UniqueKey();
-        });
-
-        if (v != null) {
-          _loadCities(v.id);
-        }
-      },
-    );
-  }
-
-  Widget _cityDropdown() {
-    return DropdownButtonFormField<MasterValue>(
-      hint: const Text("Select City"),
-      value: cities.contains(selectedCity) ? selectedCity : null,
-      isDense: true, // ✅ reduces height
-      itemHeight: 48, // ✅ compact dropdown list
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: AppColors.white,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 6, // ✅ reduced
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      items: cities
-          .map((c) => DropdownMenuItem(
-        value: c,
-        child: Text(
-          c.value,
-          style: const TextStyle(fontSize: 14),
-        ),
-      ))
-          .toList(),
-      onChanged: selectedState == null
-          ? null
-          : (v) async {
-        setState(() {
-          selectedCity = v;
-
-          localities = [];
-          locationController.clear();
-
-          /// force rebuild autocomplete
-          localityKey = UniqueKey();
-        });
-
-        if (v != null) {
-          await _loadLocalities(v.id);
-        }
-      },
-    );
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  // ── Submit ────────────────────────────────────────────────────────────────────
 
   Future<void> _submit() async {
-
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
+    setState(() => _submitting = true);
 
-    final parsedPrice = double.tryParse(priceController.text);
+    final price = double.tryParse(_priceCtrl.text.trim());
 
     final property = PropertyModel(
       id: widget.propertyToEdit?.id,
-      title: titleController.text,
-      description: descriptionController.text,
-      price: isRent ? null : parsedPrice,
-      monthlyRent: isRent ? parsedPrice : null,
-      securityDeposit: isRent ? double.tryParse(securityDepositController.text) : null,
-      superArea: double.tryParse(superAreaController.text),
-      carpetArea: double.tryParse(carpetAreaController.text),
-      address: addressController.text,
-      location: locationController.text,
+      title: _titleCtrl.text.trim(),
+      description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+      price: _isRent ? null : price,
+      monthlyRent: _isRent ? price : null,
+      securityDeposit: _isRent ? double.tryParse(_depositCtrl.text.trim()) : null,
+      superArea: double.tryParse(_superAreaCtrl.text.trim()),
+      carpetArea: double.tryParse(_carpetAreaCtrl.text.trim()),
+      address: _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
+      location: _locationCtrl.text.trim(),
       city: selectedCity?.value,
       state: selectedState?.value,
       type: propertyType,
@@ -883,23 +280,22 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       postedBy: postedByType,
       postedByUser: widget.userId,
       constructionStatus: constructionStatus,
-      bedrooms: bedrooms,
-      bathrooms: bathrooms,
+      bedrooms: _isResidential ? bedrooms : null,
+      bathrooms: _isResidential ? bathrooms : null,
       floorNumber: floorNumber,
       totalFloors: totalFloors,
       furnishing: furnishing,
       facing: facing,
       propertyAge: propertyAge,
       parkingCount: parking,
-      amenities: amenities.join(","),
-      contactNumber: contactController.text,
-      currency: "INR",
+      amenities: _selectedAmenities.isEmpty ? null : _selectedAmenities.join(','),
+      contactNumber: _contactCtrl.text.trim(),
+      currency: 'INR',
       postDate: widget.propertyToEdit?.postDate ?? DateTime.now().toIso8601String(),
-      verified: true,
+      verified: widget.propertyToEdit?.verified,
     );
 
     try {
-
       int id;
       if (widget.propertyToEdit != null) {
         await PropertyApiService.updateProperty(property);
@@ -909,26 +305,629 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       }
 
       if (!mounted) return;
-
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PropertyMediaScreen(
-              propertyId: id,
-              userId: widget.userId),
+          builder: (_) => PropertyMediaScreen(propertyId: id, userId: widget.userId),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final isNetwork = e.toString().contains('SocketException') ||
+          e.toString().contains('TimeoutException') ||
+          e.toString().contains('Connection refused');
+      _showError(isNetwork
+          ? 'Network error. Please check your connection and try again.'
+          : 'Could not save the property. Please try again.');
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  // ── UI Helpers ────────────────────────────────────────────────────────────────
+
+  InputDecoration _inputDeco(String label, {bool required = false, String? hint, Widget? suffixIcon}) {
+    return InputDecoration(
+      labelText: required ? '$label *' : label,
+      hintText: hint,
+      hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+      filled: true,
+      fillColor: AppColors.white,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+      labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+      suffixIcon: suffixIcon,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+      ),
+      errorStyle: const TextStyle(fontSize: 11, color: AppColors.error),
+    );
+  }
+
+  Widget _section(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20, bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _textField({
+    required TextEditingController controller,
+    required String label,
+    bool required = false,
+    int maxLines = 1,
+    TextInputType keyboard = TextInputType.text,
+    String? hint,
+    String? Function(String?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboard,
+        style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+        decoration: _inputDeco(label, required: required, hint: hint),
+        validator: validator,
+      ),
+    );
+  }
+
+  Widget _dropdownField<T>({
+    required String label,
+    required T value,
+    required List<T> items,
+    required ValueChanged<T> onChanged,
+    bool required = false,
+    String? Function(T?)? validator,
+  }) {
+    final safeValue = items.contains(value) ? value : null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DropdownButtonFormField<T>(
+        value: safeValue,
+        isDense: true,
+        itemHeight: 48,
+        decoration: _inputDeco(label, required: required),
+        items: items.map((e) => DropdownMenuItem<T>(
+          value: e,
+          child: Text(e.toString(), style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+        )).toList(),
+        onChanged: (v) { if (v != null) onChanged(v); },
+        validator: validator,
+      ),
+    );
+  }
+
+  Widget _chipSelector(
+    List<String> options,
+    String selected,
+    ValueChanged<String> onSelected,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 6,
+        children: options.map((e) {
+          final isSelected = selected == e;
+          return ChoiceChip(
+            label: Text(e),
+            selected: isSelected,
+            selectedColor: AppColors.primary,
+            backgroundColor: AppColors.white,
+            side: BorderSide(color: isSelected ? AppColors.primary : AppColors.border),
+            labelStyle: TextStyle(
+              fontSize: 13,
+              color: isSelected ? AppColors.white : AppColors.textSecondary,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+            onSelected: (_) => onSelected(e),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // Stepper replaces sliders — more conventional for property forms.
+  Widget _stepper(
+    String label,
+    int value,
+    ValueChanged<int> onChanged, {
+    int min = 0,
+    int max = 10,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+          Row(
+            children: [
+              _stepButton(Icons.remove_rounded,
+                  value <= min ? null : () => setState(() => onChanged(value - 1))),
+              SizedBox(
+                width: 40,
+                child: Text(
+                  value.toString(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              _stepButton(Icons.add_rounded,
+                  value >= max ? null : () => setState(() => onChanged(value + 1))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _stepButton(IconData icon, VoidCallback? onTap) {
+    final active = onTap != null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: active ? AppColors.primary : AppColors.border),
+          color: active ? AppColors.primary.withOpacity(0.08) : AppColors.surfaceSubtle,
+        ),
+        child: Icon(icon, size: 16, color: active ? AppColors.primary : AppColors.textMuted),
+      ),
+    );
+  }
+
+  Widget _loadingIndicator() => const SizedBox(
+        width: 20,
+        height: 20,
+        child: Padding(
+          padding: EdgeInsets.all(12),
+          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
         ),
       );
 
-    } catch (e) {
+  // ── Location Widgets ──────────────────────────────────────────────────────────
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
+  Widget _stateDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DropdownButtonFormField<MasterValue>(
+        hint: const Text('Select State', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+        value: states.contains(selectedState) ? selectedState : null,
+        isDense: true,
+        itemHeight: 48,
+        decoration: _inputDeco('State', required: true,
+            suffixIcon: _loadingStates ? _loadingIndicator() : null),
+        items: states.map((s) => DropdownMenuItem(
+          value: s,
+          child: Text(s.value, style: const TextStyle(fontSize: 14)),
+        )).toList(),
+        validator: (v) => v == null ? 'Please select a state' : null,
+        onChanged: _loadingStates
+            ? null
+            : (v) {
+                setState(() {
+                  selectedState = v;
+                  selectedCity = null;
+                  cities = [];
+                  localities = [];
+                  _locationCtrl.clear();
+                  _localityKey = UniqueKey();
+                });
+                if (v != null) _loadCities(v.id);
+              },
+      ),
+    );
+  }
 
-    } finally {
+  Widget _cityDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DropdownButtonFormField<MasterValue>(
+        hint: Text(
+          selectedState == null ? 'Select state first' : 'Select City',
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+        ),
+        value: cities.contains(selectedCity) ? selectedCity : null,
+        isDense: true,
+        itemHeight: 48,
+        decoration: _inputDeco('City', required: true,
+            suffixIcon: _loadingCities ? _loadingIndicator() : null),
+        items: cities.map((c) => DropdownMenuItem(
+          value: c,
+          child: Text(c.value, style: const TextStyle(fontSize: 14)),
+        )).toList(),
+        validator: (v) => v == null ? 'Please select a city' : null,
+        onChanged: (selectedState == null || _loadingCities)
+            ? null
+            : (v) {
+                setState(() {
+                  selectedCity = v;
+                  localities = [];
+                  _locationCtrl.clear();
+                  _localityKey = UniqueKey();
+                });
+                if (v != null) _loadLocalities(v.id);
+              },
+      ),
+    );
+  }
 
-      if (mounted) setState(() => _loading = false);
+  Widget _localityField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: IgnorePointer(
+        ignoring: _loadingLocalities,
+        child: Autocomplete<String>(
+          key: _localityKey,
+          initialValue: TextEditingValue(text: _locationCtrl.text),
+          optionsBuilder: (v) {
+            final all = localities.map((e) => e.value);
+            if (v.text.isEmpty) return all;
+            return all.where((l) => l.toLowerCase().contains(v.text.toLowerCase()));
+          },
+          onSelected: (v) => _locationCtrl.text = v,
+          fieldViewBuilder: (ctx, ctrl, focusNode, _) {
+            return TextFormField(
+              controller: ctrl,
+              focusNode: focusNode,
+              style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+              // Use onChanged instead of addListener to avoid listener leaks on rebuild
+              onChanged: (v) => _locationCtrl.text = v,
+              decoration: _inputDeco(
+                'Locality / Area',
+                required: true,
+                hint: 'Type to search…',
+                suffixIcon: _loadingLocalities ? _loadingIndicator() : null,
+              ),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Locality is required';
+                return null;
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
 
-    }
+  // ── Build ─────────────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    final propertyTypes = _isResidential ? _residentialTypes : _commercialTypes;
+    final safePropertyType =
+        propertyTypes.contains(propertyType) ? propertyType : propertyTypes.first;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.propertyToEdit != null ? 'Edit Property' : 'Post Property'),
+        flexibleSpace: const DecoratedBox(
+          decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+        ),
+      ),
+      body: Form(
+        key: _formKey,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+
+                  // ── 1. Basic Details ────────────────────────────────────────
+                  _section('Basic Details'),
+                  _textField(
+                    controller: _titleCtrl,
+                    label: 'Property Title',
+                    required: true,
+                    hint: 'e.g. 2BHK Apartment near Metro',
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Title is required';
+                      if (v.trim().length < 5) return 'Title must be at least 5 characters';
+                      return null;
+                    },
+                  ),
+                  _textField(
+                    controller: _descCtrl,
+                    label: 'Description',
+                    maxLines: 4,
+                    hint: 'Describe key features, nearby landmarks…',
+                  ),
+
+                  // ── 2. Listing Type ─────────────────────────────────────────
+                  _section('Listing Type'),
+                  _chipSelector(_rentSaleOptions, rentOrSale,
+                      (v) => setState(() => rentOrSale = v)),
+
+                  // ── 3. Category & Property Type ─────────────────────────────
+                  _section('Category'),
+                  _chipSelector(_categoryOptions, category, (v) {
+                    setState(() {
+                      category = v;
+                      propertyType = (_isResidential ? _residentialTypes : _commercialTypes).first;
+                    });
+                  }),
+
+                  _dropdownField<String>(
+                    label: 'Property Type',
+                    value: safePropertyType,
+                    items: propertyTypes,
+                    required: true,
+                    onChanged: (v) => setState(() => propertyType = v),
+                    validator: (v) => v == null ? 'Please select a property type' : null,
+                  ),
+
+                  _dropdownField<String>(
+                    label: 'Posted By',
+                    value: postedByType,
+                    items: _postedByOptions,
+                    onChanged: (v) => setState(() => postedByType = v),
+                  ),
+
+                  // ── 4. Location ─────────────────────────────────────────────
+                  _section('Location'),
+                  _stateDropdown(),
+                  _cityDropdown(),
+                  _localityField(),
+                  _textField(
+                    controller: _addressCtrl,
+                    label: 'Full Address',
+                    maxLines: 3,
+                    hint: 'Street, colony, landmark…',
+                  ),
+
+                  // ── 5. Pricing ──────────────────────────────────────────────
+                  _section(_isRent ? 'Rent Details' : 'Pricing'),
+                  _textField(
+                    controller: _priceCtrl,
+                    label: _isRent ? 'Monthly Rent (₹)' : 'Price (₹)',
+                    required: true,
+                    keyboard: TextInputType.number,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return _isRent ? 'Monthly rent is required' : 'Price is required';
+                      }
+                      final n = double.tryParse(v.trim());
+                      if (n == null) return 'Enter a valid amount';
+                      if (n <= 0) return 'Amount must be greater than zero';
+                      return null;
+                    },
+                  ),
+                  if (_isRent) ...[
+                    _textField(
+                      controller: _depositCtrl,
+                      label: 'Security Deposit (₹)',
+                      keyboard: TextInputType.number,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return null;
+                        final n = double.tryParse(v.trim());
+                        if (n == null) return 'Enter a valid amount';
+                        if (n < 0) return 'Amount cannot be negative';
+                        return null;
+                      },
+                    ),
+                    _dropdownField<String>(
+                      label: 'Available From',
+                      value: availableFrom,
+                      items: _availableFromOptions,
+                      onChanged: (v) => setState(() => availableFrom = v),
+                    ),
+                  ],
+
+                  // ── 6. Area ─────────────────────────────────────────────────
+                  _section('Area'),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _textField(
+                          controller: _superAreaCtrl,
+                          label: 'Super Area (sq.ft)',
+                          keyboard: TextInputType.number,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return null;
+                            final n = double.tryParse(v.trim());
+                            if (n == null) return 'Invalid number';
+                            if (n <= 0) return 'Must be > 0';
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _textField(
+                          controller: _carpetAreaCtrl,
+                          label: 'Carpet Area (sq.ft)',
+                          keyboard: TextInputType.number,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return null;
+                            final n = double.tryParse(v.trim());
+                            if (n == null) return 'Invalid number';
+                            if (n <= 0) return 'Must be > 0';
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // ── 7. Rooms (Residential only) ─────────────────────────────
+                  if (_isResidential) ...[
+                    _section('Rooms'),
+                    _stepper('Bedrooms', bedrooms, (v) => bedrooms = v, min: 1),
+                    _stepper('Bathrooms', bathrooms, (v) => bathrooms = v, min: 1),
+                  ],
+
+                  // ── 8. Floor Info ───────────────────────────────────────────
+                  _section('Floor Info'),
+                  _stepper('Floor Number', floorNumber, (v) => floorNumber = v, max: 60),
+                  _stepper('Total Floors', totalFloors, (v) => totalFloors = v, min: 1, max: 60),
+
+                  // ── 9. Property Details ─────────────────────────────────────
+                  _section('Property Details'),
+                  _dropdownField<String>(
+                    label: 'Furnishing',
+                    value: furnishing,
+                    items: _furnishingOptions,
+                    onChanged: (v) => setState(() => furnishing = v),
+                  ),
+                  _dropdownField<String>(
+                    label: 'Parking',
+                    value: parking,
+                    items: _parkingOptions,
+                    onChanged: (v) => setState(() => parking = v),
+                  ),
+                  _dropdownField<String>(
+                    label: 'Facing',
+                    value: facing,
+                    items: _facingOptions,
+                    onChanged: (v) => setState(() => facing = v),
+                  ),
+                  _dropdownField<String>(
+                    label: 'Property Age',
+                    value: propertyAge,
+                    items: _ageOptions,
+                    onChanged: (v) => setState(() => propertyAge = v),
+                  ),
+                  _dropdownField<String>(
+                    label: 'Construction Status',
+                    value: constructionStatus,
+                    items: _constructionOptions,
+                    onChanged: (v) => setState(() => constructionStatus = v),
+                  ),
+
+                  // ── 10. Amenities ───────────────────────────────────────────
+                  _section('Amenities'),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: _amenityOptions.map((a) {
+                        final selected = _selectedAmenities.contains(a);
+                        return FilterChip(
+                          label: Text(a),
+                          selected: selected,
+                          selectedColor: AppColors.primary.withOpacity(0.15),
+                          backgroundColor: AppColors.white,
+                          checkmarkColor: AppColors.primary,
+                          showCheckmark: true,
+                          side: BorderSide(
+                            color: selected ? AppColors.primary : AppColors.border,
+                          ),
+                          labelStyle: TextStyle(
+                            fontSize: 12,
+                            color: selected ? AppColors.primary : AppColors.textSecondary,
+                            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                          ),
+                          onSelected: (v) => setState(() {
+                            v ? _selectedAmenities.add(a) : _selectedAmenities.remove(a);
+                          }),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  // ── 11. Contact ─────────────────────────────────────────────
+                  _section('Contact'),
+                  _textField(
+                    controller: _contactCtrl,
+                    label: 'Mobile Number',
+                    required: true,
+                    keyboard: TextInputType.phone,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Phone number is required';
+                      final digits = v.replaceAll(RegExp(r'\D'), '');
+                      final valid = digits.length == 10 ||
+                          (digits.length == 12 && digits.startsWith('91'));
+                      return valid ? null : 'Enter a valid 10-digit mobile number';
+                    },
+                  ),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+
+      // ── Sticky Submit ─────────────────────────────────────────────────────────
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 12,
+                color: Colors.black.withOpacity(0.06),
+                offset: const Offset(0, -3),
+              ),
+            ],
+          ),
+          child: AppButton(
+            text: widget.propertyToEdit != null ? 'Update Property' : 'Save & Continue',
+            isLoading: _submitting,
+            onTap: _submitting ? null : _submit,
+          ),
+        ),
+      ),
+    );
   }
 }
