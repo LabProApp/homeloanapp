@@ -129,7 +129,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             actions: [
               if (isOwner)
                 IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
+                  icon: Icon(Icons.delete, color: AppColors.error),
                   onPressed: _confirmDelete,
                 ),
               IconButton(

@@ -153,16 +153,78 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   @override
   void initState() {
     super.initState();
+    _prefillFromEdit();
     _loadStates();
+  }
+
+  void _prefillFromEdit() {
+    final p = widget.propertyToEdit;
+    if (p == null) return;
+
+    titleController.text = p.title ?? '';
+    descriptionController.text = p.description ?? '';
+    final isEditRent = p.rentOrSale?.toUpperCase() == 'RENT';
+    priceController.text =
+        (isEditRent ? p.monthlyRent : p.price)?.toString() ?? '';
+    securityDepositController.text = p.securityDeposit?.toString() ?? '';
+    superAreaController.text = p.superArea?.toString() ?? '';
+    carpetAreaController.text = p.carpetArea?.toString() ?? '';
+    addressController.text = p.address ?? '';
+    locationController.text = p.location ?? '';
+    contactController.text = p.contactNumber;
+
+    rentOrSale = isEditRent ? 'Rent' : 'Sale';
+    category = p.category ?? 'Residential';
+    propertyType = p.type ?? 'APARTMENT';
+    postedByType = p.postedBy ?? 'Owner';
+    constructionStatus = p.constructionStatus ?? 'Ready to Move';
+    bedrooms = p.bedrooms;
+    bathrooms = p.bathrooms;
+    floorNumber = p.floorNumber;
+    totalFloors = p.totalFloors;
+    furnishing = p.furnishing ?? 'Unfurnished';
+    parking = p.parkingCount ?? 'None';
+    facing = p.facing ?? 'North';
+    propertyAge = p.propertyAge ?? '0-1 Years';
+
+    if (p.amenities != null && p.amenities!.isNotEmpty) {
+      amenities.addAll(
+        p.amenities!
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => amenityOptions.contains(e)),
+      );
+    }
   }
 
   /// LOAD STATES
   Future<void> _loadStates() async {
     try {
       states = await MasterService.getStates();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to load states: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load states. Please check your connection.')),
+        );
+      }
+    }
 
+    if (!mounted) return;
     setState(() => _loadingStates = false);
+
+    // Pre-fill state selection for edit mode
+    final editState = widget.propertyToEdit?.state;
+    if (editState != null) {
+      MasterValue? match;
+      for (final s in states) {
+        if (s.value == editState) { match = s; break; }
+      }
+      if (match != null) {
+        setState(() => selectedState = match);
+        await _loadCities(match.id);
+      }
+    }
   }
 
   /// LOAD CITIES
@@ -172,6 +234,8 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       setState(() {
         cities = cityCache[stateId]!;
       });
+      // Pre-fill city selection for edit mode
+      _prefillCity();
       return;
     }
 
@@ -191,10 +255,34 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
       cities = data;
 
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to load cities: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load cities. Please try again.')),
+        );
+      }
+    }
 
+    if (!mounted) return;
     setState(() => _loadingCities = false);
     FocusScope.of(context).requestFocus(FocusNode());
+
+    // Pre-fill city selection for edit mode
+    _prefillCity();
+  }
+
+  void _prefillCity() {
+    final editCity = widget.propertyToEdit?.city;
+    if (editCity == null) return;
+    MasterValue? match;
+    for (final c in cities) {
+      if (c.value == editCity) { match = c; break; }
+    }
+    if (match != null && mounted) {
+      setState(() => selectedCity = match);
+      _loadLocalities(match.id);
+    }
   }
 
   /// LOAD LOCALITIES
@@ -259,12 +347,14 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     return Scaffold(
 
       appBar: AppBar(
-        title: const Text("Post Property"),
+        title: Text(widget.propertyToEdit != null ? "Edit Property" : "Post Property"),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
 
-      body: CustomScrollView(
+      body: Form(
+        key: _formKey,
+        child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
 
@@ -358,6 +448,10 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                   _slider("Bathrooms", bathrooms, (v) => setState(() => bathrooms = v)),
                 ],
 
+                _section("Floor Info"),
+                _slider("Floor Number", floorNumber, (v) => setState(() => floorNumber = v), max: 50),
+                _slider("Total Floors", totalFloors, (v) => setState(() => totalFloors = v), max: 50),
+
                 _section("Property Details"),
 
                 _dropdown("Furnishing", furnishing, furnishingOptions,
@@ -413,6 +507,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
           )
         ],
       ),
+      ),
 
       /// Sticky Save Button
       bottomNavigationBar: Container(
@@ -428,7 +523,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
           ],
         ),
         child: AppButton(
-          text: "Save Property",
+          text: widget.propertyToEdit != null ? "Update Property" : "Save & Continue",
           isLoading: _loading,
           onTap: _submit,
         ),
@@ -462,6 +557,12 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
         validator: (v) {
           if (label.contains("*") && (v == null || v.isEmpty)) {
             return "Required";
+          }
+          if (keyboard == TextInputType.number &&
+              v != null &&
+              v.isNotEmpty &&
+              double.tryParse(v) == null) {
+            return "Enter a valid number";
           }
           return null;
         },
@@ -565,9 +666,9 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     );
   }
 
-  Widget _slider(String label, int? value, Function(int) onChanged) {
+  Widget _slider(String label, int? value, Function(int) onChanged, {int max = 10}) {
 
-    final v = value ?? 0;
+    final v = (value ?? 0).clamp(0, max);
 
     return Column(
       children: [
@@ -581,8 +682,8 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
         Slider(
           value: v.toDouble(),
           min: 0,
-          max: 10,
-          divisions: 10,
+          max: max.toDouble(),
+          divisions: max,
           activeColor: AppColors.primary,
           onChanged: (x) => onChanged(x.toInt()),
         )
@@ -761,10 +862,15 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
     setState(() => _loading = true);
 
+    final parsedPrice = double.tryParse(priceController.text);
+
     final property = PropertyModel(
+      id: widget.propertyToEdit?.id,
       title: titleController.text,
       description: descriptionController.text,
-      price: double.tryParse(priceController.text),
+      price: isRent ? null : parsedPrice,
+      monthlyRent: isRent ? parsedPrice : null,
+      securityDeposit: isRent ? double.tryParse(securityDepositController.text) : null,
       superArea: double.tryParse(superAreaController.text),
       carpetArea: double.tryParse(carpetAreaController.text),
       address: addressController.text,
@@ -775,6 +881,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       category: category,
       rentOrSale: rentOrSale.toUpperCase(),
       postedBy: postedByType,
+      postedByUser: widget.userId,
       constructionStatus: constructionStatus,
       bedrooms: bedrooms,
       bathrooms: bathrooms,
@@ -787,13 +894,19 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       amenities: amenities.join(","),
       contactNumber: contactController.text,
       currency: "INR",
-      postDate: DateTime.now().toIso8601String(),
+      postDate: widget.propertyToEdit?.postDate ?? DateTime.now().toIso8601String(),
       verified: true,
     );
 
     try {
 
-      final id = await PropertyApiService.addProperty(property);
+      int id;
+      if (widget.propertyToEdit != null) {
+        await PropertyApiService.updateProperty(property);
+        id = widget.propertyToEdit!.id!;
+      } else {
+        id = await PropertyApiService.addProperty(property);
+      }
 
       if (!mounted) return;
 
@@ -808,11 +921,14 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
     } catch (e) {
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Error: $e")));
 
-    }
+    } finally {
 
-    setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
+
+    }
   }
 }

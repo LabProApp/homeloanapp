@@ -69,10 +69,13 @@ class PropertyApiService {
     final response = await ApiClient.get(uri);
 
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      return data.map((e) => PropertyModel.fromJson(e)).toList();
+      final decoded = jsonDecode(response.body);
+      if (decoded is! List) {
+        throw Exception('Unexpected response format from server');
+      }
+      return decoded.map((e) => PropertyModel.fromJson(e as Map<String, dynamic>)).toList();
     }
-    throw Exception('Failed to load properties (${response.statusCode})');
+    throw Exception('Failed to load properties (${response.statusCode}): ${response.body}');
   }
 
   static Future<int> addProperty(PropertyModel property) async {
@@ -123,10 +126,13 @@ class PropertyApiService {
     final response = await ApiClient.get(uri);
 
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      return data.map((e) => PropertyModel.fromJson(e)).toList();
+      final decoded = jsonDecode(response.body);
+      if (decoded is! List) {
+        throw Exception('Unexpected response format from server');
+      }
+      return decoded.map((e) => PropertyModel.fromJson(e as Map<String, dynamic>)).toList();
     }
-    throw Exception('Failed to load favourites (${response.statusCode})');
+    throw Exception('Failed to load favourites (${response.statusCode}): ${response.body}');
   }
 
   static Future<bool> toggleFavourite({
