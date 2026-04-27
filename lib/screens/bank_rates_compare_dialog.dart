@@ -5,31 +5,15 @@ import 'package:intl/intl.dart';
 
 class BankCompareDialog extends StatefulWidget {
   final List<Bank> banks;
-  final ScrollController? scrollController;
 
-  const BankCompareDialog({
-    super.key,
-    required this.banks,
-    this.scrollController,
-  });
+  const BankCompareDialog({super.key, required this.banks});
 
   static void show(BuildContext context, List<Bank> banks) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.88,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (_, controller) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: BankCompareDialog(banks: banks, scrollController: controller),
-        ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => BankCompareDialog(banks: banks),
       ),
     );
   }
@@ -62,60 +46,39 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
           _banks.sort((a, b) => (a.processingFee ?? double.infinity)
               .compareTo(b.processingFee ?? double.infinity));
         case 'tenure':
-          _banks.sort((a, b) => (b.tenureYears ?? 0)
-              .compareTo(a.tenureYears ?? 0));
+          _banks.sort(
+              (a, b) => (b.tenureYears ?? 0).compareTo(a.tenureYears ?? 0));
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _handle(),
-        _header(context),
-        _sortChips(),
-        const Divider(height: 1),
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SingleChildScrollView(
-              controller: widget.scrollController,
-              child: _table(),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Bank Comparison'),
+        foregroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary, AppColors.secondary],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _handle() => Container(
-        margin: const EdgeInsets.only(top: 10, bottom: 4),
-        width: 36,
-        height: 4,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade300,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      );
-
-  Widget _header(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 8, 8),
-      child: Row(
+      ),
+      body: Column(
         children: [
-          const Expanded(
-            child: Text(
-              'Bank Comparison',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary),
+          _sortChips(),
+          const Divider(height: 1),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SingleChildScrollView(
+                child: _table(),
+              ),
             ),
-          ),
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
           ),
         ],
       ),
@@ -124,7 +87,7 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
 
   Widget _sortChips() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
         children: [
           const Text('Sort:',
@@ -172,7 +135,6 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
   }
 
   Widget _table() {
-    // Collect all unique CIBIL ranges across banks
     final cibilRanges = <String>{};
     for (final bank in _banks) {
       for (final rate in bank.interestRates) {
@@ -190,7 +152,8 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
 
     return DataTable(
       columnSpacing: 28,
-      headingRowColor: WidgetStateProperty.all(AppColors.primary.withOpacity(0.1)),
+      headingRowColor:
+          WidgetStateProperty.all(AppColors.primary.withOpacity(0.1)),
       columns: [
         const DataColumn(
             label: Text('Criteria',
@@ -231,9 +194,8 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
         ),
         _fixedRow(
           'Min CIBIL Score',
-          _banks.map((b) => b.minCibilScore != null
-              ? '${b.minCibilScore!.toInt()}+'
-              : '--'),
+          _banks.map((b) =>
+              b.minCibilScore != null ? '${b.minCibilScore!.toInt()}+' : '--'),
           highlightMin: true,
           lowerIsBetter: true,
         ),
@@ -251,7 +213,6 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
           highlightMin: true,
           lowerIsBetter: false,
         ),
-        // CIBIL-wise interest rate rows
         ...sortedRanges.map((range) => _cibilRow(range)),
       ],
     );
@@ -268,8 +229,8 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
     double? bestNum;
     if (highlightMin) {
       final nums = list
-          .map((s) => double.tryParse(
-              s.replaceAll(RegExp(r'[₹%+a-zA-Z, ]'), '')))
+          .map((s) =>
+              double.tryParse(s.replaceAll(RegExp(r'[₹%+a-zA-Z, ]'), '')))
           .whereType<double>()
           .toList();
       if (nums.isNotEmpty) {
