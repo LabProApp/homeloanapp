@@ -191,11 +191,27 @@ class MyApp extends StatelessWidget {
 
       // ── Chips ──────────────────────────────────────────────────────────────
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.border,
-        selectedColor: AppColors.primary.withOpacity(0.15),
-        labelStyle: const TextStyle(fontFamily: font, fontSize: 13),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        backgroundColor: Colors.white,
+        selectedColor: AppColors.primary,
+        disabledColor: AppColors.disabled.withOpacity(0.5),
+        // unselected label
+        labelStyle: const TextStyle(
+          fontFamily: font,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimary,
+        ),
+        // selected label — white text on primary background
+        secondaryLabelStyle: const TextStyle(
+          fontFamily: font,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+        side: const BorderSide(color: AppColors.border),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        showCheckmark: false,
       ),
 
       // ── BottomNavBar ───────────────────────────────────────────────────────

@@ -204,7 +204,8 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
                 : _properties.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
+                        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                        cacheExtent: 400,
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         itemCount: _properties.length,
                         itemBuilder: (context, index) {
@@ -353,10 +354,13 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
       borderRadius: BorderRadius.circular(12),
       constraints: const BoxConstraints(minHeight: 36, minWidth: 110),
       selectedColor: Colors.white,
+      color: AppColors.textSecondary,
       fillColor: AppColors.primary,
+      borderColor: AppColors.border,
+      selectedBorderColor: AppColors.primary,
       onPressed: (i) => onTap(i == 0),
       children: labels
-          .map((e) => Text(e, style: const TextStyle(fontSize: 13)))
+          .map((e) => Text(e, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)))
           .toList(),
     );
   }

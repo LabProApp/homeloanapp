@@ -299,44 +299,35 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
               },
 
               child: InputChip(
-                /// 🔥 Text with overflow handling
                 label: SizedBox(
                   width: 130,
                   child: Text(
                     _summarizeSearch(s),
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
+                      color: isPinned ? AppColors.primary : AppColors.textPrimary,
                     ),
                   ),
                 ),
-
-                /// 🔥 Visual polish
                 backgroundColor: isPinned
-                    ? AppColors.primary.withOpacity(0.10)
+                    ? AppColors.primary.withOpacity(0.12)
                     : Colors.white,
-
                 side: BorderSide(
                   color: isPinned ? AppColors.primary : AppColors.border,
+                  width: isPinned ? 1.5 : 1.0,
                 ),
-
                 elevation: 2,
-                shadowColor: Colors.black.withOpacity(0.05),
-
+                shadowColor: Colors.black.withOpacity(0.06),
                 avatar: Icon(
                   isPinned ? Icons.push_pin : Icons.history,
                   size: 16,
                   color: isPinned ? AppColors.primary : AppColors.textMuted,
                 ),
-
-                /// 🔥 Apply search
                 onPressed: () => _applySavedSearch(s),
-
-                /// 🔥 Delete (actual delete now)
                 onDeleted: () => _deleteSearch(i),
-
-                deleteIcon: const Icon(Icons.close, size: 18),
+                deleteIcon: Icon(Icons.close, size: 16, color: isPinned ? AppColors.primary : AppColors.textMuted),
                 deleteButtonTooltipMessage: "Remove search",
               ),
             ),
@@ -400,7 +391,8 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                 : _properties.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
+                        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                        cacheExtent: 400,
                         itemCount: _properties.length,
                         itemBuilder: (_, i) {
                           final p = _properties[i];
@@ -539,11 +531,16 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     return ToggleButtons(
       isSelected: [first, !first],
       borderRadius: BorderRadius.circular(12),
-      constraints: const BoxConstraints(minHeight: 35, minWidth: 90),
+      constraints: const BoxConstraints(minHeight: 36, minWidth: 100),
       selectedColor: Colors.white,
+      color: AppColors.textSecondary,
       fillColor: AppColors.primary,
+      borderColor: AppColors.border,
+      selectedBorderColor: AppColors.primary,
       onPressed: (i) => onTap(i == 0),
-      children: labels.map((e) => Text(e)).toList(),
+      children: labels
+          .map((e) => Text(e, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)))
+          .toList(),
     );
   }
 
