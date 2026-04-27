@@ -27,7 +27,7 @@ class AppSearchField extends StatelessWidget {
       height: 44,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0C000000),

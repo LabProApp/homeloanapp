@@ -76,8 +76,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       builder: (_) => AlertDialog(
         title: const Text("Delete Property"),
         content: const Text("Are you sure you want to delete this property?"),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         actions: [
-          OutlinedButton(
+          TextButton(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(80, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
             onPressed: () => Navigator.pop(context),
             child: const Text("Cancel"),
           ),
@@ -85,6 +90,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
+              minimumSize: const Size(88, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
             onPressed: () async {
               Navigator.pop(context);

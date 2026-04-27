@@ -107,6 +107,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         elevation: 0,
         backgroundColor: AppColors.listingbackground,
         foregroundColor: AppColors.primary,
+        iconTheme: const IconThemeData(color: AppColors.primary),
         title: Text(
           'KeyBricks',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -355,8 +356,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (_) => AlertDialog(
         title: const Text("Logout"),
         content: const Text("Are you sure you want to logout?"),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         actions: [
-          OutlinedButton(
+          TextButton(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(80, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
             onPressed: () => Navigator.pop(context),
             child: const Text("Cancel"),
           ),
@@ -364,6 +370,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
+              minimumSize: const Size(88, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
             onPressed: () async {
               Navigator.pop(context);
