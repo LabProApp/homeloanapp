@@ -13,20 +13,26 @@ class InquiryDialog extends StatefulWidget {
 
 class _InquiryDialogState extends State<InquiryDialog> {
   final _formKey = GlobalKey<FormState>();
-
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _messageController = TextEditingController();
 
   bool _loading = false;
+  String _selectedService = 'DOCUMENT_SERVICES';
 
-  final List<String> _services = [
-    "DOCUMENT_SERVICES",
-    "PROPERTY_REGISTRATION",
-    "RENT_AGREEMENT",
-  ];
+  static const Map<String, String> _serviceLabels = {
+    'DOCUMENT_SERVICES': 'Document Services',
+    'PROPERTY_REGISTRATION': 'Property Registration',
+    'RENT_AGREEMENT': 'Rent Agreement',
+  };
 
-  String _selectedService = "DOCUMENT_SERVICES";
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -34,23 +40,22 @@ class _InquiryDialogState extends State<InquiryDialog> {
     setState(() => _loading = true);
 
     try {
-      final inquiry = Inquiry(
+      await LegalServiceApi.submitInquiry(Inquiry(
         applicantName: _nameController.text.trim(),
         mobileNumber: _phoneController.text.trim(),
         inquiryType: _selectedService,
-        comments: _messageController.text.trim(),
-        leadSource: "APP",
-      );
-
-      await LegalServiceApi.submitInquiry(inquiry);
+        comments: _messageController.text.trim().isEmpty
+            ? null
+            : _messageController.text.trim(),
+        leadSource: 'APP',
+      ));
 
       if (!mounted) return;
       Navigator.pop(context);
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: AppColors.success,
-          content: Text("Inquiry submitted successfully"),
+          content: Text('Inquiry submitted successfully'),
         ),
       );
     } catch (e) {
@@ -58,7 +63,7 @@ class _InquiryDialogState extends State<InquiryDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: AppColors.error,
-          content: Text("Failed to submit inquiry"),
+          content: Text('Failed to submit inquiry'),
         ),
       );
     } finally {
@@ -73,123 +78,142 @@ class _InquiryDialogState extends State<InquiryDialog> {
         color: AppColors.listingbackground,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        top: 16,
-      ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              /// HEADER
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Raise an Inquiry',
-                    style: TextStyle(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Colored header band ─────────────────────────────────────
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Text(
+                  'Raise an Inquiry',
+                  style: TextStyle(
+                      color: Colors.white,
                       fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
+                      fontWeight: FontWeight.w600),
+                ),
+                Positioned(
+                  right: 4,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white70),
                     onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
+                ),
+              ],
+            ),
+          ),
 
-              /// NAME
-              _buildTextField(
-                controller: _nameController,
-                label: "Full Name",
-                validator: (v) => v == null || v.isEmpty ? "Enter your name" : null,
+          // ── Form ────────────────────────────────────────────────────
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
               ),
-              const SizedBox(height: 12),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _field(
+                      controller: _nameController,
+                      label: 'Full Name',
+                      icon: Icons.person_outline_rounded,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
+                    ),
+                    const SizedBox(height: 12),
 
-              /// PHONE
-              _buildTextField(
-                controller: _phoneController,
-                label: "Mobile Number",
-                keyboardType: TextInputType.phone,
-                validator: (v) =>
-                v == null || v.length != 10 ? "Enter valid 10-digit number" : null,
-              ),
-              const SizedBox(height: 12),
+                    _field(
+                      controller: _phoneController,
+                      label: 'Mobile Number',
+                      icon: Icons.phone_outlined,
+                      keyboard: TextInputType.phone,
+                      validator: (v) => (v == null || v.trim().length != 10)
+                          ? 'Enter a valid 10-digit number'
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
 
-              /// SERVICE
-              DropdownButtonFormField<String>(
-                value: _selectedService,
-                items: _services
-                    .map(
-                      (s) => DropdownMenuItem(
-                    value: s,
-                    child: Text(s.replaceAll("_", " ")),
-                  ),
-                )
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedService = v!),
-                decoration: _inputDecoration(label: "Service"),
-              ),
-              const SizedBox(height: 12),
+                    // Service type
+                    DropdownButtonFormField<String>(
+                      value: _selectedService,
+                      decoration: _inputDeco(
+                          label: 'Service Type',
+                          icon: Icons.gavel_rounded),
+                      items: _serviceLabels.entries
+                          .map((e) => DropdownMenuItem(
+                              value: e.key, child: Text(e.value)))
+                          .toList(),
+                      onChanged: (v) =>
+                          setState(() => _selectedService = v!),
+                    ),
+                    const SizedBox(height: 12),
 
-              /// MESSAGE
-              _buildTextField(
-                controller: _messageController,
-                label: "Message",
-                maxLines: 3,
-              ),
-              const SizedBox(height: 20),
+                    _field(
+                      controller: _messageController,
+                      label: 'Message (optional)',
+                      icon: Icons.comment_outlined,
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 20),
 
-              /// SUBMIT BUTTON
-              /// SUBMIT BUTTON (AppButton)
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: AppButton(
-                  text: "Submit Inquiry",
-                  isLoading: _loading,
-                  onTap: _loading ? null : _submit,
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        text: 'Submit Inquiry',
+                        isLoading: _loading,
+                        onTap: _loading ? null : _submit,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  /// STANDARD WHITE ROUNDED TEXTFIELD
-  Widget _buildTextField({
+  Widget _field({
     required TextEditingController controller,
     required String label,
-    TextInputType keyboardType = TextInputType.text,
+    required IconData icon,
+    TextInputType keyboard = TextInputType.text,
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
-      keyboardType: keyboardType,
+      keyboardType: keyboard,
       maxLines: maxLines,
       validator: validator,
-      decoration: _inputDecoration(label: label),
+      decoration: _inputDeco(label: label, icon: icon),
     );
   }
 
-  InputDecoration _inputDecoration({required String label}) {
+  InputDecoration _inputDeco({required String label, required IconData icon}) {
     return InputDecoration(
       labelText: label,
       filled: true,
       fillColor: Colors.white,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      labelStyle: const TextStyle(color: AppColors.textMuted),
+      prefixIcon: Icon(icon, size: 20, color: AppColors.textMuted),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,

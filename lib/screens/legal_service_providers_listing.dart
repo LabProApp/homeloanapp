@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_colors.dart';
 import '../models/legal_service_model.dart';
 import '../services/legal_service_api.dart';
@@ -84,31 +83,6 @@ class _LegalServicePageState extends State<LegalServicePage> {
     }).toList();
   }
 
-  Future<void> _call(String phone) async {
-    final cleanedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    if (cleanedPhone.isEmpty) return;
-
-    final uri = Uri.parse("tel:$cleanedPhone");
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
-
-  Future<void> _whatsApp(String phone) async {
-    final cleanedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    if (cleanedPhone.isEmpty) return;
-
-    final whatsappNumber =
-    cleanedPhone.startsWith('91') ? cleanedPhone : '91$cleanedPhone';
-
-    final message = "I would like to inquire about legal services";
-    final uri = Uri.parse(
-      "https://wa.me/$whatsappNumber?text=${Uri.encodeComponent(message)}",
-    );
-
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-
   Widget _buildList() {
     if (_isLoading && _providers.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -180,7 +154,9 @@ class _LegalServicePageState extends State<LegalServicePage> {
 
     return ListView.builder(
       controller: _scrollController,
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      cacheExtent: 800,
+      addAutomaticKeepAlives: false,
       padding: const EdgeInsets.all(16),
       itemCount: _filteredProviders.length + (_isLoading ? 1 : 0),
       itemBuilder: (context, index) {
@@ -190,12 +166,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
             child: Center(child: CircularProgressIndicator()),
           );
         }
-        final p = _filteredProviders[index];
-        return LegalServiceCard(
-          service: p,
-          onCall: () => _call(p.phone1),
-          onWhatsApp: () => _whatsApp(p.phone1),
-        );
+        return LegalServiceCard(service: _filteredProviders[index]);
       },
     );
   }
