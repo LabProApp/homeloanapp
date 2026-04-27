@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 
@@ -20,32 +22,57 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
   String _otpCode = '';
   bool _loading = false;
   bool _resending = false;
+  int _countdown = 60;
+  Timer? _countdownTimer;
 
   @override
   void initState() {
     super.initState();
     listenForCode();
+    _startCountdown();
   }
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     cancel();
     super.dispose();
   }
 
   @override
   void codeUpdated() {
+    if (!mounted) return;
     setState(() => _otpCode = code ?? '');
     if (_otpCode.length == 6) _verifyOtp();
   }
 
+  void _startCountdown() {
+    _countdownTimer?.cancel();
+    setState(() => _countdown = 60);
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      setState(() {
+        if (_countdown > 0) {
+          _countdown--;
+        } else {
+          t.cancel();
+        }
+      });
+    });
+  }
+
   Future<void> _verifyOtp() async {
-    if (_otpCode.length != 6) return;
+    if (_otpCode.length != 6) {
+      _showSnack('Please enter the complete 6-digit code');
+      return;
+    }
     setState(() => _loading = true);
 
     try {
       await UserApiService.verifyOtp(value: widget.value, otp: _otpCode);
-
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -55,58 +82,92 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
       );
     } catch (e) {
       if (!mounted) return;
-      _showSnack(e.toString().replaceFirst('Exception: ', ''));
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      _showSnack(
+        msg.isNotEmpty ? msg : 'Invalid or expired code. Please try again.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _resendOtp() async {
+    if (_countdown > 0) return;
     setState(() => _resending = true);
     try {
       await UserApiService.resendOtp(widget.value);
       if (!mounted) return;
-      _showSnack('OTP resent successfully', success: true);
+      _startCountdown();
+      _showSnack('Verification code resent successfully', success: true);
     } catch (e) {
       if (!mounted) return;
-      _showSnack(e.toString().replaceFirst('Exception: ', ''));
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      _showSnack(
+          msg.isNotEmpty ? msg : 'Failed to resend code. Please try again.');
     } finally {
       if (mounted) setState(() => _resending = false);
     }
   }
 
   void _showSnack(String msg, {bool success = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg, style: const TextStyle(fontSize: 14)),
-        backgroundColor: success ? AppColors.success : AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(msg, style: const TextStyle(fontSize: 14)),
+          backgroundColor: success ? AppColors.success : AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final canResend = _countdown == 0 && !_resending;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Verify OTP')),
-      body: Padding(
+      appBar: AppBar(
+        title: const Text('Verify Code'),
+        flexibleSpace: const DecoratedBox(
+          decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+        ),
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
+            // Icon header
+            Center(
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.10),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.mark_email_read_outlined,
+                    size: 36, color: AppColors.primary),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             Text(
               'Enter the 6-digit code sent to',
-              style: textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              style: textTheme.bodyMedium
+                  ?.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 4),
             Text(
               widget.value,
               style: textTheme.titleMedium?.copyWith(
                 color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
 
@@ -117,37 +178,60 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
               currentCode: _otpCode,
               decoration: BoxLooseDecoration(
                 gapSpace: 10,
-                radius: const Radius.circular(10),
-                strokeColorBuilder: FixedColorBuilder(AppColors.primary),
-                bgColorBuilder: FixedColorBuilder(AppColors.textBoxbackground),
+                radius: const Radius.circular(12),
+                strokeColorBuilder:
+                    FixedColorBuilder(AppColors.primary),
+                bgColorBuilder:
+                    FixedColorBuilder(AppColors.textBoxbackground),
               ),
               onCodeChanged: (code) {
                 if (code != null) setState(() => _otpCode = code);
               },
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _resending ? null : _resendOtp,
-                child: Text(
-                  _resending ? 'Resending…' : 'Resend OTP',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+            // Resend row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (_countdown > 0)
+                  Text(
+                    'Resend in ${_countdown}s',
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.textMuted),
+                  )
+                else
+                  TextButton(
+                    onPressed: canResend ? _resendOtp : null,
+                    child: Text(
+                      _resending ? 'Resending…' : 'Resend Code',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
-              ),
+              ],
             ),
 
             const SizedBox(height: 24),
 
             AppButton(
-              text: 'Verify OTP',
+              text: 'Verify Code',
               isLoading: _loading,
               onTap: _loading ? null : _verifyOtp,
+            ),
+
+            const SizedBox(height: 20),
+
+            Center(
+              child: Text(
+                "Didn't receive the code? Check your spam folder.",
+                textAlign: TextAlign.center,
+                style: textTheme.bodySmall
+                    ?.copyWith(color: AppColors.textMuted),
+              ),
             ),
           ],
         ),

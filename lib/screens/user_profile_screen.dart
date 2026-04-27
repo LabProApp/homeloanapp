@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../services/user_service.dart';
 import '../models/user_model.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
 import '../services/document_service.dart';
+import 'user_forgot_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final int userId;
@@ -24,7 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   File? _selectedImage;
   String? _profileImageUrl;
-  bool _loading = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -60,15 +64,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final picked = await ImagePicker()
-        .pickImage(source: source, imageQuality: 70);
+    final picked =
+        await ImagePicker().pickImage(source: source, imageQuality: 70);
     if (picked != null && mounted) {
       setState(() => _selectedImage = File(picked.path));
     }
   }
 
   Future<void> _saveProfile(UserModel user) async {
-    setState(() => _loading = true);
+    if (_nameCtrl.text.trim().isEmpty) {
+      _showSnack('Name cannot be empty', isError: true);
+      return;
+    }
+    setState(() => _saving = true);
     try {
       await UserApiService.updateProfile(
         userId: user.id,
@@ -83,27 +91,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
           files: [_selectedImage!],
         );
         await _loadProfileImage();
+        _selectedImage = null;
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColors.success,
-          content: Text('Profile updated successfully'),
-        ),
-      );
+      _showSnack('Profile updated successfully');
       setState(() => _futureUser = _loadUser());
+    } on SocketException {
+      _showSnack('No internet connection. Please check your network.',
+          isError: true);
+    } on TimeoutException {
+      _showSnack('Connection timed out. Please try again.', isError: true);
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      _showSnack(
+          msg.isNotEmpty ? msg : 'Could not update profile. Please try again.',
+          isError: true);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _showSnack(String msg, {bool isError = false}) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
         SnackBar(
-          backgroundColor: AppColors.error,
-          content: Text('Update failed: $e'),
+          backgroundColor:
+              isError ? AppColors.error : AppColors.success,
+          content: Text(msg, style: const TextStyle(fontSize: 14)),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
         ),
       );
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
   }
 
   void _showImagePickerSheet() {
@@ -121,8 +142,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2)),
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt_rounded,
@@ -149,155 +171,213 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // ── Build ─────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<UserModel>(
+      future: _futureUser,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            snapshot.data == null) {
+          return _buildScaffold(child: const Center(
+            child: CircularProgressIndicator(),
+          ));
+        }
+
+        if ((snapshot.hasError || !snapshot.hasData) &&
+            snapshot.data == null) {
+          return _buildScaffold(
+            child: _errorView(snapshot.error?.toString()),
+          );
+        }
+
+        final user = snapshot.data!;
+        return _buildContent(user);
+      },
+    );
+  }
+
+  // Simple scaffold for loading/error states (no sliver app bar)
+  Widget _buildScaffold({required Widget child}) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      body: FutureBuilder<UserModel>(
-        future: _futureUser,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError || !snapshot.hasData) {
-            return _errorView(snapshot.error?.toString() ?? 'No profile data found.');
-          }
+      appBar: AppBar(
+        title: const Text('My Profile'),
+        flexibleSpace: const DecoratedBox(
+          decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+        ),
+      ),
+      body: child,
+    );
+  }
 
-          final user = snapshot.data!;
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // ── AppBar ────────────────────────────────────────────────
-              SliverAppBar(
-                expandedHeight: 170,
-                pinned: true,
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                iconTheme: const IconThemeData(color: Colors.white),
-                flexibleSpace: FlexibleSpaceBar(
-                  centerTitle: true,
-                  titlePadding: const EdgeInsets.only(bottom: 14),
-                  title: const Text(
-                    'My Profile',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(offset: Offset(0, 1), blurRadius: 3)
-                        ]),
-                  ),
-                  background: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.secondary],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                  ),
+  // Full scaffold with sliver app bar for the success/content state
+  Widget _buildContent(UserModel user) {
+    return Scaffold(
+      backgroundColor: AppColors.listingbackground,
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // Gradient SliverAppBar
+          SliverAppBar(
+            expandedHeight: 160,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: true,
+              titlePadding: const EdgeInsets.only(bottom: 14),
+              title: const Text(
+                'My Profile',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.white,
+                  shadows: [Shadow(offset: Offset(0, 1), blurRadius: 3)],
                 ),
               ),
+              background: const DecoratedBox(
+                decoration:
+                    BoxDecoration(gradient: AppColors.primaryGradient),
+              ),
+            ),
+          ),
 
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Avatar + name
+                  _profileHeader(user),
+
+                  const SizedBox(height: 20),
+
+                  // Personal Information
+                  _SectionCard(
+                    icon: Icons.person_outline_rounded,
+                    title: 'Personal Information',
                     children: [
-                      // ── Avatar + name + badges ─────────────────────
-                      _profileHeader(user),
-
-                      const SizedBox(height: 20),
-
-                      // ── Personal Information ───────────────────────
-                      _SectionCard(
-                        icon: Icons.person_outline_rounded,
-                        title: 'Personal Information',
-                        children: [
-                          _EditableField(
-                            label: 'Full Name',
-                            controller: _nameCtrl,
-                            icon: Icons.badge_outlined,
-                          ),
-                          const SizedBox(height: 12),
-                          _ReadOnlyField(
-                            label: 'Email',
-                            value: user.email,
-                            icon: Icons.email_outlined,
-                          ),
-                          const SizedBox(height: 12),
-                          _ReadOnlyField(
-                            label: 'Mobile',
-                            value: user.mobile,
-                            icon: Icons.phone_outlined,
-                          ),
-                          const SizedBox(height: 12),
-                          _EditableField(
-                            label: 'Address',
-                            controller: _addressCtrl,
-                            icon: Icons.home_outlined,
-                            maxLines: 2,
-                          ),
-                        ],
+                      _EditableField(
+                        label: 'Full Name',
+                        controller: _nameCtrl,
+                        icon: Icons.badge_outlined,
                       ),
-
-                      const SizedBox(height: 16),
-
-                      // ── Account Details ────────────────────────────
-                      _SectionCard(
-                        icon: Icons.manage_accounts_outlined,
-                        title: 'Account Details',
-                        children: [
-                          _ReadOnlyField(
-                            label: 'Role',
-                            value: _formatRole(user.userRole),
-                            icon: Icons.work_outline_rounded,
-                          ),
-                          const SizedBox(height: 12),
-                          _ReadOnlyField(
-                            label: 'Plan',
-                            value: user.userPackage.isNotEmpty
-                                ? user.userPackage
-                                : 'Free',
-                            icon: Icons.workspace_premium_outlined,
-                          ),
-                          const SizedBox(height: 12),
-                          _ReadOnlyField(
-                            label: 'Status',
-                            value: user.isVerified
-                                ? 'Verified'
-                                : 'Pending Verification',
-                            icon: user.isVerified
-                                ? Icons.verified_outlined
-                                : Icons.pending_outlined,
-                            valueColor: user.isVerified
-                                ? AppColors.success
-                                : AppColors.warning,
-                          ),
-                        ],
+                      const SizedBox(height: 12),
+                      _ReadOnlyField(
+                        label: 'Email',
+                        value: user.email,
+                        icon: Icons.email_outlined,
                       ),
-
-                      const SizedBox(height: 24),
-
-                      // ── Save button ────────────────────────────────
-                      AppButton(
-                        text: 'Save Profile',
-                        isLoading: _loading,
-                        onTap: _loading ? null : () => _saveProfile(user),
+                      const SizedBox(height: 12),
+                      _ReadOnlyField(
+                        label: 'Mobile',
+                        value: user.mobile,
+                        icon: Icons.phone_outlined,
                       ),
-
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 12),
+                      _EditableField(
+                        label: 'Address',
+                        controller: _addressCtrl,
+                        icon: Icons.home_outlined,
+                        maxLines: 2,
+                      ),
                     ],
                   ),
-                ),
+
+                  const SizedBox(height: 16),
+
+                  // Account Details
+                  _SectionCard(
+                    icon: Icons.manage_accounts_outlined,
+                    title: 'Account Details',
+                    children: [
+                      _ReadOnlyField(
+                        label: 'Role',
+                        value: _formatRole(user.userRole),
+                        icon: Icons.work_outline_rounded,
+                      ),
+                      const SizedBox(height: 12),
+                      _ReadOnlyField(
+                        label: 'Plan',
+                        value: user.userPackage.isNotEmpty
+                            ? user.userPackage
+                            : 'Free',
+                        icon: Icons.workspace_premium_outlined,
+                      ),
+                      const SizedBox(height: 12),
+                      _ReadOnlyField(
+                        label: 'Account Status',
+                        value: user.isVerified
+                            ? 'Verified'
+                            : 'Pending Verification',
+                        icon: user.isVerified
+                            ? Icons.verified_outlined
+                            : Icons.pending_outlined,
+                        valueColor: user.isVerified
+                            ? AppColors.success
+                            : AppColors.warning,
+                      ),
+                      const SizedBox(height: 12),
+                      // Change Password action
+                      InkWell(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const ForgotPasswordScreen()),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: AppColors.primary.withOpacity(0.2)),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.lock_reset_rounded,
+                                  size: 20, color: AppColors.primary),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Change Password',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Icon(Icons.chevron_right_rounded,
+                                  size: 18, color: AppColors.primary),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Save button
+                  AppButton(
+                    text: 'Save Profile',
+                    isLoading: _saving,
+                    onTap: _saving ? null : () => _saveProfile(user),
+                  ),
+
+                  const SizedBox(height: 32),
+                ],
               ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // ── Profile Header ────────────────────────────────────────────────────────
+  // ── Profile header ─────────────────────────────────────────────────────────
 
   Widget _profileHeader(UserModel user) {
     final imageUrl = _profileImageUrl ?? user.imageUrl;
@@ -305,7 +385,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Column(
       children: [
-        // Avatar with camera overlay
         GestureDetector(
           onTap: _showImagePickerSheet,
           child: Stack(
@@ -324,9 +403,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ? user.name[0].toUpperCase()
                             : 'U',
                         style: const TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary),
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
                       )
                     : null,
               ),
@@ -338,15 +418,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                    border: Border.all(color: AppColors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 4)
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 4,
+                      ),
                     ],
                   ),
                   child: const Icon(Icons.camera_alt_rounded,
-                      size: 14, color: Colors.white),
+                      size: 14, color: AppColors.white),
                 ),
               ),
             ],
@@ -358,19 +439,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           user.name,
           style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary),
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(
           user.email,
-          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          style: const TextStyle(
+              fontSize: 13, color: AppColors.textSecondary),
         ),
+
+        if (_selectedImage != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            'New photo selected — save to apply',
+            style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500),
+          ),
+        ],
 
         const SizedBox(height: 10),
 
-        // Badges row
         Wrap(
           spacing: 8,
           runSpacing: 6,
@@ -387,16 +480,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 label: user.userPackage,
                 color: AppColors.warning,
               ),
+            if (user.isVerified)
+              _badge(
+                icon: Icons.verified_rounded,
+                label: 'Verified',
+                color: AppColors.success,
+              ),
           ],
         ),
       ],
     );
   }
 
-  Widget _badge(
-      {required IconData icon,
-      required String label,
-      required Color color}) {
+  Widget _badge({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -409,9 +509,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 4),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w600, color: color),
+          ),
         ],
       ),
     );
@@ -434,7 +536,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Widget _errorView(String msg) {
+  Widget _errorView(String? msg) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -447,15 +549,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const Text(
               "Couldn't load profile",
               style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Check your connection and try again.',
+            Text(
+              msg != null && msg.contains('SocketException')
+                  ? 'No internet connection.'
+                  : 'Check your connection and try again.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 20),
             OutlinedButton.icon(
@@ -470,20 +575,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// ── Shared Section Card ───────────────────────────────────────────────────────
+// ── Section Card ───────────────────────────────────────────────────────────────
 
 class _SectionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final List<Widget> children;
 
-  const _SectionCard(
-      {required this.icon, required this.title, required this.children});
+  const _SectionCard({
+    required this.icon,
+    required this.title,
+    required this.children,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -493,11 +602,14 @@ class _SectionCard extends StatelessWidget {
               children: [
                 Icon(icon, color: AppColors.primary, size: 20),
                 const SizedBox(width: 8),
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -509,7 +621,7 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-// ── Editable Field ────────────────────────────────────────────────────────────
+// ── Editable Field ─────────────────────────────────────────────────────────────
 
 class _EditableField extends StatelessWidget {
   final String label;
@@ -535,28 +647,29 @@ class _EditableField extends StatelessWidget {
         labelStyle: const TextStyle(color: AppColors.textMuted),
         prefixIcon: Icon(icon, size: 20, color: AppColors.textMuted),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.white,
         isDense: true,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide:
+              const BorderSide(color: AppColors.primary, width: 1.5),
         ),
       ),
     );
   }
 }
 
-// ── Read-only Field ───────────────────────────────────────────────────────────
+// ── Read-only Field ────────────────────────────────────────────────────────────
 
 class _ReadOnlyField extends StatelessWidget {
   final String label;
@@ -576,9 +689,9 @@ class _ReadOnlyField extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: AppColors.surfaceSubtle,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -588,18 +701,21 @@ class _ReadOnlyField extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: const TextStyle(
-                        fontSize: 11, color: AppColors.textMuted)),
+                Text(
+                  label,
+                  style: const TextStyle(
+                      fontSize: 11, color: AppColors.textMuted),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   value.isEmpty ? '—' : value,
                   style: TextStyle(
-                      fontSize: 14,
-                      color: valueColor ?? AppColors.textPrimary,
-                      fontWeight: valueColor != null
-                          ? FontWeight.w600
-                          : FontWeight.normal),
+                    fontSize: 14,
+                    color: valueColor ?? AppColors.textPrimary,
+                    fontWeight: valueColor != null
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
                 ),
               ],
             ),

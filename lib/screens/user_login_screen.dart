@@ -23,7 +23,6 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
-  // ── State ────────────────────────────────────────────────────────────────
   int _tab = 0;
   bool _passwordVisible = false;
   bool _loading = false;
@@ -32,56 +31,44 @@ class _LoginScreenState extends State<LoginScreen>
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
 
-  // ── Entrance animation ───────────────────────────────────────────────────
   late final AnimationController _entranceCtrl;
-
-  // Each "layer" slides up + fades in, staggered by 80 ms
   late final Animation<double> _logoFade;
   late final Animation<Offset> _logoSlide;
-
   late final Animation<double> _titleFade;
   late final Animation<Offset> _titleSlide;
-
   late final Animation<double> _tabFade;
   late final Animation<Offset> _tabSlide;
-
   late final Animation<double> _fieldsFade;
   late final Animation<Offset> _fieldsSlide;
-
   late final Animation<double> _btnFade;
   late final Animation<Offset> _btnSlide;
 
   @override
   void initState() {
     super.initState();
-
     _entranceCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-
-    _logoFade   = _fade(0.00, 0.30);
-    _logoSlide  = _slide(0.00, 0.30);
-    _titleFade  = _fade(0.15, 0.45);
-    _titleSlide = _slide(0.15, 0.45);
-    _tabFade    = _fade(0.28, 0.58);
-    _tabSlide   = _slide(0.28, 0.58);
-    _fieldsFade = _fade(0.42, 0.72);
-    _fieldsSlide= _slide(0.42, 0.72);
-    _btnFade    = _fade(0.56, 0.86);
-    _btnSlide   = _slide(0.56, 0.86);
-
+    _logoFade    = _fade(0.00, 0.30);
+    _logoSlide   = _slide(0.00, 0.30);
+    _titleFade   = _fade(0.15, 0.45);
+    _titleSlide  = _slide(0.15, 0.45);
+    _tabFade     = _fade(0.28, 0.58);
+    _tabSlide    = _slide(0.28, 0.58);
+    _fieldsFade  = _fade(0.42, 0.72);
+    _fieldsSlide = _slide(0.42, 0.72);
+    _btnFade     = _fade(0.56, 0.86);
+    _btnSlide    = _slide(0.56, 0.86);
     _checkIfLoggedIn();
   }
 
-  // Helper: fade animation over [start, end] interval
   Animation<double> _fade(double start, double end) =>
       Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
         parent: _entranceCtrl,
         curve: Interval(start, end, curve: Curves.easeOut),
       ));
 
-  // Helper: slide animation over [start, end] interval
   Animation<Offset> _slide(double start, double end) =>
       Tween<Offset>(begin: const Offset(0, 0.28), end: Offset.zero)
           .animate(CurvedAnimation(
@@ -92,7 +79,6 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _checkIfLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
-
     if (userId != null && userId != 0) {
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -115,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  // ── Build ────────────────────────────────────────────────────────────────
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -139,12 +125,10 @@ class _LoginScreenState extends State<LoginScreen>
         fit: StackFit.expand,
         children: [
           Image.asset('assets/images/splash_bg.jpg', fit: BoxFit.cover),
-
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
             child: Container(color: Colors.black.withOpacity(0.40)),
           ),
-
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -154,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen>
                   children: [
                     const SizedBox(height: 52),
 
-                    // ── Logo ─────────────────────────────────────────────
+                    // Logo
                     _animated(
                       fade: _logoFade,
                       slide: _logoSlide,
@@ -184,16 +168,15 @@ class _LoginScreenState extends State<LoginScreen>
 
                     const SizedBox(height: 18),
 
-                    // ── Brand text ───────────────────────────────────────
+                    // Brand
                     _animated(
                       fade: _titleFade,
                       slide: _titleSlide,
-                      child: Column(
-                        children: const [
+                      child: const Column(
+                        children: [
                           Text(
                             'KeyBricks',
                             style: TextStyle(
-                
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
@@ -204,7 +187,6 @@ class _LoginScreenState extends State<LoginScreen>
                           Text(
                             'Find. Finance. Finalize.',
                             style: TextStyle(
-                
                               fontSize: 14,
                               color: Colors.white70,
                               letterSpacing: 0.5,
@@ -216,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                     const SizedBox(height: 32),
 
-                    // ── Tabs ─────────────────────────────────────────────
+                    // Tabs
                     _animated(
                       fade: _tabFade,
                       slide: _tabSlide,
@@ -225,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                     const SizedBox(height: 24),
 
-                    // ── Fields ───────────────────────────────────────────
+                    // Fields
                     _animated(
                       fade: _fieldsFade,
                       slide: _fieldsSlide,
@@ -234,14 +216,16 @@ class _LoginScreenState extends State<LoginScreen>
 
                     const SizedBox(height: 28),
 
-                    // ── Button ───────────────────────────────────────────
+                    // Button
                     _animated(
                       fade: _btnFade,
                       slide: _btnSlide,
                       child: AppButton(
-                        text: _tab == 0 ? 'Sign In' : 'Sign Up',
+                        text: _tab == 0 ? 'Sign In' : 'Create Account',
                         isLoading: _loading,
-                        onTap: _loading ? null : (_tab == 0 ? _login : _signup),
+                        onTap: _loading
+                            ? null
+                            : (_tab == 0 ? _login : _signup),
                       ),
                     ),
 
@@ -256,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ── Sub-widgets ──────────────────────────────────────────────────────────
+  // ── Sub-widgets ────────────────────────────────────────────────────────────
 
   Widget _animated({
     required Animation<double> fade,
@@ -287,7 +271,13 @@ class _LoginScreenState extends State<LoginScreen>
     final selected = _tab == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _tab = index),
+        onTap: () {
+          setState(() {
+            _tab = index;
+            _emailCtrl.clear();
+            _passwordCtrl.clear();
+          });
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           alignment: Alignment.center,
@@ -296,13 +286,17 @@ class _LoginScreenState extends State<LoginScreen>
             color: selected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
             boxShadow: selected
-                ? [BoxShadow(color: AppColors.primary.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 2))]
+                ? [
+                    BoxShadow(
+                        color: AppColors.primary.withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2))
+                  ]
                 : [],
           ),
           child: Text(
             label,
             style: TextStyle(
-
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: selected ? Colors.white : Colors.white70,
@@ -317,12 +311,13 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel('Email or Mobile'),
+        _fieldLabel(_tab == 0 ? 'Email or Mobile' : 'Email or Mobile'),
         const SizedBox(height: 6),
         _glassField(
           controller: _emailCtrl,
-          hint: 'Enter email or mobile',
+          hint: _tab == 0 ? 'Enter email or mobile' : 'Enter email or mobile',
           icon: Icons.person_outline_rounded,
+          keyboardType: TextInputType.emailAddress,
         ),
 
         if (_tab == 0) ...[
@@ -332,9 +327,13 @@ class _LoginScreenState extends State<LoginScreen>
           _glassField(
             controller: _passwordCtrl,
             hint: 'Enter password',
-            icon: _passwordVisible ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+            icon: _passwordVisible
+                ? Icons.visibility_rounded
+                : Icons.visibility_off_rounded,
             obscure: !_passwordVisible,
-            onIconTap: () => setState(() => _passwordVisible = !_passwordVisible),
+            keyboardType: TextInputType.visiblePassword,
+            onIconTap: () =>
+                setState(() => _passwordVisible = !_passwordVisible),
           ),
           const SizedBox(height: 10),
           Align(
@@ -342,17 +341,43 @@ class _LoginScreenState extends State<LoginScreen>
             child: GestureDetector(
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                MaterialPageRoute(
+                    builder: (_) => const ForgotPasswordScreen()),
               ),
               child: const Text(
                 'Forgot Password?',
                 style: TextStyle(
-    
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
+            ),
+          ),
+        ] else ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    size: 16, color: Colors.white60),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "We'll send a verification code to confirm your identity.",
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                        height: 1.4),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -374,21 +399,21 @@ class _LoginScreenState extends State<LoginScreen>
     required String hint,
     required IconData icon,
     bool obscure = false,
+    TextInputType keyboardType = TextInputType.text,
     VoidCallback? onIconTap,
   }) {
     return TextField(
       controller: controller,
       obscureText: obscure,
-      style: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
+      keyboardType: keyboardType,
+      style: const TextStyle(fontSize: 14, color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
         filled: true,
         fillColor: Colors.white.withOpacity(0.10),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         suffixIcon: GestureDetector(
           onTap: onIconTap,
           child: Icon(icon, color: Colors.white60, size: 20),
@@ -409,11 +434,38 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ── Actions ──────────────────────────────────────────────────────────────
+  // ── Validation helpers ────────────────────────────────────────────────────
+
+  String? _validateIdentifier(String value) {
+    final v = value.trim();
+    if (v.isEmpty) return 'Please enter your email or mobile number';
+    if (v.contains('@')) {
+      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+      if (!emailRegex.hasMatch(v)) return 'Please enter a valid email address';
+    } else {
+      final digits = v.replaceAll(RegExp(r'\D'), '');
+      if (digits.length != 10 &&
+          !(digits.length == 12 && digits.startsWith('91'))) {
+        return 'Please enter a valid 10-digit mobile number';
+      }
+    }
+    return null;
+  }
+
+  // ── Actions ───────────────────────────────────────────────────────────────
 
   Future<void> _login() async {
-    if (_emailCtrl.text.isEmpty || _passwordCtrl.text.isEmpty) {
-      _showError('Please enter credentials');
+    final identifierError = _validateIdentifier(_emailCtrl.text);
+    if (identifierError != null) {
+      _showError(identifierError);
+      return;
+    }
+    if (_passwordCtrl.text.trim().isEmpty) {
+      _showError('Please enter your password');
+      return;
+    }
+    if (_passwordCtrl.text.length < 6) {
+      _showError('Password must be at least 6 characters');
       return;
     }
 
@@ -424,11 +476,9 @@ class _LoginScreenState extends State<LoginScreen>
         _emailCtrl.text.trim(),
         _passwordCtrl.text.trim(),
       );
-
       final user = response.user;
-
       if (user.id == null || user.id == 0) {
-        _showError('Login failed. User ID missing.');
+        _showError('Login failed. Please try again.');
         return;
       }
 
@@ -439,17 +489,19 @@ class _LoginScreenState extends State<LoginScreen>
       await prefs.setString('userMobile', user.mobile ?? '');
       await prefs.setString('userRole', user.userRole ?? '');
       await prefs.setBool('isVerified', user.isVerified ?? false);
-      if (response.token != null) await prefs.setString('token', response.token!);
+      if (response.token != null) {
+        await prefs.setString('token', response.token!);
+      }
 
       if (!mounted) return;
-
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 500),
           pageBuilder: (_, __, ___) => DashboardScreen(userId: user.id!),
           transitionsBuilder: (_, animation, __, child) {
-            final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+            final curved = CurvedAnimation(
+                parent: animation, curve: Curves.easeOutCubic);
             return FadeTransition(
               opacity: curved,
               child: SlideTransition(
@@ -464,22 +516,26 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       );
     } on SocketException {
-      _showError('No internet connection');
+      _showError('No internet connection. Please check your network.');
     } on TimeoutException {
-      _showError('Request timed out. Try again.');
+      _showError('Connection timed out. Please try again.');
     } on FormatException {
-      _showError('Invalid server response');
+      _showError('Unexpected server response. Please try again later.');
     } catch (e, s) {
-      if (kDebugMode) dev.log('Login error', name: 'LoginScreen', error: e, stackTrace: s);
-      _showError('Invalid login credentials');
+      if (kDebugMode) {
+        dev.log('Login error', name: 'LoginScreen', error: e, stackTrace: s);
+      }
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      _showError(msg.isNotEmpty ? msg : 'Incorrect email or password.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _signup() async {
-    if (_emailCtrl.text.isEmpty) {
-      _showError('Enter email or mobile');
+    final identifierError = _validateIdentifier(_emailCtrl.text);
+    if (identifierError != null) {
+      _showError(identifierError);
       return;
     }
 
@@ -487,32 +543,37 @@ class _LoginScreenState extends State<LoginScreen>
 
     try {
       await UserApiService.resendOtp(_emailCtrl.text.trim());
-
       if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => OtpVerificationScreen(value: _emailCtrl.text.trim()),
+          builder: (_) =>
+              OtpVerificationScreen(value: _emailCtrl.text.trim()),
         ),
       );
+    } on SocketException {
+      _showError('No internet connection. Please check your network.');
+    } on TimeoutException {
+      _showError('Connection timed out. Please try again.');
     } catch (e) {
-      _showError('Failed to send OTP');
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      _showError(msg.isNotEmpty ? msg : 'Failed to send OTP. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.error,
-        content: Text(
-          msg,
-          style: const TextStyle(fontSize: 14),
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.error,
+          content: Text(msg, style: const TextStyle(fontSize: 14)),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+      );
   }
 }
