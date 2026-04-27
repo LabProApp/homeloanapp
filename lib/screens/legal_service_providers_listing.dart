@@ -5,6 +5,7 @@ import '../models/legal_service_model.dart';
 import '../services/legal_service_api.dart';
 import '../screens/legal_inquiry_dialog.dart';
 import '../cards/legal_service_card.dart';
+import '../commons/common_widget.dart';
 
 class LegalServicePage extends StatefulWidget {
 
@@ -243,28 +244,12 @@ class _LegalServicePageState extends State<LegalServicePage> {
       ),
       body: Column(
         children: [
-          /// 🔍 SEARCH (HEIGHT = 40)
           Padding(
-            padding: const EdgeInsets.all(8),
-            child: SizedBox(
-              height: 40,
-              child: TextField(
-                controller: _searchController,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: "Search by name, city or service",
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  isDense: true,
-                  contentPadding:
-                  const EdgeInsets.symmetric(vertical: 4),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: AppSearchField(
+              controller: _searchController,
+              hintText: "Search by name, city or service",
+              onChanged: (_) => setState(() {}),
             ),
           ),
 

@@ -9,6 +9,7 @@ import '../cards/property_card.dart';
 import '../screens/property_detail_screen.dart';
 import '../screens/property_add_screen.dart';
 import '../screens/property_filter_dialog.dart';
+import '../commons/common_widget.dart';
 
 class PropertyListingScreen extends StatefulWidget {
   final int userId;
@@ -343,22 +344,10 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Container(
-              height: 42,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onSubmitted: (_) => _refreshFromApi(),
-                decoration: const InputDecoration(
-                  hintText: "Search by locality, city, state",
-                  border: InputBorder.none,
-                  prefixIcon: Icon(Icons.search),
-                ),
-              ),
+            child: AppSearchField(
+              controller: _searchController,
+              hintText: "Search by locality, city, state",
+              onSubmitted: (_) => _refreshFromApi(),
             ),
           ),
           const SizedBox(width: 8),

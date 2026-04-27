@@ -5,6 +5,7 @@ import '../theme/app_colors.dart';
 import '../cards/bank_card.dart';
 import '../screens/bank_rates_compare_dialog.dart';
 import '../screens/bank_apply_loan_dialog.dart';
+import '../commons/common_widget.dart';
 
 class BankPage extends StatefulWidget {
   final int? userId;
@@ -219,22 +220,10 @@ class _BankPageState extends State<BankPage> {
   }
 
   Widget _searchBar() {
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: _search,
-        decoration: const InputDecoration(
-          hintText: "Search bank",
-          border: InputBorder.none,
-          prefixIcon: Icon(Icons.search, size: 20),
-        ),
-      ),
+    return AppSearchField(
+      controller: _searchController,
+      hintText: "Search bank",
+      onChanged: _search,
     );
   }
 

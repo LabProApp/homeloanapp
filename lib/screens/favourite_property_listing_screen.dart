@@ -4,6 +4,7 @@ import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
 import '../cards/property_card.dart';
 import '../screens/property_detail_screen.dart';
+import '../commons/common_widget.dart';
 
 class FavouritePropertyListingScreen extends StatefulWidget {
   final int userId;
@@ -86,28 +87,10 @@ class _FavouritePropertyListingScreenState
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 42,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onSubmitted: (_) => _refreshFromApi(),
-                decoration: const InputDecoration(
-                  hintText: "Search favourite properties",
-                  border: InputBorder.none,
-                  prefixIcon: Icon(Icons.search),
-                ),
-              ),
-            ),
-          ),
-        ],
+      child: AppSearchField(
+        controller: _searchController,
+        hintText: "Search favourite properties",
+        onSubmitted: (_) => _refreshFromApi(),
       ),
     );
   }

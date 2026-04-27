@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../services/leads_service.dart';
 import '../cards/lead_card.dart';
+import '../commons/common_widget.dart';
 
 class BrokerLeadsScreen extends StatefulWidget {
   final int brokerId;
@@ -70,32 +71,12 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        alignment: Alignment.center, // 🔥 important
-        child: TextField(
-          textAlignVertical: TextAlignVertical.center, // 🔥 vertical centering
-          decoration: const InputDecoration(
-            hintText: "Search by name or mobile",
-            border: InputBorder.none,
-            isDense: true,
-            prefixIcon: Icon(Icons.search),
-            prefixIconConstraints: BoxConstraints(
-              minWidth: 36, // 🔥 reduce icon padding
-              minHeight: 36,
-            ),
-            contentPadding: EdgeInsets.zero, // 🔥 remove default padding
-          ),
-          onChanged: (value) {
-            _search = value.toLowerCase();
-            _applyFilters();
-          },
-        ),
+      child: AppSearchField(
+        hintText: "Search by name or mobile",
+        onChanged: (value) {
+          _search = value.toLowerCase();
+          _applyFilters();
+        },
       ),
     );
   }

@@ -6,6 +6,7 @@ import '../cards/rent_property_card.dart';
 import '../screens/rent_property_detail_screen.dart';
 import '../screens/property_add_screen.dart';
 import '../screens/property_filter_dialog.dart';
+import '../commons/common_widget.dart';
 
 class RentalListingScreen extends StatefulWidget {
   final int userId;
@@ -150,22 +151,11 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Container(
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onSubmitted: (_) => _refreshFromApi(),
-                decoration: const InputDecoration(
-                  hintText: "Search city, area, PG, flat...",
-                  border: InputBorder.none,
-                  prefixIcon: Icon(Icons.location_on_outlined),
-                ),
-              ),
+            child: AppSearchField(
+              controller: _searchController,
+              hintText: "Search city, area, PG, flat...",
+              prefixIcon: Icons.location_on_outlined,
+              onSubmitted: (_) => _refreshFromApi(),
             ),
           ),
           const SizedBox(width: 8),
