@@ -17,10 +17,7 @@ import '../theme/app_colors.dart';
 class DashboardScreen extends StatefulWidget {
   final int userId;
 
-  const DashboardScreen({
-    super.key,
-    required this.userId,
-  });
+  const DashboardScreen({super.key, required this.userId});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -28,11 +25,9 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
-  String _appVersion = "";
-
-  String _userName = "User";
-  String _userEmail = "";
-
+  String _appVersion = '';
+  String _userName = 'User';
+  String _userEmail = '';
   int? _postedByUserId;
   Widget? _currentPage;
 
@@ -46,22 +41,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadAppVersion() async {
     final info = await PackageInfo.fromPlatform();
-
     if (!mounted) return;
-
-    setState(() {
-      _appVersion = "v${info.version} (${info.buildNumber})";
-    });
+    setState(() => _appVersion = 'v${info.version} (${info.buildNumber})');
   }
 
   Future<void> _loadUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
-
     if (!mounted) return;
-
     setState(() {
-      _userName = prefs.getString("userName") ?? "User";
-      _userEmail = prefs.getString("userEmail") ?? "";
+      _userName = prefs.getString('userName') ?? 'User';
+      _userEmail = prefs.getString('userEmail') ?? '';
     });
   }
 
@@ -69,130 +58,119 @@ class _DashboardScreenState extends State<DashboardScreen> {
     switch (_selectedIndex) {
       case 0:
         return PropertyListingScreen(
-          key: const PageStorageKey("home"),
+          key: const PageStorageKey('home'),
           userId: widget.userId,
           postedbyuserId: _postedByUserId,
         );
-
       case 1:
         return RentalListingScreen(
-          key: const PageStorageKey("rentals"),
+          key: const PageStorageKey('rentals'),
           userId: widget.userId,
         );
-
       case 2:
         return BankPage(userId: widget.userId);
-
       case 3:
         return LegalServicePage(userId: widget.userId);
-
       default:
         return PropertyListingScreen(userId: widget.userId);
     }
   }
 
-  void _setPage(Widget page) {
-    setState(() {
-      _currentPage = page;
-    });
-  }
+  void _setPage(Widget page) => setState(() => _currentPage = page);
+
+  // ── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
 
-      /// APP BAR
+      // ── AppBar ────────────────────────────────────────────────────────────
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: AppColors.listingbackground,
-        foregroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: AppColors.primary),
-        title: Text(
-          'KeyBricks',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            letterSpacing: 1.2,
-            color: AppColors.primary,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary, AppColors.secondary],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
+        title: const Text(
+          'KeyBricks',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            letterSpacing: 1.0,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => ProfileScreen(userId: widget.userId)),
+              ),
+              child: CircleAvatar(
+                radius: 17,
+                backgroundColor: Colors.white.withOpacity(0.25),
+                child: Text(
+                  _userName.isNotEmpty ? _userName[0].toUpperCase() : 'U',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
 
-      /// DRAWER
+      // ── Drawer ────────────────────────────────────────────────────────────
       drawer: Drawer(
         child: SafeArea(
           child: Column(
             children: [
-
-              /// HEADER (ENHANCED)
-              Container(
-                padding: const EdgeInsets.all(16),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: AppColors.primary,
-                      child: const Icon(Icons.person, color: Colors.white),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _userName,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            _userEmail,
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              color: AppColors.textMuted,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Header — tappable → profile
+              _drawerHeader(),
 
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(top: 8, bottom: 12),
                   children: [
+                    _sectionLabel('MAIN'),
+                    _drawerNavItem(Icons.home_rounded, 'Home', 0),
+                    _drawerNavItem(Icons.apartment_rounded, 'Rentals / PG', 1),
+                    _drawerNavItem(
+                        Icons.account_balance_wallet_rounded, 'Bank Loans', 2),
+                    _drawerNavItem(
+                        Icons.assignment_rounded, 'Documentation', 3),
 
-                    _drawerItem(Icons.dashboard_rounded, "Home", 0),
-                    _drawerItem(Icons.apartment_rounded, "Rentals / PG", 1),
-                    _drawerItem(Icons.account_balance_wallet_rounded, "Bank Loans", 2),
-                    _drawerItem(Icons.assignment_rounded, "Documentation", 3),
-
-                    /// 🔥 PROFILE ADDED
-                    ListTile(
-                      leading: const Icon(Icons.person_outline),
-                      title: const Text("My Profile"),
+                    const Divider(height: 20),
+                    _sectionLabel('MY ACCOUNT'),
+                    _drawerActionItem(
+                      Icons.person_outline_rounded,
+                      'My Profile',
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => ProfileScreen(
-                              userId: widget.userId,
-                            ),
-                          ),
+                              builder: (_) =>
+                                  ProfileScreen(userId: widget.userId)),
                         );
                       },
                     ),
-
-                    ListTile(
-                      leading: const Icon(Icons.business_center_rounded),
-                      title: const Text("My Property Postings"),
+                    _drawerActionItem(
+                      Icons.business_center_rounded,
+                      'My Property Postings',
                       onTap: () {
                         setState(() {
                           _postedByUserId = widget.userId;
@@ -202,67 +180,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Navigator.pop(context);
                       },
                     ),
-
-                    const Divider(),
-
-                    ListTile(
-                      leading: const Icon(Icons.favorite_rounded),
-                      title: const Text("My Favourite Properties"),
+                    _drawerActionItem(
+                      Icons.favorite_rounded,
+                      'My Favourite Properties',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _setPage(FavouritePropertyListingScreen(
+                            userId: widget.userId));
+                      },
+                    ),
+                    _drawerActionItem(
+                      Icons.groups_rounded,
+                      'Customer Inquiries',
                       onTap: () {
                         Navigator.pop(context);
                         _setPage(
-                          FavouritePropertyListingScreen(
-                            userId: widget.userId,
-                          ),
-                        );
+                            BrokerLeadsScreen(brokerId: widget.userId));
                       },
                     ),
 
-                    ListTile(
-                      leading: const Icon(Icons.groups_rounded),
-                      title: const Text("Customer Inquiries"),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _setPage(
-                          BrokerLeadsScreen(
-                            brokerId: widget.userId,
-                          ),
-                        );
-                      },
-                    ),
-
-                    const Divider(),
-
-                    ListTile(
-                      leading: const Icon(Icons.calculate),
-                      title: const Text("EMI Calculator"),
+                    const Divider(height: 20),
+                    _sectionLabel('TOOLS'),
+                    _drawerActionItem(
+                      Icons.calculate_outlined,
+                      'EMI Calculator',
                       onTap: () {
                         Navigator.pop(context);
                         _setPage(const EmiCalculatorScreen());
                       },
                     ),
 
-                    const SizedBox(height: 10),
-
+                    const SizedBox(height: 16),
                     Padding(
-                      padding: const EdgeInsets.only(left: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         _appVersion,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.textMuted,
-                        ),
+                        style: const TextStyle(
+                            fontSize: 11, color: AppColors.textMuted),
                       ),
                     ),
+                    const SizedBox(height: 8),
 
-                    const SizedBox(height: 10),
-
-                    ListTile(
-                      leading: const Icon(Icons.logout_rounded, color: Colors.red),
-                      title: const Text(
-                        "Logout",
-                        style: TextStyle(color: Colors.red),
-                      ),
-                      onTap: () => _showLogoutDialog(),
+                    _drawerActionItem(
+                      Icons.logout_rounded,
+                      'Logout',
+                      onTap: _showLogoutDialog,
+                      color: AppColors.error,
                     ),
                   ],
                 ),
@@ -272,69 +235,150 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
 
-      /// BODY
+      // ── Body ──────────────────────────────────────────────────────────────
       body: _currentPage ?? _buildPage(),
 
-      /// BOTTOM NAVIGATION
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textMuted,
-        type: BottomNavigationBarType.fixed,
-
-        onTap: (index) {
+      // ── Bottom Navigation (Material 3 NavigationBar) ──────────────────────
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: AppColors.primary.withOpacity(0.12),
+        elevation: 4,
+        shadowColor: Colors.black.withOpacity(0.08),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        onDestinationSelected: (index) {
           setState(() {
             _postedByUserId = null;
             _selectedIndex = index;
             _currentPage = _buildPage();
           });
         },
-
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard_rounded),
-            label: "Home",
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded, color: AppColors.primary),
+            label: 'Home',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.apartment_outlined),
-            activeIcon: Icon(Icons.apartment_rounded),
-            label: "Rentals/PG",
+            selectedIcon:
+                Icon(Icons.apartment_rounded, color: AppColors.primary),
+            label: 'Rentals/PG',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
-            activeIcon: Icon(Icons.account_balance_wallet_rounded),
-            label: "Loans",
+            selectedIcon: Icon(Icons.account_balance_wallet_rounded,
+                color: AppColors.primary),
+            label: 'Loans',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.assignment_outlined),
-            activeIcon: Icon(Icons.assignment_rounded),
-            label: "Documents",
+            selectedIcon:
+                Icon(Icons.assignment_rounded, color: AppColors.primary),
+            label: 'Docs',
           ),
         ],
       ),
     );
   }
 
-  Widget _drawerItem(IconData icon, String title, int index) {
-    final isSelected = _selectedIndex == index;
+  // ── Drawer helpers ────────────────────────────────────────────────────────
 
+  Widget _drawerHeader() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => ProfileScreen(userId: widget.userId)),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primary, AppColors.secondary],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: Colors.white.withOpacity(0.25),
+              child: Text(
+                _userName.isNotEmpty ? _userName[0].toUpperCase() : 'U',
+                style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              _userName,
+              style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white),
+            ),
+            if (_userEmail.isNotEmpty)
+              Text(
+                _userEmail,
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                overflow: TextOverflow.ellipsis,
+              ),
+            const SizedBox(height: 6),
+            const Row(
+              children: [
+                Icon(Icons.open_in_new, size: 11, color: Colors.white54),
+                SizedBox(width: 4),
+                Text('View Profile',
+                    style: TextStyle(fontSize: 11, color: Colors.white54)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String text) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        child: Text(
+          text,
+          style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textMuted,
+              letterSpacing: 0.8),
+        ),
+      );
+
+  Widget _drawerNavItem(IconData icon, String title, int index) {
+    final selected = _selectedIndex == index;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
       decoration: BoxDecoration(
-        color: isSelected
-            ? AppColors.primary.withOpacity(0.1)
-            : Colors.transparent,
+        color: selected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
+        dense: true,
         leading: Icon(icon,
-            color: isSelected ? AppColors.primary : AppColors.textPrimary),
+            size: 22,
+            color: selected ? AppColors.primary : AppColors.textPrimary),
         title: Text(
           title,
           style: TextStyle(
-            color: isSelected ? AppColors.primary : AppColors.textPrimary,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 14,
+            color: selected ? AppColors.primary : AppColors.textPrimary,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
         onTap: () {
@@ -343,35 +387,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _selectedIndex = index;
             _currentPage = _buildPage();
           });
-
           Navigator.pop(context);
         },
       ),
     );
   }
 
+  Widget _drawerActionItem(
+    IconData icon,
+    String title, {
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    final c = color ?? AppColors.textPrimary;
+    return ListTile(
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      leading: Icon(icon, size: 22, color: c),
+      title: Text(title,
+          style: TextStyle(fontSize: 14, color: c)),
+      onTap: onTap,
+    );
+  }
+
+  // ── Logout ────────────────────────────────────────────────────────────────
+
   void _showLogoutDialog() {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Logout"),
-        content: const Text("Are you sure you want to logout?"),
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         actions: [
           TextButton(
             style: TextButton.styleFrom(
               minimumSize: const Size(80, 40),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
               minimumSize: const Size(88, 40),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
             onPressed: () async {
               Navigator.pop(context);
@@ -387,13 +451,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-
     if (!mounted) return;
-
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
+      (route) => false,
     );
   }
 }
