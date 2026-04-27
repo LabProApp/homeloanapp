@@ -43,7 +43,7 @@ class LegalServiceCard extends StatelessWidget {
                       Text(
                         service.legalName,
                         style: const TextStyle(
-                          fontSize: 16.5,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -51,7 +51,7 @@ class LegalServiceCard extends StatelessWidget {
                       Text(
                         "${service.city}, ${service.state}",
                         style: TextStyle(
-                          fontSize: 12.5,
+                          fontSize: 13,
                           color: Colors.grey.shade600,
                         ),
                       ),

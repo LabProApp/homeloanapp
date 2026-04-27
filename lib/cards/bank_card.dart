@@ -31,13 +31,13 @@ class BankCard extends StatelessWidget {
       shadowColor: Colors.black.withOpacity(0.08),
       margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: Colors.grey.shade200,
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           showBankDetailSheet(context, bank);
         },

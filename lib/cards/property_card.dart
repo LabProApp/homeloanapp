@@ -83,7 +83,7 @@ class _PropertyCardState extends State<PropertyCard> {
     return Card(
       elevation: 3,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
@@ -204,7 +204,7 @@ class _PropertyCardState extends State<PropertyCard> {
                       Text(
                         property.location ?? "-",
                         style: const TextStyle(
-                            color: Colors.white70, fontSize: 12),
+                            color: AppColors.imageCaptionText, fontSize: 12),
                       ),
 
                       const SizedBox(height: 2),
@@ -216,7 +216,7 @@ class _PropertyCardState extends State<PropertyCard> {
                             child: Text(
                               "${property.city ?? "-"} | ${property.state ?? "-"}",
                               style: const TextStyle(
-                                  color: Colors.white70, fontSize: 11),
+                                  color: AppColors.imageCaptionText, fontSize: 11),
                             ),
                           ),
                           Text(
@@ -237,7 +237,7 @@ class _PropertyCardState extends State<PropertyCard> {
                       Text(
                         "Posted: ${AppUtils.formatDate(property.postDate)}",
                         style: const TextStyle(
-                            fontSize: 10, color: Colors.white60),
+                            fontSize: 10, color: AppColors.imageCaptionText),
                       ),
 
                       const SizedBox(height: 6),
@@ -285,18 +285,18 @@ class _PropertyCardState extends State<PropertyCard> {
             padding: const EdgeInsets.only(right: 6),
             child: Row(
               children: [
-                Icon(a.icon, size: 12, color: Colors.white70),
+                Icon(a.icon, size: 12, color: AppColors.imageCaptionText),
                 const SizedBox(width: 3),
                 Text(a.label,
                     style:
-                    const TextStyle(fontSize: 10, color: Colors.white70)),
+                    const TextStyle(fontSize: 10, color: AppColors.imageCaptionText)),
               ],
             ),
           );
         }),
         if (amenities.length > 4)
           Text("+${amenities.length - 4} more",
-              style: const TextStyle(fontSize: 10, color: Colors.white70)),
+              style: const TextStyle(fontSize: 10, color: AppColors.imageCaptionText)),
       ],
     );
   }
@@ -304,7 +304,7 @@ class _PropertyCardState extends State<PropertyCard> {
   Widget _feature(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 12, color: Colors.white70),
+        Icon(icon, size: 12, color: AppColors.imageCaptionText),
         const SizedBox(width: 4),
         Text(
           text,

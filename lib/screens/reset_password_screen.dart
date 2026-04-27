@@ -46,7 +46,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           backgroundColor: AppColors.success,
           content: const Text(
             'Password reset successfully',
-            style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
+            style: TextStyle(fontSize: 14),
           ),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -61,7 +61,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           backgroundColor: AppColors.error,
           content: Text(
             e.toString(),
-            style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
+            style: const TextStyle(fontSize: 14),
           ),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

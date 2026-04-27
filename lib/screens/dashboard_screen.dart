@@ -356,7 +356,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: const Text("Logout"),
         content: const Text("Are you sure you want to logout?"),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.pop(context),
             child: const Text("Cancel"),
           ),

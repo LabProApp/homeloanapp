@@ -77,12 +77,15 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         title: const Text("Delete Property"),
         content: const Text("Are you sure you want to delete this property?"),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.pop(context),
             child: const Text("Cancel"),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () async {
               Navigator.pop(context);
 
@@ -196,7 +199,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           decoration: BoxDecoration(
                             color: currentIndex == i
                                 ? Colors.white
-                                : Colors.white54,
+                                : AppColors.imageCaptionText,
                             borderRadius: BorderRadius.circular(6),
                           ),
                         ),
@@ -219,8 +222,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   /// TITLE + LOCATION
                   Text(
                     widget.property.title ?? "-",
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -449,8 +453,12 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
 
   Widget _sectionTitle(String title) {
-    return Text(title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+      ),
+    );
   }
 }
 

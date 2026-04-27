@@ -24,7 +24,7 @@ class LeadCard extends StatelessWidget {
     return Card(
       elevation: 3,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -45,26 +45,27 @@ class LeadCard extends StatelessWidget {
           ),
 
           const SizedBox(height: 6),
-          Text("📞 ${lead["mobile"] ?? "-"}"),
-          if (lead["email"] != null) Text("✉️ ${lead["email"]}"),
+          _infoRow(Icons.phone_outlined, lead["mobile"] ?? "-"),
+          if (lead["email"] != null)
+            _infoRow(Icons.email_outlined, lead["email"]),
 
           const Divider(),
-          Text("🏠 ${lead["propertyTitle"] ?? "-"}"),
-          Text("📍 ${lead["propertyCity"] ?? "-"}"),
-          Text("💰 Price: ₹${lead["propertyPrice"] ?? "-"}"),
+          _infoRow(Icons.home_outlined, lead["propertyTitle"] ?? "-"),
+          _infoRow(Icons.location_on_outlined, lead["propertyCity"] ?? "-"),
+          _infoRow(Icons.currency_rupee_outlined, "Price: ₹${lead["propertyPrice"] ?? "-"}"),
 
           const Divider(),
-          Text("🎯 Preference: ${lead["preferredPropertyType"] ?? "-"}"),
-          Text("💼 Budget: ₹${lead["preferredBudget"] ?? "-"}"),
+          _infoRow(Icons.tune_outlined, "Preference: ${lead["preferredPropertyType"] ?? "-"}"),
+          _infoRow(Icons.account_balance_wallet_outlined, "Budget: ₹${lead["preferredBudget"] ?? "-"}"),
 
           const Divider(),
-          Text("🗓 Inquiry: ${_formatDate(lead["inquiryDate"])}"),
-          Text("☎️ Contacted: ${_formatDate(lead["contactedDate"])}"),
-          Text("⏭ Follow-up: ${_formatDate(lead["nextFollowUpDate"])}"),
+          _infoRow(Icons.calendar_today_outlined, "Inquiry: ${_formatDate(lead["inquiryDate"])}"),
+          _infoRow(Icons.call_outlined, "Contacted: ${_formatDate(lead["contactedDate"])}"),
+          _infoRow(Icons.schedule_outlined, "Follow-up: ${_formatDate(lead["nextFollowUpDate"])}"),
 
           const Divider(),
-          Text("📌 Lead Source: ${lead["leadSource"] ?? "-"}"),
-          Text("📝 Remark: ${lead["remark"] ?? "-"}"),
+          _infoRow(Icons.push_pin_outlined, "Source: ${lead["leadSource"] ?? "-"}"),
+          _infoRow(Icons.notes_outlined, "Remark: ${lead["remark"] ?? "-"}"),
 
           const SizedBox(height: 10),
 
@@ -92,6 +93,20 @@ class LeadCard extends StatelessWidget {
             ],
           )
         ]),
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 15, color: Colors.grey.shade600),
+          const SizedBox(width: 6),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+        ],
       ),
     );
   }

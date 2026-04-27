@@ -78,7 +78,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
   void _showSnack(String msg, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14)),
+        content: Text(msg, style: const TextStyle(fontSize: 14)),
         backgroundColor: success ? AppColors.success : AppColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -135,7 +135,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                 child: Text(
                   _resending ? 'Resending…' : 'Resend OTP',
                   style: const TextStyle(
-                    fontFamily: 'Poppins',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),

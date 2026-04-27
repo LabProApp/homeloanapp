@@ -30,4 +30,8 @@ class AppColors {
   // ===== Special UI =====
   static const Color disabled = Color(0xFFCBD5E1);
   static const Color overlay = Color(0x80000000);
+
+  // ===== Image overlays =====
+  static const Color imageOverlay = Color(0x73000000);   // 45% black — used on photo overlays
+  static const Color imageCaptionText = Color(0xB3FFFFFF); // 70% white — secondary caption text on images
 }

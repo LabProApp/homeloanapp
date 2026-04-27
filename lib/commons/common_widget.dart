@@ -118,7 +118,6 @@ class AppButton extends StatelessWidget {
               : Text(
                   text,
                   style: TextStyle(
-                    fontFamily: 'Poppins',
                     fontSize: fontSize,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,

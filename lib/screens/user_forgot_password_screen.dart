@@ -43,7 +43,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         SnackBar(
           content: Text(
             e.toString(),
-            style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
+            style: const TextStyle(fontSize: 14),
           ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,

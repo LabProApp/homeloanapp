@@ -184,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen>
                           Text(
                             'KeyBricks',
                             style: TextStyle(
-                              fontFamily: 'Poppins',
+                
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
@@ -195,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen>
                           Text(
                             'Find. Finance. Finalize.',
                             style: TextStyle(
-                              fontFamily: 'Poppins',
+                
                               fontSize: 14,
                               color: Colors.white70,
                               letterSpacing: 0.5,
@@ -293,7 +293,7 @@ class _LoginScreenState extends State<LoginScreen>
           child: Text(
             label,
             style: TextStyle(
-              fontFamily: 'Poppins',
+
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: selected ? Colors.white : Colors.white70,
@@ -338,7 +338,7 @@ class _LoginScreenState extends State<LoginScreen>
               child: const Text(
                 'Forgot Password?',
                 style: TextStyle(
-                  fontFamily: 'Poppins',
+    
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -354,7 +354,6 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _fieldLabel(String text) => Text(
         text,
         style: const TextStyle(
-          fontFamily: 'Poppins',
           fontSize: 13,
           fontWeight: FontWeight.w500,
           color: Colors.white70,
@@ -372,7 +371,6 @@ class _LoginScreenState extends State<LoginScreen>
       controller: controller,
       obscureText: obscure,
       style: const TextStyle(
-        fontFamily: 'Poppins',
         fontSize: 14,
         color: Colors.white,
       ),
@@ -501,7 +499,7 @@ class _LoginScreenState extends State<LoginScreen>
         backgroundColor: AppColors.error,
         content: Text(
           msg,
-          style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
+          style: const TextStyle(fontSize: 14),
         ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

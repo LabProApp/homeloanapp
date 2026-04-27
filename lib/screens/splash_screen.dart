@@ -249,7 +249,7 @@ class _SplashScreenState extends State<SplashScreen>
                         child: const Text(
                           'KeyBricks',
                           style: TextStyle(
-                            fontFamily: 'Poppins',
+
                             fontSize: 32,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
@@ -269,7 +269,7 @@ class _SplashScreenState extends State<SplashScreen>
                         child: const Text(
                           'Find. Finance. Finalize.',
                           style: TextStyle(
-                            fontFamily: 'Poppins',
+
                             fontSize: 15,
                             fontWeight: FontWeight.w400,
                             color: Colors.white70,

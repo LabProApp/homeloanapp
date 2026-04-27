@@ -63,7 +63,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
         widget.property.constructionStatus ?? widget.property.propertyStatus ?? "-";
     return Card(
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -175,7 +175,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                       Text(
                         "${widget.property.location ?? ""}, ${widget.property.city ?? ""}",
                         style: const TextStyle(
-                            fontSize: 12, color: Colors.white70),
+                            fontSize: 12, color: AppColors.imageCaptionText),
                       ),
 
                       const SizedBox(height: 4),
@@ -241,18 +241,18 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
             padding: const EdgeInsets.only(right: 6),
             child: Row(
               children: [
-                Icon(a.icon, size: 12, color: Colors.white70),
+                Icon(a.icon, size: 12, color: AppColors.imageCaptionText),
                 const SizedBox(width: 3),
                 Text(a.label,
                     style:
-                    const TextStyle(fontSize: 10, color: Colors.white70)),
+                    const TextStyle(fontSize: 10, color: AppColors.imageCaptionText)),
               ],
             ),
           );
         }),
         if (amenities.length > 4)
           Text("+${amenities.length - 4} more",
-              style: const TextStyle(fontSize: 10, color: Colors.white70)),
+              style: const TextStyle(fontSize: 10, color: AppColors.imageCaptionText)),
       ],
     );
   }
@@ -262,7 +262,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
       padding: const EdgeInsets.only(right: 8),
       child: Row(
         children: [
-          Icon(icon, size: 12, color: Colors.white70),
+          Icon(icon, size: 12, color: AppColors.imageCaptionText),
           const SizedBox(width: 3),
           Text(text,
               style: const TextStyle(fontSize: 11, color: Colors.white)),

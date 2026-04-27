@@ -31,7 +31,11 @@ class _RentalPropertyDetailScreenState
   List<String> get _images {
     if (widget.property.documentList != null &&
         widget.property.documentList!.isNotEmpty) {
-      return widget.property.documentList!.map((e) => e.docUrl).toList();
+      final urls = widget.property.documentList!
+          .map((e) => e.docUrl)
+          .where((url) => url.isNotEmpty)
+          .toList();
+      if (urls.isNotEmpty) return urls;
     }
     return [
       'assets/images/house1.jpg',
@@ -105,7 +109,7 @@ class _RentalPropertyDetailScreenState
                           decoration: BoxDecoration(
                             color: currentIndex == i
                                 ? Colors.white
-                                : Colors.white54,
+                                : AppColors.imageCaptionText,
                             borderRadius: BorderRadius.circular(6),
                           ),
                         ),
@@ -127,10 +131,10 @@ class _RentalPropertyDetailScreenState
                   /// PRICE
                   Text(
                     rent,
-                    style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
                   ),
 
                   const SizedBox(height: 6),
@@ -138,8 +142,9 @@ class _RentalPropertyDetailScreenState
                   /// TITLE
                   Text(
                     widget.property.title ?? "-",
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
 
                   const SizedBox(height: 6),
@@ -350,7 +355,8 @@ class _RentalPropertyDetailScreenState
   }
 
   Widget _bottomButtons() {
-    final phone = widget.property.contactNumber;
+    final phone = widget.property.contactNumber.trim();
+    final hasPhone = phone.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -360,16 +366,19 @@ class _RentalPropertyDetailScreenState
           Expanded(
             child: AppButton(
               text: "Call Owner",
-
-              onTap: phone.isEmpty ? null : () => AppUtils.call(widget.property.contactNumber),
+              onTap: hasPhone ? () => AppUtils.call(phone) : null,
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: AppButton(
               text: "WhatsApp",
-
-              onTap: phone.isEmpty ? null : () => AppUtils.whatsapp(widget.property.contactNumber, "Hi, I am interested in your property ${widget.property.title}"),
+              onTap: hasPhone
+                  ? () => AppUtils.whatsapp(
+                        phone,
+                        "Hi, I am interested in your property ${widget.property.title}",
+                      )
+                  : null,
             ),
           ),
         ],
@@ -378,8 +387,12 @@ class _RentalPropertyDetailScreenState
   }
 
   Widget _sectionTitle(String title) {
-    return Text(title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+      ),
+    );
   }
 }
 
