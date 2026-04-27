@@ -52,6 +52,14 @@ class ApiClient {
         requestBody: body,
       );
 
+  // ── DELETE ─────────────────────────────────────────────────────────────────
+
+  static Future<http.Response> delete(
+    Uri uri, {
+    Map<String, String>? headers,
+  }) =>
+      _send('DELETE', uri, () => http.delete(uri, headers: _defaultHeaders(headers)));
+
   // ── PATCH ──────────────────────────────────────────────────────────────────
 
   static Future<http.Response> patch(

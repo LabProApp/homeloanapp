@@ -102,6 +102,14 @@ class PropertyApiService {
     throw Exception('Add property failed (${response.statusCode}): ${response.body}');
   }
 
+  static Future<bool> deleteProperty(int id) async {
+    final uri = Uri.parse('${ApiUrls.delete_property}/$id');
+    developer.log('Delete property: $uri');
+    final response = await ApiClient.delete(uri);
+    if (response.statusCode == 200 || response.statusCode == 204) return true;
+    throw Exception('Delete property failed (${response.statusCode}): ${response.body}');
+  }
+
   static Future<bool> updateProperty(PropertyModel property) async {
     if (property.id == null) throw Exception('Property ID required for update');
 

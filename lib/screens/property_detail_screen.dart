@@ -31,21 +31,27 @@ class PropertyDetailScreen extends StatefulWidget {
 class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   static final _fmt = NumberFormat('#,##,###');
 
-  int currentIndex = 0;
+  int _currentIndex = 0;
   bool _isFavourite = false;
   bool _sendingLead = false;
+  bool _deleting = false;
 
-  /// ✅ OWNER CHECK
   bool get isOwner =>
       widget.property.postedByUser != null &&
-          widget.property.postedByUser == widget.userId;
+      widget.property.postedByUser == widget.userId;
 
-  /// 📸 Images
+  bool get _isRent =>
+      widget.property.rentOrSale?.toUpperCase() == 'RENT';
+
+  bool get _isResidential =>
+      widget.property.category?.toUpperCase() == 'RESIDENTIAL';
+
   List<String> get _images {
     if (widget.property.documentList != null &&
         widget.property.documentList!.isNotEmpty) {
       return widget.property.documentList!
-          .map((e) => e.docUrl ?? "")
+          .map((e) => e.docUrl ?? '')
+          .where((u) => u.isNotEmpty)
           .toList();
     }
     return [
@@ -55,7 +61,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     ];
   }
 
-  /// 🧩 Amenities
   List<String> get _amenities {
     if (widget.property.amenitiesAsList != null) {
       return widget.property.amenitiesAsList!
@@ -65,78 +70,77 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     return [];
   }
 
-  /// 💰 Price Logic (Sale + Rent handled)
-  String get priceText {
-    if (widget.property.rentOrSale == "RENT") {
+  String get _priceText {
+    if (_isRent) {
       return widget.property.monthlyRent != null
-          ? "₹ ${_fmt.format(widget.property.monthlyRent)} / month"
-          : "-";
-    } else {
-      return widget.property.price != null
-          ? "₹ ${_fmt.format(widget.property.price)}"
-          : "-";
+          ? '₹ ${_fmt.format(widget.property.monthlyRent)} / month'
+          : '-';
     }
+    return widget.property.price != null
+        ? '₹ ${_fmt.format(widget.property.price)}'
+        : '-';
   }
 
-  /// 🗑️ DELETE CONFIRMATION
+  // ── Actions ─────────────────────────────────────────────────────────────────
+
   void _confirmDelete() {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Delete Property"),
-        content: const Text("Are you sure you want to delete this property?"),
+        title: const Text('Delete Property'),
+        content:
+            const Text('Are you sure you want to delete this property?'),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         actions: [
           TextButton(
             style: TextButton.styleFrom(
               minimumSize: const Size(80, 40),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 10),
             ),
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white,
               minimumSize: const Size(88, 40),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 10),
             ),
             onPressed: () async {
               Navigator.pop(context);
-
-              // 🔥 TODO: Call your delete API here
-              // await PropertyApiService.deleteProperty(widget.property.id);
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Property deleted")),
-              );
-
-              Navigator.pop(context); // go back
+              await _deleteProperty();
             },
-            child: const Text("Delete"),
+            child: const Text('Delete'),
           ),
         ],
       ),
     );
   }
 
-  Widget _iconCircle(IconData icon, VoidCallback? onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: CircleAvatar(
-        radius: 18,
-        backgroundColor: Colors.black45,
-        child: _sendingLead && icon == Icons.star
-            ? const SizedBox(
-                height: 12,
-                width: 12,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white),
-              )
-            : Icon(icon, size: 18, color: Colors.white),
-      ),
-    );
+  Future<void> _deleteProperty() async {
+    if (widget.property.id == null) return;
+    setState(() => _deleting = true);
+    try {
+      await PropertyApiService.deleteProperty(widget.property.id!);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Property deleted successfully')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Could not delete. Please try again.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
   }
 
   Future<void> _toggleFavorite() async {
@@ -168,7 +172,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       status: 'NEW',
       contacted: false,
       leadSource: 'Property Interest',
-      remark: 'User showed interest from property ${widget.property.title}',
+      remark:
+          'User showed interest from property ${widget.property.title}',
     );
     try {
       await LeadApiService.createLead(lead);
@@ -179,9 +184,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('You already showed interest in this property'),
-            backgroundColor: Colors.red),
+        SnackBar(
+          content:
+              const Text('You already showed interest in this property'),
+          backgroundColor: AppColors.error,
+        ),
       );
     } finally {
       if (mounted) setState(() => _sendingLead = false);
@@ -189,66 +196,70 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   void _shareProperty() {
-    Share.share('${widget.property.title}\n$priceText\n${widget.property.address}');
+    Share.share(
+        '${widget.property.title}\n$_priceText\n${widget.property.address}');
   }
 
   void _callOwner() {
-    final phone = widget.property.contactNumber ?? '';
+    final phone = widget.property.contactNumber;
     if (phone.isEmpty) return;
     AppUtils.call(phone);
   }
 
   void _openWhatsApp() {
-    final phone = widget.property.contactNumber ?? '';
+    final phone = widget.property.contactNumber;
     if (phone.isEmpty) return;
-    AppUtils.whatsapp(phone, "Hi, I'm interested in ${widget.property.title}");
+    AppUtils.whatsapp(
+        phone, "Hi, I'm interested in ${widget.property.title}");
   }
+
+  // ── Build ────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.scaffoldBg,
-      bottomNavigationBar: _bottomButtons(),
+      bottomNavigationBar: _bottomBar(),
       body: CustomScrollView(
         slivers: [
-
-          /// 🔥 IMAGE HEADER
+          // ── Image header ───────────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
             backgroundColor: Colors.transparent,
-            iconTheme: const IconThemeData(color: Colors.white),
+            iconTheme:
+                const IconThemeData(color: AppColors.white),
             actions: const [],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-
                   PageView.builder(
                     itemCount: _images.length,
-                    onPageChanged: (i) => setState(() => currentIndex = i),
+                    onPageChanged: (i) =>
+                        setState(() => _currentIndex = i),
                     itemBuilder: (_, i) {
                       final img = _images[i];
                       return img.startsWith('assets/')
                           ? Image.asset(img, fit: BoxFit.cover)
                           : Image.network(
-                        img,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            Image.asset('assets/images/house1.jpg',
-                                fit: BoxFit.cover),
-                      );
+                              img,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Image.asset(
+                                  'assets/images/house1.jpg',
+                                  fit: BoxFit.cover),
+                            );
                     },
                   ),
 
-                  /// Gradient overlay
-                  Container(
+                  // Gradient overlay
+                  const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.black.withOpacity(0.4),
+                          Color(0x66000000),
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Color(0xB3000000),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -256,20 +267,21 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     ),
                   ),
 
-                  /// Price
+                  // Price
                   Positioned(
                     bottom: 40,
                     left: 16,
                     child: Text(
-                      priceText,
+                      _priceText,
                       style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold),
+                        color: AppColors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
 
-                  /// Indicator
+                  // Page indicator
                   Positioned(
                     bottom: 12,
                     left: 0,
@@ -278,13 +290,14 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
                         _images.length,
-                            (i) => Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: currentIndex == i ? 10 : 6,
+                        (i) => Container(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 4),
+                          width: _currentIndex == i ? 10 : 6,
                           height: 6,
                           decoration: BoxDecoration(
-                            color: currentIndex == i
-                                ? Colors.white
+                            color: _currentIndex == i
+                                ? AppColors.white
                                 : AppColors.imageCaptionText,
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -293,24 +306,31 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     ),
                   ),
 
-                  /// Action icon column (matches listing card icons)
+                  // Action icons (top-right)
                   Positioned(
-                    top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
+                    top: MediaQuery.of(context).padding.top +
+                        kToolbarHeight +
+                        8,
                     right: 12,
                     child: Column(
                       children: [
                         _iconCircle(
-                          _isFavourite ? Icons.favorite : Icons.favorite_border,
+                          _isFavourite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
                           _toggleFavorite,
                         ),
                         const SizedBox(height: 6),
                         _iconCircle(Icons.share, _shareProperty),
                         const SizedBox(height: 6),
                         _iconCircle(Icons.call, _callOwner),
-                        const SizedBox(height: 6),
-                        _iconCircle(Icons.star, _sendingLead ? null : _createLead),
-                        const SizedBox(height: 6),
-                        _iconCircle(Icons.chat, _openWhatsApp),
+                        if (!isOwner) ...[
+                          const SizedBox(height: 6),
+                          _iconCircle(
+                            Icons.star_border_rounded,
+                            _sendingLead ? null : _createLead,
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -319,7 +339,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             ),
           ),
 
-          /// 🔽 CONTENT
+          // ── Content ────────────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -327,95 +347,194 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
 
-                  /// TITLE + LOCATION
+                  // Title
                   Text(
-                    widget.property.title ?? "-",
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    widget.property.title ?? '-',
+                    style:
+                        Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    "${widget.property.address ?? ""}, ${widget.property.city ?? ""}",
-                    style: TextStyle(color: AppColors.textSecondary),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          size: 14, color: AppColors.textMuted),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          [
+                            widget.property.address,
+                            widget.property.city,
+                          ]
+                              .where((s) =>
+                                  s != null && s.isNotEmpty)
+                              .join(', '),
+                          style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 16),
 
-                  /// FEATURES
+                  // Feature chips
                   _featureRow(),
 
                   const SizedBox(height: 20),
 
-                  /// DESCRIPTION
-                  _sectionTitle("Description"),
+                  // Description
+                  _sectionTitle('Description'),
                   const SizedBox(height: 8),
                   ReadMoreText(
-                    widget.property.description ?? "-",
+                    widget.property.description ?? '-',
                     trimLines: 3,
                     trimMode: TrimMode.Line,
                   ),
 
                   const SizedBox(height: 24),
 
-                  /// LOCATION SECTION
-                  _sectionTitle("Location"),
+                  // Pricing
+                  _sectionTitle(_isRent ? 'Rent Details' : 'Pricing'),
                   _card([
-                    _DetailRow("Address", widget.property.address ?? "-"),
-                    _DetailRow("City", widget.property.city ?? "-"),
-                    _DetailRow("State", widget.property.state ?? "-"),
-                    _DetailRow("Landmark", widget.property.landmark ?? "-"),
+                    if (_isRent) ...[
+                      if (widget.property.monthlyRent != null)
+                        _DetailRow('Monthly Rent',
+                            '₹ ${_fmt.format(widget.property.monthlyRent)}'),
+                      if (widget.property.securityDeposit != null)
+                        _DetailRow('Security Deposit',
+                            '₹ ${_fmt.format(widget.property.securityDeposit)}'),
+                      if (widget.property.preferredTenants != null)
+                        _DetailRow('Preferred Tenants',
+                            widget.property.preferredTenants!),
+                    ] else ...[
+                      if (widget.property.price != null)
+                        _DetailRow('Price',
+                            '₹ ${_fmt.format(widget.property.price)}'),
+                    ],
+                    if (widget.property.brokerage != null)
+                      _DetailRow('Brokerage',
+                          '₹ ${_fmt.format(widget.property.brokerage)}'),
+                    if (widget.property.negotiable == true)
+                      const _DetailRow('Negotiable', 'Yes'),
+                    if (widget.property.loanAvailable == true)
+                      const _DetailRow('Loan Available', 'Yes'),
                   ]),
 
                   const SizedBox(height: 20),
 
-                  /// AREA SECTION
-                  _sectionTitle("Area"),
+                  // Location
+                  _sectionTitle('Location'),
                   _card([
-                    _DetailRow("Carpet Area",
-                        "${widget.property.carpetArea ?? "-"} sqft"),
-                    _DetailRow("Super Area",
-                        "${widget.property.superArea ?? "-"} sqft"),
+                    if (widget.property.address != null &&
+                        widget.property.address!.isNotEmpty)
+                      _DetailRow('Address', widget.property.address!),
+                    if (widget.property.city != null &&
+                        widget.property.city!.isNotEmpty)
+                      _DetailRow('City', widget.property.city!),
+                    if (widget.property.state != null &&
+                        widget.property.state!.isNotEmpty)
+                      _DetailRow('State', widget.property.state!),
+                    if (widget.property.landmark != null &&
+                        widget.property.landmark!.isNotEmpty)
+                      _DetailRow('Landmark', widget.property.landmark!),
                   ]),
 
                   const SizedBox(height: 20),
 
-                  /// PROPERTY DETAILS
-                  _sectionTitle("Property Details"),
+                  // Property Details
+                  _sectionTitle('Property Details'),
                   _card([
-                    _DetailRow("Type", widget.property.type ?? "-"),
-                    _DetailRow("Category", widget.property.category ?? "-"),
-                    _DetailRow("Bedrooms",
-                        widget.property.bedrooms?.toString() ?? "-"),
-                    _DetailRow("Bathrooms",
-                        widget.property.bathrooms?.toString() ?? "-"),
-                    _DetailRow("Floor",
-                        "${widget.property.floorNumber ?? "-"} / ${widget.property.totalFloors ?? "-"}"),
-                    _DetailRow("Facing", widget.property.facing ?? "-"),
-                    _DetailRow("Furnishing", widget.property.furnishing ?? "-"),
-                    _DetailRow("Age", widget.property.propertyAge ?? "-"),
+                    if (widget.property.type != null)
+                      _DetailRow('Type', widget.property.type!),
+                    if (widget.property.category != null)
+                      _DetailRow(
+                          'Category', widget.property.category!),
+                    if (_isResidential &&
+                        widget.property.bedrooms != null)
+                      _DetailRow('Bedrooms',
+                          widget.property.bedrooms.toString()),
+                    if (_isResidential &&
+                        widget.property.bathrooms != null)
+                      _DetailRow('Bathrooms',
+                          widget.property.bathrooms.toString()),
+                    if (widget.property.furnishing != null)
+                      _DetailRow(
+                          'Furnishing', widget.property.furnishing!),
+                    if (widget.property.parkingType != null ||
+                        widget.property.parkingCount != null)
+                      _DetailRow(
+                        'Parking',
+                        [
+                          widget.property.parkingType,
+                          widget.property.parkingCount != null
+                              ? '(${widget.property.parkingCount})'
+                              : null,
+                        ]
+                            .whereType<String>()
+                            .join(' ')
+                            .trim(),
+                      ),
+                    if (widget.property.facing != null)
+                      _DetailRow('Facing', widget.property.facing!),
+                    if (widget.property.propertyAge != null)
+                      _DetailRow('Age', widget.property.propertyAge!),
+                    if (widget.property.constructionStatus != null)
+                      _DetailRow('Construction',
+                          widget.property.constructionStatus!),
                   ]),
 
                   const SizedBox(height: 20),
 
-                  /// EXTRA DETAILS
-                  _sectionTitle("Other Details"),
+                  // Area & Floor
+                  _sectionTitle('Area & Floor'),
                   _card([
-                    _DetailRow("Construction",
-                        widget.property.constructionStatus ?? "-"),
-                    _DetailRow("Ownership",
-                        widget.property.ownershipType ?? "-"),
-                    _DetailRow("RERA Approved",
-                        widget.property.reraApproved == true ? "Yes" : "No"),
-                    _DetailRow("RERA Number",
-                        widget.property.reraNumber ?? "-"),
+                    if (widget.property.superArea != null)
+                      _DetailRow('Super Area',
+                          '${widget.property.superArea!.toStringAsFixed(0)} sqft'),
+                    if (widget.property.carpetArea != null)
+                      _DetailRow('Carpet Area',
+                          '${widget.property.carpetArea!.toStringAsFixed(0)} sqft'),
+                    if (widget.property.floorNumber != null ||
+                        widget.property.totalFloors != null)
+                      _DetailRow(
+                        'Floor',
+                        '${widget.property.floorNumber ?? '-'} of ${widget.property.totalFloors ?? '-'}',
+                      ),
                   ]),
 
                   const SizedBox(height: 20),
 
-                  /// AMENITIES
+                  // Other Details
+                  _sectionTitle('Other Details'),
+                  _card([
+                    if (widget.property.ownershipType != null)
+                      _DetailRow('Ownership',
+                          widget.property.ownershipType!),
+                    if (widget.property.reraApproved != null)
+                      _DetailRow(
+                          'RERA Approved',
+                          widget.property.reraApproved == true
+                              ? 'Yes'
+                              : 'No'),
+                    if (widget.property.reraApproved == true &&
+                        widget.property.reraNumber != null)
+                      _DetailRow(
+                          'RERA Number', widget.property.reraNumber!),
+                    if (widget.property.petsAllowed != null)
+                      _DetailRow('Pets Allowed',
+                          widget.property.petsAllowed! ? 'Yes' : 'No'),
+                    if (widget.property.nonVegAllowed != null)
+                      _DetailRow('Non-Veg',
+                          widget.property.nonVegAllowed! ? 'Yes' : 'No'),
+                  ]),
+
+                  // Amenities
                   if (_amenities.isNotEmpty) ...[
-                    _sectionTitle("Amenities"),
+                    const SizedBox(height: 20),
+                    _sectionTitle('Amenities'),
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 12,
@@ -426,19 +545,27 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           width: 90,
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.white,
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
                             boxShadow: const [
-                              BoxShadow(color: Colors.black12, blurRadius: 4)
+                              BoxShadow(
+                                  color: Color(0x14000000),
+                                  blurRadius: 4),
                             ],
                           ),
                           child: Column(
                             children: [
-                              Icon(data.icon, color: AppColors.primary),
+                              Icon(data.icon,
+                                  color: AppColors.primary),
                               const SizedBox(height: 6),
-                              Text(data.label,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 11)),
+                              Text(
+                                data.label,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary),
+                              ),
                             ],
                           ),
                         );
@@ -448,129 +575,226 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
                   const SizedBox(height: 20),
 
-                  /// OWNER
-                  _sectionTitle("Owner Details"),
+                  // Owner Details
+                  _sectionTitle('Owner Details'),
                   _card([
-                    _DetailRow("Posted By", widget.property.postedBy ?? "-"),
-                    _DetailRow("Contact",
-                        widget.property.contactNumber ?? "-"),
-                    _DetailRow(
-                        "Verified",
-                        widget.property.verified == true ? "Yes" : "No"),
-                    _DetailRow("Posted On",
-                        AppUtils.formatDate(widget.property.postDate) ?? "-"),
+                    if (widget.property.postedBy != null &&
+                        widget.property.postedBy!.isNotEmpty)
+                      _DetailRow(
+                          'Posted By', widget.property.postedBy!),
+                    if (widget.property.contactNumber.isNotEmpty)
+                      _DetailRow(
+                          'Contact', widget.property.contactNumber),
+                    if (widget.property.verified != null)
+                      _DetailRow(
+                          'Verified',
+                          widget.property.verified! ? 'Yes' : 'No'),
+                    if (widget.property.postDate != null)
+                      _DetailRow(
+                        'Posted On',
+                        AppUtils.formatDate(widget.property.postDate) ??
+                            widget.property.postDate!,
+                      ),
                   ]),
 
                   const SizedBox(height: 100),
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );
   }
 
-  /// FEATURES
+  // ── Section helpers ──────────────────────────────────────────────────────────
+
   Widget _featureRow() {
+    final area =
+        widget.property.superArea ?? widget.property.carpetArea;
+    final features = <Widget>[];
+
+    if (_isResidential) {
+      if (widget.property.bedrooms != null) {
+        features.add(_Feature(Icons.bed_rounded,
+            '${widget.property.bedrooms} Beds'));
+      }
+      if (widget.property.bathrooms != null) {
+        features.add(_Feature(Icons.bathtub_outlined,
+            '${widget.property.bathrooms} Baths'));
+      }
+    }
+    if (area != null) {
+      features.add(_Feature(
+          Icons.square_foot, '${area.toStringAsFixed(0)} sqft'));
+    }
+    if (features.isEmpty) return const SizedBox.shrink();
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: features,
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Row(
       children: [
-        _Feature(Icons.bed, "${widget.property.bedrooms ?? '-'} Beds"),
-        _Feature(Icons.bathtub, "${widget.property.bathrooms ?? '-'} Baths"),
-        _Feature(Icons.square_foot,
-            "${widget.property.superArea?.toStringAsFixed(0) ?? '-'} sqft"),
+        Container(
+          width: 3,
+          height: 16,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+        ),
       ],
     );
   }
 
-  /// COMMON CARD
   Widget _card(List<Widget> children) {
+    if (children.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.cardBg,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
         boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4)
+          BoxShadow(color: Color(0x0A000000), blurRadius: 4),
         ],
       ),
       child: Column(children: children),
     );
   }
 
-  /// BUTTONS
-  Widget _bottomButtons() {
-    final phone = widget.property.contactNumber ?? "";
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      color: Colors.white,
-      child: Row(
-        children: [
-          /// OWNER BUTTONS
-          if (isOwner) ...[
-            Expanded(
-              child: AppButton(
-                text: "Modify",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PostPropertyScreen(
-                        userId: widget.userId,
-                        propertyToEdit: widget.property, // ✅ prefilled
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: AppButton(
-                text: "Delete",
-                onTap: _confirmDelete,
-              ),
-            ),
-          ] else ...[
-            Expanded(
-              child: AppButton(
-                text: "Call",
-                onTap: phone.isEmpty ? null : () => AppUtils.call(phone),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: AppButton(
-                text: "WhatsApp",
-                onTap: phone.isEmpty
-                    ? null
-                    : () => AppUtils.whatsapp(
-                  phone,
-                  "Hi, I'm interested in ${widget.property.title}",
-                ),
-              ),
-            ),
-          ],
-        ],
+  Widget _iconCircle(IconData icon, VoidCallback? onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: CircleAvatar(
+        radius: 18,
+        backgroundColor: AppColors.imageOverlay,
+        child: _sendingLead && icon == Icons.star_border_rounded
+            ? const SizedBox(
+                height: 12,
+                width: 12,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: AppColors.white),
+              )
+            : Icon(icon, size: 18, color: AppColors.white),
       ),
     );
   }
 
+  // ── Bottom bar ───────────────────────────────────────────────────────────────
 
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.bold,
+  Widget _bottomBar() {
+    final phone = widget.property.contactNumber;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 8,
+            color: Colors.black.withOpacity(0.06),
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            if (isOwner) ...[
+              Expanded(
+                child: AppButton(
+                  text: 'Modify',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PostPropertyScreen(
+                        userId: widget.userId,
+                        propertyToEdit: widget.property,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: _deleting ? null : _confirmDelete,
+                  child: _deleting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.error),
+                        )
+                      : const Text(
+                          'Delete',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                ),
+              ),
+            ] else ...[
+              Expanded(
+                child: AppButton(
+                  text: 'Call',
+                  onTap:
+                      phone.isEmpty ? null : () => AppUtils.call(phone),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.chat_rounded, size: 18),
+                  label: const Text('WhatsApp',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.whatsAppGreen,
+                    foregroundColor: AppColors.white,
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: phone.isEmpty ? null : _openWhatsApp,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
-/// SMALL WIDGETS
+// ── Reusable sub-widgets ─────────────────────────────────────────────────────
 
 class _Feature extends StatelessWidget {
   final IconData icon;
@@ -581,10 +805,23 @@ class _Feature extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: AppColors.primary),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 12)),
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 22),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(
+              fontSize: 12, color: AppColors.textSecondary),
+        ),
       ],
     );
   }
@@ -601,10 +838,27 @@ class _DetailRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(color: AppColors.textSecondary)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          SizedBox(
+            width: 130,
+            child: Text(
+              title,
+              style: const TextStyle(
+                  color: AppColors.textMuted, fontSize: 13),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.end,
+            ),
+          ),
         ],
       ),
     );

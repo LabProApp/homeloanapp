@@ -37,6 +37,7 @@ class ApiUrls {
   static const String propertySearch = "$baseUrl/property/advancedsearch";
   static const String post_property = "$baseUrl/property/add";
   static const String update_property = "$baseUrl/property/update";
+  static const String delete_property = "$baseUrl/property/delete";
 
 
 

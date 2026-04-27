@@ -1,7 +1,4 @@
-// ✅ ONLY ADDITIONS MARKED WITH 🔥
-
 import 'package:flutter/material.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../services/state_api_service.dart';
@@ -17,9 +14,11 @@ class PropertyFilterDialog extends StatefulWidget {
     this.initialFilters,
   });
 
-  static void show(BuildContext context,
-      {required Function(Map<String, dynamic>) onApply,
-        Map<String, dynamic>? initialFilters}) {
+  static void show(
+    BuildContext context, {
+    required Function(Map<String, dynamic>) onApply,
+    Map<String, dynamic>? initialFilters,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -33,113 +32,56 @@ class PropertyFilterDialog extends StatefulWidget {
   }
 
   @override
-  State<PropertyFilterDialog> createState() =>
-      _PropertyFilterBottomSheetState();
+  State<PropertyFilterDialog> createState() => _PropertyFilterDialogState();
 }
 
-class _PropertyFilterBottomSheetState
-    extends State<PropertyFilterDialog> {
-  static const double vGap = 6;
+class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
+  final _locationCtrl = TextEditingController();
 
-  final locationController = TextEditingController();
+  RangeValues _priceRange = const RangeValues(1000.0, 100000000.0);
+  RangeValues _areaRange = const RangeValues(100.0, 10000.0);
+  bool _priceChanged = false;
+  bool _areaChanged = false;
 
-  RangeValues priceRange =
-  const RangeValues(1000.0, 100000000.0);
-  RangeValues areaRange =
-  const RangeValues(100.0, 10000.0);
+  int _bedrooms = 0;
+  int _bathrooms = 0;
 
-  /// ✅ Optional filters
-  double bedrooms = 0.0;
-  double bathrooms = 0.0;
+  String? _category;
+  String? _listingType;
+  String? _type;
+  String? _status;
+  String? _furnishing;
+  String? _ownership;
+  String? _preferredTenants;
+  String? _availability;
 
-  /// ✅ NEW FLAGS
-  bool isPriceChanged = false;
-  bool isAreaChanged = false;
-
-  String? selectedType;
-  String? selectedStatus;
-
-  String? selectedCategory;
-  String? selectedListingType;
-
-  MasterValue? selectedState;
-  MasterValue? selectedCity;
-
-  List<MasterValue> states = [];
-  List<MasterValue> cities = [];
-
-  /// 🔥 NEW FILTER VARIABLES
-  String? selectedFurnishing;
-  String? selectedOwnership;
-
-  String? selectedPreferredTenants;
-  String? selectedAvailability;
-
-  final List<String> residentialTypes = [
-    "HOUSE",
-    "PLOT",
-    "APARTMENT",
-    "BUILDER FLOOR",
-    "PG",
-  ];
-
-  final List<String> commercialTypes = [
-    "SHOP",
-    "OFFICE",
-    "SHOWROOM",
-    "CO WORKING",
-    "AGRICULTURAL",
-  ];
-
-  final List<String> statusList = [
-    "Ready to Move",
-    "Under Construction",
-    "New Launch",
-    "ReSale"
-  ];
-
-  final List<String> amenities = [
-    "Parking",
-    "Lift",
-    "Gym",
-    "Garden",
-    "Security",
-    "Pool"
-  ];
-
-  /// 🔥 NEW DROPDOWN LISTS
-  final List<String> furnishingList = [
-    "Furnished",
-    "Semi-Furnished",
-    "Unfurnished"
-  ];
-
-  final List<String> ownershipList = [
-    "Freehold",
-    "Leasehold"
-  ];
-
-
-
-
-  final List<String> preferredTenantList = [
-    "Family",
-    "Bachelors",
-    "Anyone"
-  ];
-
-  final List<String> availabilityList = [
-    "Immediate",
-    "15 Days",
-    "30 Days"
-  ];
-
-  final Set<String> selectedAmenities = {};
-
+  MasterValue? _selectedState;
+  MasterValue? _selectedCity;
+  List<MasterValue> _states = [];
+  List<MasterValue> _cities = [];
   bool _loadingStates = true;
   bool _loadingCities = false;
 
-  final NumberFormat _currencyFmt = NumberFormat.currency(
+  final Set<String> _amenities = {};
+
+  static const _residentialTypes = [
+    'APARTMENT', 'HOUSE', 'BUILDER FLOOR', 'PLOT', 'PG',
+  ];
+  static const _commercialTypes = [
+    'SHOP', 'OFFICE', 'SHOWROOM', 'CO WORKING', 'AGRICULTURAL',
+  ];
+  static const _statusList = [
+    'Ready to Move', 'Under Construction', 'New Launch', 'Resale',
+  ];
+  static const _furnishingList = ['Furnished', 'Semi-Furnished', 'Unfurnished'];
+  static const _ownershipList = ['Freehold', 'Leasehold'];
+  static const _tenantList = ['Family', 'Bachelors', 'Anyone'];
+  static const _availabilityList = ['Immediate', '15 Days', '30 Days'];
+  static const _amenityList = [
+    'Parking', 'Lift', 'Gym', 'Garden', 'Security', 'Pool',
+  ];
+
+  static final _currencyFmt = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
     decimalDigits: 0,
@@ -154,92 +96,83 @@ class _PropertyFilterBottomSheetState
     return fallback;
   }
 
-  List<String> get filteredTypes {
-    if (selectedCategory == "Residential") return residentialTypes;
-    if (selectedCategory == "Commercial") return commercialTypes;
-    return [...residentialTypes, ...commercialTypes];
+  List<String> get _filteredTypes {
+    if (_category == 'Residential') return _residentialTypes;
+    if (_category == 'Commercial') return _commercialTypes;
+    return [..._residentialTypes, ..._commercialTypes];
   }
 
   @override
   void initState() {
     super.initState();
     _loadStates();
-
-    if (widget.initialFilters != null) {
-      final f = widget.initialFilters!;
-      locationController.text = f["location"] ?? "";
-      selectedType = f["type"];
-      selectedStatus = f["constructionStatus"];
-      selectedCategory = f["category"];
-      selectedListingType = f["rentOrSale"];
-
-      priceRange = RangeValues(
-        _toDouble(f["minPrice"], 1000.0),
-        _toDouble(f["maxPrice"], 100000000.0),
+    final f = widget.initialFilters;
+    if (f != null) {
+      _locationCtrl.text = f['location'] ?? '';
+      _type = f['type'];
+      _status = f['constructionStatus'];
+      _category = f['category'];
+      _listingType = f['rentOrSale'];
+      _furnishing = f['furnishing'];
+      _ownership = f['ownershipType'];
+      _preferredTenants = f['preferredTenants'];
+      _availability = f['availability'];
+      _priceRange = RangeValues(
+        _toDouble(f['minPrice'], 1000.0),
+        _toDouble(f['maxPrice'], 100000000.0),
       );
-
-      areaRange = RangeValues(
-        _toDouble(f["minArea"], 100.0),
-        _toDouble(f["maxArea"], 10000.0),
+      _areaRange = RangeValues(
+        _toDouble(f['minArea'], 100.0),
+        _toDouble(f['maxArea'], 10000.0),
       );
-
-      /// if values came from API → mark as changed
-      isPriceChanged = f["minPrice"] != null || f["maxPrice"] != null;
-      isAreaChanged = f["minArea"] != null || f["maxArea"] != null;
-
-      bedrooms = _toDouble(f["bedrooms"], 0.0);
-      bathrooms = _toDouble(f["bathrooms"], 0.0);
-
-      if (f["amenity"] != null && f["amenity"] is String) {
-        selectedAmenities.addAll(
-            (f["amenity"] as String).split(","));
+      _priceChanged = f['minPrice'] != null || f['maxPrice'] != null;
+      _areaChanged = f['minArea'] != null || f['maxArea'] != null;
+      _bedrooms = (f['bedrooms'] as int?) ?? 0;
+      _bathrooms = (f['bathrooms'] as int?) ?? 0;
+      if (f['amenity'] is String) {
+        _amenities.addAll((f['amenity'] as String).split(','));
       }
     }
   }
 
-  /// 🔥 FIXED STATE LOADING
+  @override
+  void dispose() {
+    _locationCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadStates() async {
     setState(() => _loadingStates = true);
-
     try {
-      states = await MasterService.getStates();
-
+      _states = await MasterService.getStates();
       final f = widget.initialFilters;
-
-      if (f != null && f["state"] != null) {
-        selectedState = states.firstWhere(
-              (s) => s.value == f["state"],
-          orElse: () => states.first,
+      if (f != null && f['state'] != null) {
+        _selectedState = _states.firstWhere(
+          (s) => s.value == f['state'],
+          orElse: () => _states.first,
         );
-
-        await _loadCities(selectedState!.id, applyInitial: true);
+        await _loadCities(_selectedState!.id, applyInitial: true);
       }
     } finally {
       if (mounted) setState(() => _loadingStates = false);
     }
   }
 
-  /// 🔥 FIXED CITY LOADING
-  Future<void> _loadCities(int stateId,
-      {bool applyInitial = false}) async {
+  Future<void> _loadCities(int stateId, {bool applyInitial = false}) async {
     setState(() {
       _loadingCities = true;
-      cities = [];
-      selectedCity = null;
+      _cities = [];
+      _selectedCity = null;
     });
-
     try {
-      cities = await MasterService.getCities(stateId);
-
+      _cities = await MasterService.getCities(stateId);
       if (applyInitial && widget.initialFilters != null) {
-        final f = widget.initialFilters!;
-        if (f["city"] != null) {
-          final match = cities.where(
-                (c) => c.value.toLowerCase().trim() ==
-                f["city"].toString().toLowerCase().trim(),
-          );
-
-          selectedCity = match.isNotEmpty ? match.first : null;
+        final cityVal =
+            widget.initialFilters!['city']?.toString().toLowerCase().trim();
+        if (cityVal != null) {
+          final match =
+              _cities.where((c) => c.value.toLowerCase().trim() == cityVal);
+          _selectedCity = match.isNotEmpty ? match.first : null;
         }
       }
     } finally {
@@ -247,491 +180,583 @@ class _PropertyFilterBottomSheetState
     }
   }
 
-  @override
-  void dispose() {
-    locationController.dispose();
-    super.dispose();
+  void _clearAll() {
+    setState(() {
+      _locationCtrl.clear();
+      _category = null;
+      _listingType = null;
+      _type = null;
+      _status = null;
+      _furnishing = null;
+      _ownership = null;
+      _preferredTenants = null;
+      _availability = null;
+      _selectedState = null;
+      _selectedCity = null;
+      _cities = [];
+      _priceRange = const RangeValues(1000.0, 100000000.0);
+      _areaRange = const RangeValues(100.0, 10000.0);
+      _priceChanged = false;
+      _areaChanged = false;
+      _bedrooms = 0;
+      _bathrooms = 0;
+      _amenities.clear();
+    });
   }
 
-  SliderThemeData _sliderTheme(BuildContext context) {
-    return SliderTheme.of(context).copyWith(
-      thumbColor: AppColors.primary,
-      activeTrackColor: AppColors.primary,
-      inactiveTrackColor: AppColors.border,
-      overlayColor: AppColors.primary.withOpacity(0.18),
+  void _apply() {
+    widget.onApply({
+      'state': _selectedState?.value,
+      'city': _selectedCity?.value,
+      'location':
+          _locationCtrl.text.trim().isEmpty ? null : _locationCtrl.text.trim(),
+      'type': _type,
+      'category': _category,
+      'rentOrSale': _listingType,
+      'constructionStatus': _status,
+      'minPrice': _priceChanged ? _priceRange.start : null,
+      'maxPrice': _priceChanged ? _priceRange.end : null,
+      'minArea': _areaChanged ? _areaRange.start : null,
+      'maxArea': _areaChanged ? _areaRange.end : null,
+      'bedrooms': _bedrooms == 0 ? null : _bedrooms,
+      'bathrooms': _bathrooms == 0 ? null : _bathrooms,
+      'furnishing': _furnishing,
+      'ownershipType': _ownership,
+      'preferredTenants': _preferredTenants,
+      'availability': _availability,
+      'amenity': _amenities.isNotEmpty ? _amenities.join(',') : null,
+    });
+    Navigator.pop(context);
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+
+  InputDecoration _inputDeco(String label) => InputDecoration(
+        labelText: label,
+        labelStyle:
+            const TextStyle(color: AppColors.textMuted, fontSize: 13),
+        filled: true,
+        fillColor: AppColors.white,
+        isDense: true,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+      );
+
+  Widget _section(String title) => Padding(
+        padding: const EdgeInsets.only(top: 18, bottom: 8),
+        child: Row(
+          children: [
+            Container(
+              width: 3,
+              height: 16,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _chipRow(
+    List<String> options,
+    String? selected,
+    ValueChanged<String?> onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 6,
+        children: options.map((e) {
+          final isSelected = selected == e;
+          return ChoiceChip(
+            label: Text(e),
+            selected: isSelected,
+            selectedColor: AppColors.primary,
+            backgroundColor: AppColors.white,
+            side: BorderSide(
+              color: isSelected ? AppColors.primary : AppColors.border,
+            ),
+            labelStyle: TextStyle(
+              fontSize: 13,
+              color: isSelected ? AppColors.white : AppColors.textSecondary,
+              fontWeight:
+                  isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+            onSelected: (_) => onChanged(isSelected ? null : e),
+          );
+        }).toList(),
+      ),
     );
   }
 
-  Widget _buildRangeSlider({
+  Widget _dropdown<T>({
+    required String label,
+    required List<T> items,
+    required T? value,
+    required ValueChanged<T?>? onChanged,
+    required String Function(T) itemLabel,
+    Widget? suffixIcon,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: DropdownButtonFormField<T>(
+        value: items.contains(value) ? value : null,
+        isDense: true,
+        itemHeight: 48,
+        decoration: suffixIcon != null
+            ? _inputDeco(label).copyWith(suffixIcon: suffixIcon)
+            : _inputDeco(label),
+        hint: Text(label,
+            style: const TextStyle(
+                color: AppColors.textMuted, fontSize: 13)),
+        items: items
+            .map((e) => DropdownMenuItem<T>(
+                  value: e,
+                  child: Text(
+                    itemLabel(e),
+                    style: const TextStyle(
+                        fontSize: 14, color: AppColors.textPrimary),
+                  ),
+                ))
+            .toList(),
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _stepper(
+    String label,
+    int value,
+    ValueChanged<int> onChanged, {
+    int max = 10,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 13, color: AppColors.textPrimary)),
+              Text(
+                value == 0 ? 'Any' : value.toString(),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color:
+                      value == 0 ? AppColors.textMuted : AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              _stepBtn(
+                Icons.remove_rounded,
+                value <= 0
+                    ? null
+                    : () => setState(() => onChanged(value - 1)),
+              ),
+              const SizedBox(width: 12),
+              _stepBtn(
+                Icons.add_rounded,
+                value >= max
+                    ? null
+                    : () => setState(() => onChanged(value + 1)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _stepBtn(IconData icon, VoidCallback? onTap) {
+    final active = onTap != null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+              color: active ? AppColors.primary : AppColors.border),
+          color: active
+              ? AppColors.primary.withOpacity(0.08)
+              : AppColors.surfaceSubtle,
+        ),
+        child: Icon(
+          icon,
+          size: 16,
+          color: active ? AppColors.primary : AppColors.textMuted,
+        ),
+      ),
+    );
+  }
+
+  Widget _loadingIndicator() => const SizedBox(
+        width: 20,
+        height: 20,
+        child: Padding(
+          padding: EdgeInsets.all(12),
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: AppColors.primary),
+        ),
+      );
+
+  Widget _rangeSlider({
     required RangeValues values,
     required double min,
     required double max,
     required int divisions,
-    required String Function(double) labelFormatter,
+    required String Function(double) labelFmt,
     required ValueChanged<RangeValues> onChanged,
   }) {
     return SliderTheme(
-      data: _sliderTheme(context),
+      data: SliderTheme.of(context).copyWith(
+        thumbColor: AppColors.primary,
+        activeTrackColor: AppColors.primary,
+        inactiveTrackColor: AppColors.border,
+        overlayColor: AppColors.primary.withOpacity(0.18),
+      ),
       child: RangeSlider(
         values: values,
         min: min,
         max: max,
         divisions: divisions,
-        labels: RangeLabels(
-          labelFormatter(values.start),
-          labelFormatter(values.end),
-        ),
+        labels: RangeLabels(labelFmt(values.start), labelFmt(values.end)),
         onChanged: onChanged,
       ),
     );
   }
 
-  Widget _buildSlider({
-    required double value,
-    required double min,
-    required double max,
-    required int divisions,
-    required ValueChanged<double> onChanged,
-  }) {
-    return SliderTheme(
-      data: _sliderTheme(context),
-      child: Slider(
-        value: value,
-        min: min,
-        max: max,
-        divisions: divisions,
-        onChanged: onChanged,
-      ),
-    );
-  }
+  // ── Build ─────────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
       expand: false,
-      initialChildSize: 0.85,
+      initialChildSize: 0.88,
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (_, scrollController) {
         return Container(
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.05),
+          decoration: const BoxDecoration(
+            color: AppColors.white,
             borderRadius:
-            BorderRadius.vertical(top: Radius.circular(20)),
+                BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
+              // ── Drag handle ─────────────────────────────────────────────
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const SizedBox(height: 8),
 
+              // ── Header ──────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Filters',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _clearAll,
+                      child: const Text(
+                        'Clear All',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+
+              // ── Scrollable body ─────────────────────────────────────────
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
-                  padding: const EdgeInsets.all(12),
+                  padding:
+                      const EdgeInsets.fromLTRB(16, 4, 16, 16),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
 
-                      /// CATEGORY
-                      _section("Category"),
-                      Wrap(
-                        spacing: 6,
-                        children: ["Residential", "Commercial"]
-                            .map((e) {
-                          return ChoiceChip(
-                            label: Text(e),
-                            selected: selectedCategory == e,
-                            onSelected: (_) {
-                              setState(() {
-                                selectedCategory = e;
-                                final list =
-                                e == "Residential"
-                                    ? residentialTypes
-                                    : commercialTypes;
-                                selectedType = list.first;
-                              });
-                            },
-                          );
-                        }).toList(),
+                      // ── 1. Listing Type ──────────────────────────────
+                      _section('Listing Type'),
+                      _chipRow(
+                        ['Sale', 'Rent'],
+                        _listingType,
+                        (v) => setState(() => _listingType = v),
                       ),
 
-                      /// LISTING TYPE
-                      _section("Listing Type"),
-                      Wrap(
-                        spacing: 6,
-                        children: ["Sale", "Rent"].map((e) {
-                          return ChoiceChip(
-                            label: Text(e),
-                            selected: selectedListingType == e,
-                            onSelected: (_) => setState(
-                                    () => selectedListingType = e),
-                          );
-                        }).toList(),
+                      // ── 2. Category ──────────────────────────────────
+                      _section('Category'),
+                      _chipRow(
+                        ['Residential', 'Commercial'],
+                        _category,
+                        (v) => setState(() {
+                          _category = v;
+                          _type = null;
+                        }),
                       ),
 
-                      /// STATE
-                      _loadingStates
-                          ? const CircularProgressIndicator()
-                          : _fancyDropdown<MasterValue>(
-                        items: states,
-                        value: selectedState,
-                        hint: "State",
+                      // ── 3. Property Type ─────────────────────────────
+                      _section('Property Type'),
+                      _dropdown<String>(
+                        label: 'Select Type',
+                        items: _filteredTypes,
+                        value: _type,
+                        itemLabel: (e) => e,
+                        onChanged: (v) => setState(() => _type = v),
+                      ),
+
+                      // ── 4. Location ──────────────────────────────────
+                      _section('Location'),
+                      _dropdown<MasterValue>(
+                        label: 'State',
+                        items: _states,
+                        value: _selectedState,
                         itemLabel: (s) => s.value,
-                        onChanged: (v) {
-                          setState(() {
-                            selectedState = v;
-                            selectedCity = null;
-                            cities = [];
-                            locationController.clear();
-                          });
-                          if (v != null) {
-                            _loadCities(v.id);
-                          }
-                        },
-                      ),
-
-                      /// CITY
-                      _loadingCities
-                          ? const CircularProgressIndicator()
-                          : _fancyDropdown<MasterValue>(
-                        items: cities,
-                        value: selectedCity,
-                        hint: "City",
-                        itemLabel: (c) => c.value,
-                        onChanged: (v) {
-                          setState(() {
-                            selectedCity = v;
-                            locationController.clear();
-                          });
-                        },
-                      ),
-
-                      _textField("Location", locationController),
-
-                      /// TYPE
-                      _fancyDropdown<String>(
-                        items: filteredTypes,
-                        value: selectedType,
-                        hint: "Type",
-                        itemLabel: (t) => t,
-                        onChanged: selectedCategory == null
+                        suffixIcon: _loadingStates
+                            ? _loadingIndicator()
+                            : null,
+                        onChanged: _loadingStates
                             ? null
-                            : (v) =>
-                            setState(() => selectedType = v),
+                            : (v) {
+                                setState(() {
+                                  _selectedState = v;
+                                  _selectedCity = null;
+                                  _cities = [];
+                                  _locationCtrl.clear();
+                                });
+                                if (v != null) _loadCities(v.id);
+                              },
                       ),
-
-                      /// 🔥 NEW FILTERS (MERGED)
-                      if (selectedCategory == "Residential")
-                        _fancyDropdown(
-                          items: furnishingList,
-                          value: selectedFurnishing,
-                          hint: "Furnishing",
-                          itemLabel: (e) => e,
-                          onChanged: (v) =>
-                              setState(() => selectedFurnishing = v),
+                      _dropdown<MasterValue>(
+                        label: 'City',
+                        items: _cities,
+                        value: _selectedCity,
+                        itemLabel: (c) => c.value,
+                        suffixIcon: _loadingCities
+                            ? _loadingIndicator()
+                            : null,
+                        onChanged: (_selectedState == null ||
+                                _loadingCities)
+                            ? null
+                            : (v) => setState(() => _selectedCity = v),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: TextField(
+                          controller: _locationCtrl,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textPrimary),
+                          decoration: _inputDeco('Locality / Area'),
                         ),
-
-                      _fancyDropdown(
-                        items: ownershipList,
-                        value: selectedOwnership,
-                        hint: "Ownership",
-                        itemLabel: (e) => e,
-                        onChanged: (v) =>
-                            setState(() => selectedOwnership = v),
                       ),
 
-                      if (selectedListingType == "Rent")
-                        _fancyDropdown(
-                          items: preferredTenantList,
-                          value: selectedPreferredTenants,
-                          hint: "Preferred Tenants",
-                          itemLabel: (e) => e,
-                          onChanged: (v) => setState(
-                                  () => selectedPreferredTenants = v),
-                        ),
-
-                      _fancyDropdown(
-                        items: availabilityList,
-                        value: selectedAvailability,
-                        hint: "Availability",
-                        itemLabel: (e) => e,
-                        onChanged: (v) =>
-                            setState(() => selectedAvailability = v),
-                      ),
-
-                      /// PRICE
-                      _section(
-                        isPriceChanged
-                            ? "Price: ${_fmtCurrency(priceRange.start)} - ${_fmtCurrency(priceRange.end)}"
-                            : "Price: Any",
-                      ),
-                      _buildRangeSlider(
-                        values: priceRange,
+                      // ── 5. Price ─────────────────────────────────────
+                      _section(_priceChanged
+                          ? 'Price: ${_fmtCurrency(_priceRange.start)} – ${_fmtCurrency(_priceRange.end)}'
+                          : 'Price: Any'),
+                      _rangeSlider(
+                        values: _priceRange,
                         min: 0,
                         max: 100000000,
                         divisions: 1000,
-                        labelFormatter: _fmtCurrency,
-                        onChanged: (v) {
-                          setState(() {
-                            priceRange = v;
-                            isPriceChanged = true;
-                          });
-                        },
+                        labelFmt: _fmtCurrency,
+                        onChanged: (v) => setState(() {
+                          _priceRange = v;
+                          _priceChanged = true;
+                        }),
                       ),
 
-                      /// AREA
-                      _section(
-                        isAreaChanged
-                            ? "Area: ${areaRange.start.toInt()} - ${areaRange.end.toInt()}"
-                            : "Area: Any",
-                      ),
-                      _buildRangeSlider(
-                        values: areaRange,
+                      // ── 6. Area ──────────────────────────────────────
+                      _section(_areaChanged
+                          ? 'Area: ${_areaRange.start.toInt()} – ${_areaRange.end.toInt()} sqft'
+                          : 'Area: Any'),
+                      _rangeSlider(
+                        values: _areaRange,
                         min: 0,
                         max: 10000,
                         divisions: 100,
-                        labelFormatter: (v) =>
-                            v.toInt().toString(),
-                        onChanged: (v) {
-                          setState(() {
-                            areaRange = v;
-                            isAreaChanged = true;
-                          });
-                        },
+                        labelFmt: (v) => '${v.toInt()} sqft',
+                        onChanged: (v) => setState(() {
+                          _areaRange = v;
+                          _areaChanged = true;
+                        }),
                       ),
 
-                      /// BEDROOMS
-                      _section(
-                          "Bedrooms: ${bedrooms == 0 ? "Any" : bedrooms.toInt()}"),
-                      _buildSlider(
-                        value: bedrooms,
-                        min: 0,
-                        max: 12,
-                        divisions: 12,
+                      // ── 7. Rooms (Residential only) ──────────────────
+                      if (_category == null ||
+                          _category == 'Residential') ...[
+                        _section('Rooms'),
+                        _stepper('Bedrooms', _bedrooms,
+                            (v) => _bedrooms = v),
+                        _stepper('Bathrooms', _bathrooms,
+                            (v) => _bathrooms = v),
+                      ],
+
+                      // ── 8. Construction Status ───────────────────────
+                      _section('Status'),
+                      _chipRow(
+                        _statusList,
+                        _status,
+                        (v) => setState(() => _status = v),
+                      ),
+
+                      // ── 9. Property Details ──────────────────────────
+                      _section('Property Details'),
+                      if (_category == null ||
+                          _category == 'Residential')
+                        _dropdown<String>(
+                          label: 'Furnishing',
+                          items: _furnishingList,
+                          value: _furnishing,
+                          itemLabel: (e) => e,
+                          onChanged: (v) =>
+                              setState(() => _furnishing = v),
+                        ),
+                      _dropdown<String>(
+                        label: 'Ownership',
+                        items: _ownershipList,
+                        value: _ownership,
+                        itemLabel: (e) => e,
                         onChanged: (v) =>
-                            setState(() => bedrooms = v),
+                            setState(() => _ownership = v),
                       ),
-
-                      /// BATHROOMS
-                      _section(
-                          "Bathrooms: ${bathrooms == 0 ? "Any" : bathrooms.toInt()}"),
-                      _buildSlider(
-                        value: bathrooms,
-                        min: 0,
-                        max: 12,
-                        divisions: 12,
+                      if (_listingType == 'Rent')
+                        _dropdown<String>(
+                          label: 'Preferred Tenants',
+                          items: _tenantList,
+                          value: _preferredTenants,
+                          itemLabel: (e) => e,
+                          onChanged: (v) =>
+                              setState(() => _preferredTenants = v),
+                        ),
+                      _dropdown<String>(
+                        label: 'Availability',
+                        items: _availabilityList,
+                        value: _availability,
+                        itemLabel: (e) => e,
                         onChanged: (v) =>
-                            setState(() => bathrooms = v),
+                            setState(() => _availability = v),
                       ),
 
-                      /// STATUS
-                      _section("Status"),
+                      // ── 10. Amenities ────────────────────────────────
+                      _section('Amenities'),
                       Wrap(
-                        spacing: 6,
-                        children: statusList.map((s) {
-                          return ChoiceChip(
-                            label: Text(s),
-                            selected: selectedStatus == s,
-                            onSelected: (_) =>
-                                setState(() => selectedStatus = s),
-                          );
-                        }).toList(),
-                      ),
-
-                      /// AMENITIES
-                      _section("Amenities"),
-                      Wrap(
-                        spacing: 6,
-                        children: amenities.map((a) {
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: _amenityList.map((a) {
+                          final selected = _amenities.contains(a);
                           return FilterChip(
                             label: Text(a),
-                            selected:
-                            selectedAmenities.contains(a),
-                            onSelected: (v) {
-                              setState(() {
-                                v
-                                    ? selectedAmenities.add(a)
-                                    : selectedAmenities.remove(a);
-                              });
-                            },
+                            selected: selected,
+                            selectedColor:
+                                AppColors.primary.withOpacity(0.15),
+                            backgroundColor: AppColors.white,
+                            checkmarkColor: AppColors.primary,
+                            side: BorderSide(
+                              color: selected
+                                  ? AppColors.primary
+                                  : AppColors.border,
+                            ),
+                            labelStyle: TextStyle(
+                              fontSize: 12,
+                              color: selected
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                              fontWeight: selected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                            onSelected: (v) => setState(() {
+                              v
+                                  ? _amenities.add(a)
+                                  : _amenities.remove(a);
+                            }),
                           );
                         }).toList(),
                       ),
+
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
               ),
 
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: AppButton(
-                  text: "Search",
-                  onTap: _apply,
+              // ── Apply button ────────────────────────────────────────────
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                    16,
+                    10,
+                    16,
+                    MediaQuery.of(context).padding.bottom + 10),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 8,
+                      color: Colors.black.withOpacity(0.06),
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
                 ),
-              )
+                child: AppButton(text: 'Apply Filters', onTap: _apply),
+              ),
             ],
           ),
         );
       },
     );
   }
-
-
-  void _apply() {
-    widget.onApply({
-      "state": selectedState?.value,
-      "city": selectedCity?.value,
-      "location": locationController.text.trim().isEmpty
-          ? null
-          : locationController.text.trim(),
-      "type": selectedType,
-      "category": selectedCategory,
-      "rentOrSale": selectedListingType,
-      "constructionStatus": selectedStatus,
-
-      /// ✅ FIXED PRICE
-      "minPrice": isPriceChanged ? priceRange.start : null,
-      "maxPrice": isPriceChanged ? priceRange.end : null,
-
-      /// ✅ FIXED AREA
-      "minArea": isAreaChanged ? areaRange.start : null,
-      "maxArea": isAreaChanged ? areaRange.end : null,
-
-      "bedrooms": bedrooms == 0 ? null : bedrooms.toInt(),
-      "bathrooms": bathrooms == 0 ? null : bathrooms.toInt(),
-
-      "category": selectedCategory,
-      "type": selectedType,
-
-      /// 🔥 NEW FILTER VALUES
-      "furnishing": selectedFurnishing,
-      "ownershipType": selectedOwnership,
-
-      "preferredTenants": selectedPreferredTenants,
-      "availability": selectedAvailability,
-      "amenity": selectedAmenities.isNotEmpty
-          ? selectedAmenities.join(",")
-          : null,
-    });
-
-    Navigator.pop(context);
-  }
-
-  Widget _section(String title) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: vGap),
-    child: Align(
-      alignment: Alignment.centerLeft,
-      child: Text(title),
-    ),
-  );
-
-  Widget _textField(String hint, TextEditingController c) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: vGap),
-      child: TextField(
-        controller: c,
-        decoration: InputDecoration(hintText: hint),
-      ),
-    );
-  }
-
-  Widget _fancyDropdown<T>({
-    required List<T> items,
-    required T? value,
-    required String hint,
-    required String Function(T) itemLabel,
-    required ValueChanged<T?>? onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: vGap),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton2<T>(
-          isExpanded: true,
-          value: items.contains(value) ? value : null,
-
-          /// 🔥 Button Style (Main UI)
-          buttonStyleData: ButtonStyleData(
-            height: 32,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14), // 🔥 Rounded
-              border: Border.all(
-                color: Colors.grey.shade300,
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
-
-          /// 🔥 Icon Style
-          iconStyleData: const IconStyleData(
-            icon: Icon(Icons.keyboard_arrow_down_rounded),
-            iconSize: 22,
-          ),
-
-          /// 🔥 Dropdown Style
-          dropdownStyleData: DropdownStyleData(
-            maxHeight: 250,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14), // 🔥 Rounded dropdown
-            ),
-            elevation: 4,
-          ),
-
-          /// 🔥 Menu Item Style
-          menuItemStyleData: const MenuItemStyleData(
-            height: 30,
-            padding: EdgeInsets.symmetric(horizontal: 14),
-          ),
-
-          /// 🔥 Hint
-          hint: Text(
-            hint,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 14,
-            ),
-          ),
-
-          /// 🔥 Selected Value Style
-          selectedItemBuilder: (context) {
-            return items.map((e) {
-              return Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  itemLabel(e),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              );
-            }).toList();
-          },
-
-          /// 🔥 Items
-          items: items
-              .map((e) => DropdownMenuItem<T>(
-            value: e,
-            child: Text(
-              itemLabel(e),
-              style: const TextStyle(fontSize: 14),
-            ),
-          ))
-              .toList(),
-
-          onChanged: onChanged,
-        ),
-      ),
-    );
-  }
-
-
-
-
 }
