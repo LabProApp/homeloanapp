@@ -114,8 +114,6 @@ class _BankPageState extends State<BankPage> {
         ],
       ),
 
-      bottomNavigationBar: _selectedIndices.length >= 2 ? _compareBar() : null,
-
       body: SafeArea(
         child: Column(
           children: [
@@ -131,6 +129,8 @@ class _BankPageState extends State<BankPage> {
                 child: _buildBody(),
               ),
             ),
+
+            if (_selectedIndices.length >= 2) _compareBar(),
           ],
         ),
       ),
@@ -143,7 +143,7 @@ class _BankPageState extends State<BankPage> {
         color: Colors.white,
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, -3))],
       ),
-      padding: EdgeInsets.fromLTRB(16, 10, 16, 10 + MediaQuery.of(context).padding.bottom),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
           Container(
