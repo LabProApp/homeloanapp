@@ -38,6 +38,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   String _sortBy = "latest";
 
   List<Map<String, dynamic>> _savedSearches = [];
+  bool _savedSearchesExpanded = false;
 
   // ---------- sort label maps ----------
   static const Map<String, String> _sortLabels = {
@@ -324,7 +325,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
         children: [
           _buildSearchBar(),
           _buildActiveFilterChips(),
-          _buildSavedSearchChips(),
+          _buildSavedSearchPanel(),
           _buildToggles(),
           _buildList(),
         ],
@@ -532,164 +533,149 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   }
 
   // ============================================================
-  // SAVED SEARCH CHIPS
+  // SAVED SEARCH PANEL — expandable list
   // ============================================================
 
-  Widget _buildSavedSearchChips() {
+  Widget _buildSavedSearchPanel() {
     if (_savedSearches.isEmpty) return const SizedBox();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Header row
-        Padding(
-          padding: const EdgeInsets.fromLTRB(14, 4, 8, 0),
-          child: Row(
-            children: [
-              const Icon(Icons.bookmark_rounded,
-                  size: 14, color: AppColors.textMuted),
-              const SizedBox(width: 4),
-              const Text(
-                "Recent Filters",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const Spacer(),
-              TextButton(
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  textStyle: const TextStyle(fontSize: 11),
-                ),
-                onPressed: _showManageSearchesDialog,
-                child: const Text("Manage"),
-              ),
-            ],
-          ),
-        ),
-        // Chip row
-        SizedBox(
-          height: 52,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            itemCount: _savedSearches.length,
-            itemBuilder: (context, i) {
-              final s = _savedSearches[i];
-              final isPinned = s["pinned"] == true;
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                child: GestureDetector(
-                  onLongPress: () {
-                    _togglePin(i);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          isPinned
-                              ? "Removed from pinned"
-                              : "Pinned search",
-                        ),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  },
-                  child: InputChip(
-                    label: SizedBox(
-                      width: 130,
-                      child: Text(
-                        _summarizeSearch(s),
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: isPinned
-                              ? AppColors.primary
-                              : AppColors.textPrimary,
-                        ),
-                      ),
+        // ── Tappable header ──────────────────────────────────────
+        Material(
+          color: Colors.white,
+          child: InkWell(
+            onTap: () => setState(
+                () => _savedSearchesExpanded = !_savedSearchesExpanded),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.history_rounded,
+                      size: 15, color: AppColors.textMuted),
+                  const SizedBox(width: 6),
+                  const Text(
+                    "Saved Filters",
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.textMuted,
+                      fontWeight: FontWeight.w600,
                     ),
-                    backgroundColor: isPinned
-                        ? AppColors.primary.withOpacity(0.12)
-                        : Colors.white,
-                    side: BorderSide(
-                      color:
-                          isPinned ? AppColors.primary : AppColors.border,
-                      width: isPinned ? 1.5 : 1.0,
-                    ),
-                    elevation: 2,
-                    shadowColor: Colors.black.withOpacity(0.06),
-                    avatar: Icon(
-                      isPinned ? Icons.push_pin : Icons.history,
-                      size: 16,
-                      color: isPinned
-                          ? AppColors.primary
-                          : AppColors.textMuted,
-                    ),
-                    onPressed: () => _applySavedSearch(s),
-                    onDeleted: () => _deleteSearch(i),
-                    deleteIcon: Icon(Icons.close,
-                        size: 16,
-                        color: isPinned
-                            ? AppColors.primary
-                            : AppColors.textMuted),
-                    deleteButtonTooltipMessage: "Remove search",
                   ),
-                ),
-              );
-            },
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      "${_savedSearches.length}",
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  AnimatedRotation(
+                    turns: _savedSearchesExpanded ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    child: const Icon(Icons.keyboard_arrow_down_rounded,
+                        size: 20, color: AppColors.textMuted),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-      ],
-    );
-  }
 
-  void _showManageSearchesDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(builder: (ctx, setDlgState) {
-          return AlertDialog(
-            title: const Text("Saved Searches"),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: _savedSearches.isEmpty
-                  ? const Text("No saved searches.")
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _savedSearches.length,
-                      itemBuilder: (_, i) {
+        // ── Animated expandable list ─────────────────────────────
+        AnimatedSize(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: _savedSearchesExpanded
+              ? Material(
+                  color: Colors.white,
+                  elevation: 3,
+                  shadowColor: Colors.black.withOpacity(0.08),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Divider(height: 1, thickness: 0.5),
+                      ...List.generate(_savedSearches.length, (i) {
                         final s = _savedSearches[i];
-                        return ListTile(
-                          dense: true,
-                          title: Text(
-                            _summarizeSearch(s),
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline,
-                                color: AppColors.error),
-                            onPressed: () {
-                              _deleteSearch(i);
-                              setDlgState(() {});
-                            },
+                        final summary = _summarizeSearch(s);
+
+                        return InkWell(
+                          onTap: () {
+                            setState(() => _savedSearchesExpanded = false);
+                            _applySavedSearch(s);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 11),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.history_rounded,
+                                    size: 16,
+                                    color: AppColors.textMuted),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        summary.isEmpty
+                                            ? "All properties"
+                                            : summary,
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if ((s["sortBy"] ?? "latest") !=
+                                          "latest")
+                                        Text(
+                                          "Sort: ${_sortLabels[s['sortBy']] ?? s['sortBy']}",
+                                          style: const TextStyle(
+                                              fontSize: 11,
+                                              color: AppColors.textMuted),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () => _deleteSearch(i),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4),
+                                    child: Icon(Icons.close_rounded,
+                                        size: 16,
+                                        color: AppColors.textMuted),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
-                      },
-                    ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text("Close"),
-              ),
-            ],
-          );
-        });
-      },
+                      }),
+                      const SizedBox(height: 4),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 
