@@ -8,17 +8,15 @@ import '../theme/app_colors.dart';
 
 class BankCard extends StatelessWidget {
   final Bank bank;
-  final bool showCompareCheckbox;
-  final bool isCompared;
-  final ValueChanged<bool>? onCompareChanged;
+  final bool isSelected;
+  final ValueChanged<bool>? onSelectionChanged;
   final VoidCallback? onNavigateToEmi;
 
   const BankCard({
     super.key,
     required this.bank,
-    this.showCompareCheckbox = false,
-    this.isCompared = false,
-    this.onCompareChanged,
+    this.isSelected = false,
+    this.onSelectionChanged,
     this.onNavigateToEmi,
   });
 
@@ -36,19 +34,20 @@ class BankCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: isCompared
+        side: isSelected
             ? const BorderSide(color: AppColors.primary, width: 2)
             : BorderSide(color: Colors.grey.shade200),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: showCompareCheckbox ? null : () => showBankDetailSheet(context, bank, onNavigateToEmi: onNavigateToEmi),
+        onTap: () => showBankDetailSheet(context, bank,
+            onNavigateToEmi: onNavigateToEmi),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Logo + Name + Compare toggle ─────────────────────
+              // ── Logo + Name + Checkbox ────────────────────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -77,9 +76,14 @@ class BankCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  if (showCompareCheckbox)
-                    _compareChip()
+                  if (onSelectionChanged != null)
+                    Checkbox(
+                      value: isSelected,
+                      onChanged: (v) => onSelectionChanged?.call(v ?? false),
+                      activeColor: AppColors.primary,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                    )
                   else
                     const Icon(Icons.chevron_right_rounded,
                         color: AppColors.textMuted),
@@ -131,7 +135,8 @@ class BankCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => showBankDetailSheet(context, bank, onNavigateToEmi: onNavigateToEmi),
+                      onPressed: () => showBankDetailSheet(context, bank,
+                          onNavigateToEmi: onNavigateToEmi),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         side: const BorderSide(color: AppColors.primary),
@@ -181,45 +186,6 @@ class BankCard extends StatelessWidget {
     }
     if (max != null) return 'up to ${_fmtCompact.format(max)}';
     return '${_fmtCompact.format(min!)}+';
-  }
-
-  Widget _compareChip() {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => onCompareChanged?.call(!isCompared),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isCompared
-              ? AppColors.primary.withOpacity(0.12)
-              : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isCompared ? AppColors.primary : Colors.grey.shade300,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isCompared ? Icons.check_rounded : Icons.compare_arrows_rounded,
-              size: 14,
-              color: isCompared ? AppColors.primary : AppColors.textMuted,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              isCompared ? 'Added' : 'Compare',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: isCompared ? AppColors.primary : AppColors.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _logo() {
