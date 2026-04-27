@@ -218,13 +218,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             pinned: true,
             backgroundColor: Colors.transparent,
             iconTheme: const IconThemeData(color: Colors.white),
-            actions: [
-              if (isOwner)
-                IconButton(
-                  icon: Icon(Icons.delete, color: AppColors.error),
-                  onPressed: _confirmDelete,
-                ),
-            ],
+            actions: const [],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,

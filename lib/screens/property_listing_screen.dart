@@ -312,6 +312,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
           _buildActiveFilterChips(),
           _buildSavedSearchPanel(),
           _buildToggles(),
+          _buildResultsBar(),
           _buildList(),
         ],
       ),
@@ -661,7 +662,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   }
 
   // ============================================================
-  // TOGGLES / LIST / ERROR / EMPTY
+  // TOGGLES / RESULTS BAR / LIST / ERROR / EMPTY
   // ============================================================
 
   Widget _buildToggles() {
@@ -671,6 +672,30 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
         setState(() => isResidential = val);
         _refreshFromApi();
       }),
+    );
+  }
+
+  Widget _buildResultsBar() {
+    if (_isLoading || _error.isNotEmpty) return const SizedBox();
+    final count = _properties.length;
+    if (count == 0) return const SizedBox();
+    final hasFilters = _activeFilterCount > 0 || _searchController.text.isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
+      child: Row(
+        children: [
+          Text(
+            hasFilters
+                ? '$count ${count == 1 ? "property" : "properties"} found'
+                : '$count ${isResidential ? "residential" : "commercial"} ${count == 1 ? "property" : "properties"}',
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textMuted,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

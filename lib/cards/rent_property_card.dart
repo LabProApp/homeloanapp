@@ -93,27 +93,6 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
           /// STATUS
           Positioned(top: 12, left: 12, child: _pill(status)),
 
-          /// VERIFIED
-          if (widget.property.verified == true)
-            Positioned(
-              top: 12,
-              left: 100,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.verified, size: 10, color: Colors.white),
-                    SizedBox(width: 3),
-                    Text("Verified",
-                        style: TextStyle(fontSize: 9, color: Colors.white)),
-                  ],
-                ),
-              ),
-            ),
 
           /// ICONS (WITH INTEREST)
           Positioned(

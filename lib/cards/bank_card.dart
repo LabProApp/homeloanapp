@@ -40,7 +40,7 @@ class BankCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => showBankDetailSheet(context, bank),
+        onTap: showCompareCheckbox ? null : () => showBankDetailSheet(context, bank),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
