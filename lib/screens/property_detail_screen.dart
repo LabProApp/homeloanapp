@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/property_model.dart';
+import '../models/client_lead_model.dart';
+import '../services/leads_service.dart';
+import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
 import '../utility/amenity_icon.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../commons/common_widget.dart';
 import '../commons/common_util.dart';
@@ -28,6 +32,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   static final _fmt = NumberFormat('#,##,###');
 
   int currentIndex = 0;
+  bool _isFavourite = false;
+  bool _sendingLead = false;
+
   /// ✅ OWNER CHECK
   bool get isOwner =>
       widget.property.postedByUser != null &&
@@ -114,6 +121,89 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     );
   }
 
+  Widget _iconCircle(IconData icon, VoidCallback? onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: CircleAvatar(
+        radius: 18,
+        backgroundColor: Colors.black45,
+        child: _sendingLead && icon == Icons.star
+            ? const SizedBox(
+                height: 12,
+                width: 12,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+            : Icon(icon, size: 18, color: Colors.white),
+      ),
+    );
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (widget.property.id == null) return;
+    await PropertyApiService.toggleFavourite(
+      userId: widget.userId,
+      propertyId: widget.property.id!,
+    );
+    setState(() => _isFavourite = !_isFavourite);
+  }
+
+  Future<void> _createLead() async {
+    if (widget.property.id == null) return;
+    setState(() => _sendingLead = true);
+    final prefs = await SharedPreferences.getInstance();
+    final lead = ClientLeadModel(
+      brokerId: widget.property.postedByUser,
+      userId: widget.userId,
+      propertyId: widget.property.id!,
+      clientName: prefs.getString('userName'),
+      email: prefs.getString('userEmail'),
+      mobile: prefs.getString('userMobile'),
+      propertyTitle: widget.property.title,
+      propertyCity: widget.property.city,
+      propertyPrice: widget.property.price,
+      preferredPropertyType: widget.property.type,
+      preferredBudget: widget.property.price,
+      inquiryDate: DateTime.now().toIso8601String(),
+      status: 'NEW',
+      contacted: false,
+      leadSource: 'Property Interest',
+      remark: 'User showed interest from property ${widget.property.title}',
+    );
+    try {
+      await LeadApiService.createLead(lead);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Interest sent successfully')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('You already showed interest in this property'),
+            backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _sendingLead = false);
+    }
+  }
+
+  void _shareProperty() {
+    Share.share('${widget.property.title}\n$priceText\n${widget.property.address}');
+  }
+
+  void _callOwner() {
+    final phone = widget.property.contactNumber ?? '';
+    if (phone.isEmpty) return;
+    AppUtils.call(phone);
+  }
+
+  void _openWhatsApp() {
+    final phone = widget.property.contactNumber ?? '';
+    if (phone.isEmpty) return;
+    AppUtils.whatsapp(phone, "Hi, I'm interested in ${widget.property.title}");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,13 +224,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   icon: Icon(Icons.delete, color: AppColors.error),
                   onPressed: _confirmDelete,
                 ),
-              IconButton(
-                icon: const Icon(Icons.share),
-                onPressed: () {
-                  Share.share(
-                      "${widget.property.title}\n$priceText\n${widget.property.address}");
-                },
-              )
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
@@ -213,6 +296,28 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           ),
                         ),
                       ),
+                    ),
+                  ),
+
+                  /// Action icon column (matches listing card icons)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
+                    right: 12,
+                    child: Column(
+                      children: [
+                        _iconCircle(
+                          _isFavourite ? Icons.favorite : Icons.favorite_border,
+                          _toggleFavorite,
+                        ),
+                        const SizedBox(height: 6),
+                        _iconCircle(Icons.share, _shareProperty),
+                        const SizedBox(height: 6),
+                        _iconCircle(Icons.call, _callOwner),
+                        const SizedBox(height: 6),
+                        _iconCircle(Icons.star, _sendingLead ? null : _createLead),
+                        const SizedBox(height: 6),
+                        _iconCircle(Icons.chat, _openWhatsApp),
+                      ],
                     ),
                   ),
                 ],

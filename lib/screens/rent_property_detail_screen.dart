@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/property_model.dart';
+import '../models/client_lead_model.dart';
+import '../services/leads_service.dart';
+import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
 import '../utility/amenity_icon.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../commons/common_widget.dart';
@@ -26,7 +30,10 @@ class RentalPropertyDetailScreen extends StatefulWidget {
 
 class _RentalPropertyDetailScreenState
     extends State<RentalPropertyDetailScreen> {
+  static final _fmt = NumberFormat('#,##,###');
   int currentIndex = 0;
+  bool _isFavourite = false;
+  bool _sendingLead = false;
 
   List<String> get _images {
     if (widget.property.documentList != null &&
@@ -53,12 +60,96 @@ class _RentalPropertyDetailScreenState
 
   String get rent {
     if (widget.property.monthlyRent != null) {
-      return "₹ ${NumberFormat('#,##,###').format(widget.property.monthlyRent)} / month";
+      return "₹ ${_fmt.format(widget.property.monthlyRent)} / month";
     }
     if (widget.property.price != null) {
-      return "₹ ${NumberFormat('#,##,###').format(widget.property.price)} / month";
+      return "₹ ${_fmt.format(widget.property.price)} / month";
     }
     return "-";
+  }
+
+  Widget _iconCircle(IconData icon, VoidCallback? onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: CircleAvatar(
+        radius: 18,
+        backgroundColor: Colors.black45,
+        child: _sendingLead && icon == Icons.star
+            ? const SizedBox(
+                height: 12,
+                width: 12,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+            : Icon(icon, size: 18, color: Colors.white),
+      ),
+    );
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (widget.property.id == null) return;
+    await PropertyApiService.toggleFavourite(
+      userId: widget.userId,
+      propertyId: widget.property.id!,
+    );
+    setState(() => _isFavourite = !_isFavourite);
+  }
+
+  Future<void> _createLead() async {
+    if (widget.property.id == null) return;
+    setState(() => _sendingLead = true);
+    final prefs = await SharedPreferences.getInstance();
+    final lead = ClientLeadModel(
+      brokerId: widget.property.postedByUser,
+      userId: widget.userId,
+      propertyId: widget.property.id!,
+      clientName: prefs.getString('userName') ?? '',
+      email: prefs.getString('userEmail') ?? '',
+      mobile: prefs.getString('userMobile') ?? '',
+      propertyTitle: widget.property.title,
+      propertyCity: widget.property.city,
+      propertyPrice: widget.property.price,
+      preferredPropertyType: widget.property.type,
+      preferredBudget: widget.property.price,
+      inquiryDate: DateTime.now().toIso8601String(),
+      status: 'NEW',
+      contacted: false,
+      leadSource: 'Rental Property Interest',
+      remark: 'User interested in rental property ${widget.property.title ?? ""}',
+    );
+    try {
+      await LeadApiService.createLead(lead);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Owner will contact you soon')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You already contacted for this property'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sendingLead = false);
+    }
+  }
+
+  void _shareProperty() {
+    Share.share('${widget.property.title}\nRent: $rent\n${widget.property.address}');
+  }
+
+  void _callOwner() {
+    final phone = widget.property.contactNumber.trim();
+    if (phone.isEmpty) return;
+    AppUtils.call(phone);
+  }
+
+  void _openWhatsApp() {
+    final phone = widget.property.contactNumber.trim();
+    if (phone.isEmpty) return;
+    AppUtils.whatsapp(phone, 'Hi, I am interested in your property ${widget.property.title}');
   }
 
   @override
@@ -72,15 +163,7 @@ class _RentalPropertyDetailScreenState
             expandedHeight: 300,
             pinned: true,
             backgroundColor: AppColors.primary,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.share),
-                onPressed: () {
-                  Share.share(
-                      "${widget.property.title}\nRent: $rent\n${widget.property.address}");
-                },
-              )
-            ],
+            actions: const [],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 children: [
@@ -115,7 +198,29 @@ class _RentalPropertyDetailScreenState
                         ),
                       ),
                     ),
-                  )
+                  ),
+
+                  /// Action icon column (matches listing card icons)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
+                    right: 12,
+                    child: Column(
+                      children: [
+                        _iconCircle(
+                          _isFavourite ? Icons.favorite : Icons.favorite_border,
+                          _toggleFavorite,
+                        ),
+                        const SizedBox(height: 6),
+                        _iconCircle(Icons.share, _shareProperty),
+                        const SizedBox(height: 6),
+                        _iconCircle(Icons.call, _callOwner),
+                        const SizedBox(height: 6),
+                        _iconCircle(Icons.star, _sendingLead ? null : _createLead),
+                        const SizedBox(height: 6),
+                        _iconCircle(Icons.chat, _openWhatsApp),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -315,7 +420,7 @@ class _RentalPropertyDetailScreenState
       _DetailRow(
           "Security Deposit",
           widget.property.securityDeposit != null
-              ? "₹ ${NumberFormat('#,##,###').format(widget.property.securityDeposit)}"
+              ? "₹ ${_fmt.format(widget.property.securityDeposit)}"
               : "-"),
       _DetailRow(
           "Maintenance Included",

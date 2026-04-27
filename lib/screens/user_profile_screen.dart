@@ -381,12 +381,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               label: _formatRole(user.userRole),
               color: AppColors.primary,
             ),
-            if (user.isVerified)
-              _badge(
-                icon: Icons.verified_rounded,
-                label: 'Verified',
-                color: AppColors.success,
-              ),
             if (user.userPackage.isNotEmpty && user.userPackage != 'Free')
               _badge(
                 icon: Icons.workspace_premium_rounded,

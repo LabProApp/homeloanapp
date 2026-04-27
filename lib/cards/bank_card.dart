@@ -183,6 +183,7 @@ class BankCard extends StatelessWidget {
 
   Widget _compareChip() {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => onCompareChanged?.call(!isCompared),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),

@@ -246,6 +246,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         indicatorColor: AppColors.primary.withOpacity(0.12),
         elevation: 4,
         shadowColor: Colors.black.withOpacity(0.08),
+        height: 65,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (index) {
           setState(() {

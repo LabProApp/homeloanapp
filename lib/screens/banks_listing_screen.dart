@@ -26,8 +26,8 @@ class _BankPageState extends State<BankPage> {
   List<Bank> _allBanks = [];
   List<Bank> _filteredBanks = [];
 
-  /// Track selected banks using IDs
-  final Set<int> _selectedBankIds = {};
+  /// Track selected banks by their list index (avoids duplicate-id issues)
+  final Set<int> _selectedIndices = {};
 
   bool _isLoading = true;
   String? _error;
@@ -54,6 +54,7 @@ class _BankPageState extends State<BankPage> {
       setState(() {
         _allBanks = data;
         _filteredBanks = data;
+        _selectedIndices.clear();
         _isLoading = false;
       });
     } catch (e) {
@@ -66,6 +67,7 @@ class _BankPageState extends State<BankPage> {
 
   void _search(String value) {
     setState(() {
+      _selectedIndices.clear();
       _filteredBanks = _allBanks
           .where((b) =>
           (b.bankName ?? '').toLowerCase().contains(value.toLowerCase()))
@@ -112,7 +114,7 @@ class _BankPageState extends State<BankPage> {
         ],
       ),
 
-      bottomNavigationBar: _selectedBankIds.length >= 2 ? _compareBar() : null,
+      bottomNavigationBar: _selectedIndices.length >= 2 ? _compareBar() : null,
 
       body: SafeArea(
         child: Column(
@@ -151,13 +153,13 @@ class _BankPageState extends State<BankPage> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${_selectedBankIds.length} selected',
+              '${_selectedIndices.length} selected',
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary),
             ),
           ),
           const SizedBox(width: 8),
           TextButton(
-            onPressed: () => setState(() => _selectedBankIds.clear()),
+            onPressed: () => setState(() => _selectedIndices.clear()),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               minimumSize: Size.zero,
@@ -230,10 +232,7 @@ class _BankPageState extends State<BankPage> {
       itemCount: _filteredBanks.length,
       itemBuilder: (_, index) {
         final bank = _filteredBanks[index];
-        final bankId = bank.id;
-
-        final isSelected =
-            bankId != null && _selectedBankIds.contains(bankId);
+        final isSelected = _selectedIndices.contains(index);
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -242,12 +241,10 @@ class _BankPageState extends State<BankPage> {
             showCompareCheckbox: true,
             isCompared: isSelected,
             onCompareChanged: (checked) {
-              if (bankId == null) return;
-
               setState(() {
                 checked
-                    ? _selectedBankIds.add(bankId)
-                    : _selectedBankIds.remove(bankId);
+                    ? _selectedIndices.add(index)
+                    : _selectedIndices.remove(index);
               });
             },
           ),
@@ -267,8 +264,9 @@ class _BankPageState extends State<BankPage> {
   // ================= Compare Dialog =================
 
   void _showCompareDialog() {
-    final selectedBanks = _allBanks
-        .where((b) => b.id != null && _selectedBankIds.contains(b.id))
+    final selectedBanks = _selectedIndices
+        .where((i) => i < _filteredBanks.length)
+        .map((i) => _filteredBanks[i])
         .toList();
 
     BankCompareDialog.show(context, selectedBanks);
