@@ -90,17 +90,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       // ── AppBar ────────────────────────────────────────────────────────────
       appBar: AppBar(
-        elevation: 0,
-        foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.secondary],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+        flexibleSpace: const DecoratedBox(
+          decoration: BoxDecoration(gradient: AppColors.primaryGradient),
         ),
         title: const Text(
           'KeyBricks',
@@ -303,11 +294,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.primary, AppColors.secondary],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: AppColors.primaryGradient,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

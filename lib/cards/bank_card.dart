@@ -36,7 +36,7 @@ class BankCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         side: isSelected
             ? const BorderSide(color: AppColors.primary, width: 2)
-            : BorderSide(color: Colors.grey.shade200),
+            : const BorderSide(color: AppColors.border),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -142,7 +142,7 @@ class BankCard extends StatelessWidget {
                         side: const BorderSide(color: AppColors.primary),
                         foregroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(12)),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: const Text('View Details',
@@ -160,7 +160,7 @@ class BankCard extends StatelessWidget {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(12)),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: const Text('Apply Now',
@@ -195,8 +195,8 @@ class BankCard extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: Colors.grey.shade50,
-        border: Border.all(color: Colors.grey.shade200),
+        color: AppColors.surfaceSubtle,
+        border: Border.all(color: AppColors.border),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -209,8 +209,8 @@ class BankCard extends StatelessWidget {
     );
   }
 
-  Widget _logoFallback() => Icon(Icons.account_balance_rounded,
-      color: Colors.grey.shade400, size: 24);
+  Widget _logoFallback() => const Icon(Icons.account_balance_rounded,
+      color: AppColors.textMuted, size: 24);
 
   Widget _stat(String value, String label, {bool highlight = false}) {
     return Expanded(
@@ -237,7 +237,7 @@ class BankCard extends StatelessWidget {
   Widget _vDivider() => Container(
         width: 1,
         height: 36,
-        color: Colors.grey.shade200,
+        color: AppColors.border,
         margin: const EdgeInsets.symmetric(horizontal: 4),
       );
 

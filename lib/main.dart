@@ -75,6 +75,7 @@ class MyApp extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
+        toolbarHeight: 48,
         titleTextStyle: TextStyle(
           fontFamily: font,
           fontSize: 18,

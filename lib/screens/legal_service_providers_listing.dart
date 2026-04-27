@@ -231,16 +231,8 @@ class _LegalServicePageState extends State<LegalServicePage> {
       backgroundColor: AppColors.listingbackground,
       appBar: AppBar(
         title: const Text("Legal & Documentation"),
-
-        foregroundColor: Colors.white,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.secondary],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+        flexibleSpace: const DecoratedBox(
+          decoration: BoxDecoration(gradient: AppColors.primaryGradient),
         ),
         actions: [
           Padding(
@@ -257,8 +249,8 @@ class _LegalServicePageState extends State<LegalServicePage> {
               icon: const Icon(Icons.support_agent_rounded, size: 18),
               label: const Text('Inquiry'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white70),
+                foregroundColor: AppColors.white,
+                side: BorderSide(color: AppColors.white.withOpacity(0.7)),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,

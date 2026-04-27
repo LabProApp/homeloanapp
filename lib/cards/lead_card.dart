@@ -38,7 +38,7 @@ class LeadCard extends StatelessWidget {
               ),
               _statusBadge(lead["status"]),
               IconButton(
-                icon: const Icon(Icons.edit, color: Colors.blue),
+                icon: const Icon(Icons.edit, color: AppColors.primary),
                 onPressed: onEdit,
               )
             ],
@@ -103,7 +103,7 @@ class LeadCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 15, color: Colors.grey.shade600),
+          Icon(icon, size: 15, color: AppColors.textMuted),
           const SizedBox(width: 6),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
         ],
@@ -112,26 +112,39 @@ class LeadCard extends StatelessWidget {
   }
 
   Widget _statusBadge(String? status) {
-    Color color = Colors.grey;
+    Color color;
     switch (status) {
       case "NEW":
-        color = Colors.blue;
+        color = AppColors.info;
         break;
       case "CONTACTED":
-        color = Colors.orange;
+        color = AppColors.warning;
         break;
       case "CLOSED":
-        color = Colors.green;
+        color = AppColors.success;
         break;
       case "DROPPED":
-        color = Colors.red;
+        color = AppColors.error;
         break;
+      default:
+        color = AppColors.textMuted;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
-      child: Text(status ?? "-", style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        status ?? "-",
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 

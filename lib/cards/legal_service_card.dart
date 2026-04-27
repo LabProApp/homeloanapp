@@ -45,7 +45,7 @@ class LegalServiceCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: AppColors.border),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -145,10 +145,10 @@ class LegalServiceCard extends StatelessWidget {
                               fontSize: 13, fontWeight: FontWeight.w600)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 10),
-                        side: const BorderSide(color: Color(0xFF25D366)),
-                        foregroundColor: const Color(0xFF25D366),
+                        side: const BorderSide(color: AppColors.whatsAppGreen),
+                        foregroundColor: const AppColors.whatsAppGreen,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(12)),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
@@ -167,7 +167,7 @@ class LegalServiceCard extends StatelessWidget {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(12)),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
@@ -289,7 +289,7 @@ class LegalServiceDetailPage extends StatelessWidget {
                           fontSize: 13, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    backgroundColor: const Color(0xFF25D366),
+                    backgroundColor: const AppColors.whatsAppGreen,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -588,7 +588,7 @@ class LegalServiceDetailPage extends StatelessWidget {
   Widget _vDivider() => Container(
         width: 1,
         height: 40,
-        color: Colors.grey.shade200,
+        color: AppColors.border,
         margin: const EdgeInsets.symmetric(horizontal: 4),
       );
 
@@ -674,9 +674,9 @@ Widget _overflowChip(int count) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
     decoration: BoxDecoration(
-      color: Colors.grey.shade100,
+      color: AppColors.surfaceSubtle,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: Colors.grey.shade300),
+      border: Border.all(color: AppColors.border),
     ),
     child: Text('+$count more',
         style:
