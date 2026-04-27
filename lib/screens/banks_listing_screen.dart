@@ -112,29 +112,15 @@ class _BankPageState extends State<BankPage> {
         ],
       ),
 
+      bottomNavigationBar: _selectedBankIds.length >= 2 ? _compareBar() : null,
+
       body: SafeArea(
         child: Column(
           children: [
-            /// 🔍 SEARCH + 🔁 COMPARE ROW
+            /// 🔍 SEARCH
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  Expanded(child: _searchBar()),
-                  const SizedBox(width: 8),
-                  if (_selectedBankIds.length >= 2)
-                    OutlinedButton.icon(
-                      onPressed: _showCompareDialog,
-                      icon: const Icon(Icons.compare_arrows_rounded, size: 18),
-                      label: const Text('Compare'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ),
-                ],
-              ),
+              child: _searchBar(),
             ),
 
             Expanded(
@@ -145,6 +131,55 @@ class _BankPageState extends State<BankPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _compareBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, -3))],
+      ),
+      padding: EdgeInsets.fromLTRB(16, 10, 16, 10 + MediaQuery.of(context).padding.bottom),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '${_selectedBankIds.length} selected',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: () => setState(() => _selectedBankIds.clear()),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Clear', style: TextStyle(color: AppColors.textMuted)),
+          ),
+          const Spacer(),
+          ElevatedButton.icon(
+            onPressed: _showCompareDialog,
+            icon: const Icon(Icons.compare_arrows_rounded, size: 18),
+            label: const Text('Compare Banks'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -189,7 +224,9 @@ class _BankPageState extends State<BankPage> {
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      cacheExtent: 800,
+      addAutomaticKeepAlives: false,
       itemCount: _filteredBanks.length,
       itemBuilder: (_, index) {
         final bank = _filteredBanks[index];
