@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -37,35 +36,14 @@ class _PropertyCardState extends State<PropertyCard> {
 
   List<String> get _images {
     final docs = widget.property.documentList;
-
-    debugPrint("Fetching property images...");
-
     if (docs != null && docs.isNotEmpty) {
-      debugPrint("Document list found with ${docs.length} items");
-
-      final imageUrls = docs
-          .map((e) {
-        debugPrint("Raw fileUrl: ${e.docUrl}");
-        return e.docUrl;
-      })
-          .where((url) {
-        final isValid = url != null && url.isNotEmpty;
-        if (!isValid) {
-          debugPrint("Filtered invalid URL: $url");
-        }
-        return isValid;
-      })
+      final urls = docs
+          .map((e) => e.docUrl)
+          .where((url) => url != null && url.isNotEmpty)
           .cast<String>()
           .toList();
-
-      debugPrint("Final valid image count: ${imageUrls.length}");
-      debugPrint("Image URLs: $imageUrls");
-
-      return imageUrls;
+      if (urls.isNotEmpty) return urls;
     }
-
-    debugPrint("No document images found, using fallback assets");
-
     return [
       "assets/images/house1.jpg",
       "assets/images/house2.jpg",
@@ -111,7 +89,7 @@ class _PropertyCardState extends State<PropertyCard> {
 
           /// IMAGE COUNT
           Positioned(
-            bottom: 170,
+            bottom: 155,
             right: 12,
             child: Container(
               padding:
@@ -164,106 +142,100 @@ class _PropertyCardState extends State<PropertyCard> {
             ),
           ),
 
-          /// BOTTOM DETAILS (COMPACT)
+          /// BOTTOM DETAILS — gradient overlay (no BackdropFilter, GPU-free)
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: ClipRRect(
-              borderRadius:
-              const BorderRadius.vertical(bottom: Radius.circular(18)),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
-                  color: Colors.black.withOpacity(0.45),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: Container(
+              decoration: const BoxDecoration(
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(16)),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Color(0xE8000000)],
+                  stops: [0.0, 1.0],
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(12, 32, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  /// TITLE
+                  Text(
+                    property.title ?? "-",
+                    style: const TextStyle(
+                        fontSize: 17,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600),
+                  ),
+
+                  const SizedBox(height: 2),
+
+                  /// LOCATION
+                  Text(
+                    property.location ?? "-",
+                    style: const TextStyle(
+                        color: AppColors.imageCaptionText, fontSize: 12),
+                  ),
+
+                  const SizedBox(height: 2),
+
+                  /// CITY + PRICE
+                  Row(
                     children: [
-
-                      /// TITLE
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              property.title ?? "-",
-                              style: const TextStyle(
-                                  fontSize: 17,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ),
-
-                        ],
+                      Expanded(
+                        child: Text(
+                          "${property.city ?? "-"} | ${property.state ?? "-"}",
+                          style: const TextStyle(
+                              color: AppColors.imageCaptionText, fontSize: 11),
+                        ),
                       ),
-
-                      const SizedBox(height: 2),
-
-                      /// LOCATION
                       Text(
-                        property.location ?? "-",
+                        property.price != null
+                            ? "₹ ${NumberFormat('#,##,###').format(property.price)}"
+                            : "-",
                         style: const TextStyle(
-                            color: AppColors.imageCaptionText, fontSize: 12),
-                      ),
-
-                      const SizedBox(height: 2),
-
-                      /// CITY + PRICE
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "${property.city ?? "-"} | ${property.state ?? "-"}",
-                              style: const TextStyle(
-                                  color: AppColors.imageCaptionText, fontSize: 11),
-                            ),
-                          ),
-                          Text(
-                            property.price != null
-                                ? "₹ ${NumberFormat('#,##,###').format(property.price)}"
-                                : "-",
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold),
-                          )
-                        ],
-                      ),
-
-                      const SizedBox(height: 2),
-
-                      /// DATE
-                      Text(
-                        "Posted: ${AppUtils.formatDate(property.postDate)}",
-                        style: const TextStyle(
-                            fontSize: 10, color: AppColors.imageCaptionText),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      /// FEATURES
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _feature(Icons.bed,
-                              "${property.bedrooms ?? '-'} Beds"),
-                          _feature(Icons.bathtub,
-                              "${property.bathrooms ?? '-'} Bath"),
-                          _feature(Icons.square_foot,
-                              "${property.superArea ?? '-'} sqft"),
-                        ],
-                      ),
-
-                      if (widget.showAmenitiesExpandable &&
-                          widget.property.amenitiesAsList != null &&
-                          widget.property.amenitiesAsList!.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        _amenitiesRow(),
-                      ],
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                      )
                     ],
                   ),
-                ),
+
+                  const SizedBox(height: 2),
+
+                  /// DATE
+                  Text(
+                    "Posted: ${AppUtils.formatDate(property.postDate)}",
+                    style: const TextStyle(
+                        fontSize: 10, color: AppColors.imageCaptionText),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  /// FEATURES
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _feature(Icons.bed,
+                          "${property.bedrooms ?? '-'} Beds"),
+                      _feature(Icons.bathtub,
+                          "${property.bathrooms ?? '-'} Bath"),
+                      _feature(Icons.square_foot,
+                          "${property.superArea ?? '-'} sqft"),
+                    ],
+                  ),
+
+                  if (widget.showAmenitiesExpandable &&
+                      widget.property.amenitiesAsList != null &&
+                      widget.property.amenitiesAsList!.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    _amenitiesRow(),
+                  ],
+                ],
               ),
             ),
           )

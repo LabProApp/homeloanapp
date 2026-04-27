@@ -685,7 +685,8 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                     : ListView.builder(
                         physics: const BouncingScrollPhysics(
                             parent: AlwaysScrollableScrollPhysics()),
-                        cacheExtent: 400,
+                        cacheExtent: 800,
+                        addAutomaticKeepAlives: false,
                         itemCount: _properties.length,
                         itemBuilder: (_, i) {
                           final p = _properties[i];

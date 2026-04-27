@@ -120,8 +120,17 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     if (_checkingLogin) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset('assets/images/splash_bg.jpg', fit: BoxFit.cover),
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(color: Colors.black.withOpacity(0.40)),
+            ),
+          ],
+        ),
       );
     }
 

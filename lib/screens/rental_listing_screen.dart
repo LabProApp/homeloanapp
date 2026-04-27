@@ -716,7 +716,8 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
                     : ListView.builder(
                         physics: const BouncingScrollPhysics(
                             parent: AlwaysScrollableScrollPhysics()),
-                        cacheExtent: 400,
+                        cacheExtent: 800,
+                        addAutomaticKeepAlives: false,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         itemCount: _properties.length,

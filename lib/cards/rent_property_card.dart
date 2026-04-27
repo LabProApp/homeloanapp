@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/property_model.dart';
 import '../models/client_lead_model.dart';
@@ -142,84 +141,85 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
             ),
           ),
 
-          /// BOTTOM DETAILS (COMPACT)
+          /// BOTTOM DETAILS — gradient overlay (no BackdropFilter, GPU-free)
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: ClipRRect(
-              borderRadius:
-              const BorderRadius.vertical(bottom: Radius.circular(18)),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(
-                  color: Colors.black.withOpacity(0.45),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: Container(
+              decoration: const BoxDecoration(
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(16)),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Color(0xE8000000)],
+                  stops: [0.0, 1.0],
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(12, 32, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  /// TITLE
+                  Text(
+                    widget.property.title ?? "-",
+                    style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white),
+                  ),
+
+                  const SizedBox(height: 2),
+
+                  /// LOCATION
+                  Text(
+                    "${widget.property.location ?? ""}, ${widget.property.city ?? ""}",
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.imageCaptionText),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  /// META
+                  Row(
                     children: [
-
-                      /// TITLE
-                      Text(
-                        widget.property.title ?? "-",
-                        style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white),
-                      ),
-
-                      const SizedBox(height: 2),
-
-                      /// LOCATION
-                      Text(
-                        "${widget.property.location ?? ""}, ${widget.property.city ?? ""}",
-                        style: const TextStyle(
-                            fontSize: 12, color: AppColors.imageCaptionText),
-                      ),
-
-                      const SizedBox(height: 4),
-
-                      /// META
-                      Row(
-                        children: [
-                          _metaIcon(Icons.bed,
-                              "${widget.property.bedrooms ?? '-'}"),
-                          _metaIcon(Icons.bathtub,
-                              "${widget.property.bathrooms ?? '-'}"),
-                          _metaIcon(
-                              Icons.square_foot,
-                              widget.property.superArea != null
-                                  ? "${widget.property.superArea!.toInt()} sqft"
-                                  : "-"),
-                          _metaIcon(
-                              Icons.layers,
-                              widget.property.floorNumber != null
-                                  ? "Fl ${widget.property.floorNumber}"
-                                  : "-"),
-                        ],
-                      ),
-
-                      const SizedBox(height: 4),
-
-                      /// RENT
-                      Text(
-                        rent,
-                        style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
-                      ),
-
-                      if (widget.showAmenitiesExpandable &&
-                          widget.property.amenitiesAsList != null &&
-                          widget.property.amenitiesAsList!.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        _amenitiesRow(),
-                      ],
+                      _metaIcon(Icons.bed,
+                          "${widget.property.bedrooms ?? '-'}"),
+                      _metaIcon(Icons.bathtub,
+                          "${widget.property.bathrooms ?? '-'}"),
+                      _metaIcon(
+                          Icons.square_foot,
+                          widget.property.superArea != null
+                              ? "${widget.property.superArea!.toInt()} sqft"
+                              : "-"),
+                      _metaIcon(
+                          Icons.layers,
+                          widget.property.floorNumber != null
+                              ? "Fl ${widget.property.floorNumber}"
+                              : "-"),
                     ],
                   ),
-                ),
+
+                  const SizedBox(height: 4),
+
+                  /// RENT
+                  Text(
+                    rent,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+
+                  if (widget.showAmenitiesExpandable &&
+                      widget.property.amenitiesAsList != null &&
+                      widget.property.amenitiesAsList!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    _amenitiesRow(),
+                  ],
+                ],
               ),
             ),
           ),
