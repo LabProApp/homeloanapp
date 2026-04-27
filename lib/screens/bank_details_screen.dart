@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/bank_model.dart';
-import '../screens/emi_calculator_screen.dart';
 import '../screens/bank_apply_loan_dialog.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-void showBankDetailSheet(BuildContext context, Bank bank) {
+void showBankDetailSheet(BuildContext context, Bank bank,
+    {VoidCallback? onNavigateToEmi}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -22,7 +22,11 @@ void showBankDetailSheet(BuildContext context, Bank bank) {
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
-        child: BankDetailPage(bank: bank, scrollController: controller),
+        child: BankDetailPage(
+          bank: bank,
+          scrollController: controller,
+          onNavigateToEmi: onNavigateToEmi,
+        ),
       ),
     ),
   );
@@ -31,8 +35,14 @@ void showBankDetailSheet(BuildContext context, Bank bank) {
 class BankDetailPage extends StatelessWidget {
   final Bank bank;
   final ScrollController? scrollController;
+  final VoidCallback? onNavigateToEmi;
 
-  const BankDetailPage({super.key, required this.bank, this.scrollController});
+  const BankDetailPage({
+    super.key,
+    required this.bank,
+    this.scrollController,
+    this.onNavigateToEmi,
+  });
 
   static const double sectionGap = 16;
   static final _fmt = NumberFormat('#,##,###');
@@ -405,11 +415,10 @@ class BankDetailPage extends StatelessWidget {
                             const Icon(Icons.calculate, color: AppColors.primary),
                         title: const Text('EMI Calculator'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const EmiCalculatorScreen()),
-                        ),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          onNavigateToEmi?.call();
+                        },
                       ),
                     ],
                   ),

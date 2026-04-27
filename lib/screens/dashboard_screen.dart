@@ -68,7 +68,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           userId: widget.userId,
         );
       case 2:
-        return BankPage(userId: widget.userId);
+        return BankPage(
+          userId: widget.userId,
+          onNavigateToEmi: () => _setPage(const EmiCalculatorScreen()),
+        );
       case 3:
         return LegalServicePage(userId: widget.userId);
       default:

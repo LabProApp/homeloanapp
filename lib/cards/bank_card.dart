@@ -11,6 +11,7 @@ class BankCard extends StatelessWidget {
   final bool showCompareCheckbox;
   final bool isCompared;
   final ValueChanged<bool>? onCompareChanged;
+  final VoidCallback? onNavigateToEmi;
 
   const BankCard({
     super.key,
@@ -18,6 +19,7 @@ class BankCard extends StatelessWidget {
     this.showCompareCheckbox = false,
     this.isCompared = false,
     this.onCompareChanged,
+    this.onNavigateToEmi,
   });
 
   static final _fmt = NumberFormat('#,##,###');
@@ -40,7 +42,7 @@ class BankCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: showCompareCheckbox ? null : () => showBankDetailSheet(context, bank),
+        onTap: showCompareCheckbox ? null : () => showBankDetailSheet(context, bank, onNavigateToEmi: onNavigateToEmi),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -129,7 +131,7 @@ class BankCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => showBankDetailSheet(context, bank),
+                      onPressed: () => showBankDetailSheet(context, bank, onNavigateToEmi: onNavigateToEmi),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         side: const BorderSide(color: AppColors.primary),

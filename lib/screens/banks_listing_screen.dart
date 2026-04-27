@@ -9,10 +9,12 @@ import '../commons/common_widget.dart';
 
 class BankPage extends StatefulWidget {
   final int? userId;
+  final VoidCallback? onNavigateToEmi;
 
   const BankPage({
     super.key,
     this.userId,
+    this.onNavigateToEmi,
   });
 
   @override
@@ -117,10 +119,16 @@ class _BankPageState extends State<BankPage> {
       body: SafeArea(
         child: Column(
           children: [
-            /// 🔍 SEARCH
+            /// 🔍 SEARCH + COMPARE BUTTON
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: _searchBar(),
+              child: Row(
+                children: [
+                  Expanded(child: _searchBar()),
+                  const SizedBox(width: 8),
+                  _compareButton(),
+                ],
+              ),
             ),
 
             Expanded(
@@ -129,59 +137,29 @@ class _BankPageState extends State<BankPage> {
                 child: _buildBody(),
               ),
             ),
-
-            if (_selectedIndices.length >= 2) _compareBar(),
           ],
         ),
       ),
     );
   }
 
-  Widget _compareBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, -3))],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '${_selectedIndices.length} selected',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary),
-            ),
-          ),
-          const SizedBox(width: 8),
-          TextButton(
-            onPressed: () => setState(() => _selectedIndices.clear()),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: const Text('Clear', style: TextStyle(color: AppColors.textMuted)),
-          ),
-          const Spacer(),
-          ElevatedButton.icon(
-            onPressed: _showCompareDialog,
-            icon: const Icon(Icons.compare_arrows_rounded, size: 18),
-            label: const Text('Compare Banks'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ),
-        ],
+  Widget _compareButton() {
+    final count = _selectedIndices.length;
+    final enabled = count >= 2;
+    return ElevatedButton.icon(
+      onPressed: enabled ? _showCompareDialog : null,
+      icon: const Icon(Icons.compare_arrows_rounded, size: 16),
+      label: Text(count > 0 ? 'Compare ($count)' : 'Compare'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: enabled ? AppColors.primary : Colors.grey.shade300,
+        foregroundColor: enabled ? Colors.white : AppColors.textMuted,
+        disabledBackgroundColor: Colors.grey.shade200,
+        disabledForegroundColor: AppColors.textMuted,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -240,6 +218,7 @@ class _BankPageState extends State<BankPage> {
             bank: bank,
             showCompareCheckbox: true,
             isCompared: isSelected,
+            onNavigateToEmi: widget.onNavigateToEmi,
             onCompareChanged: (checked) {
               setState(() {
                 checked
