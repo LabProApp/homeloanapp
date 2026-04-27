@@ -87,7 +87,8 @@ class BankCard extends StatelessWidget {
               const SizedBox(height: 14),
 
               // ── Key stats row ─────────────────────────────────────
-              IntrinsicHeight(
+              SizedBox(
+                height: 52,
                 child: Row(
                   children: [
                     _stat('${best?.toStringAsFixed(2) ?? '-'}%', 'Interest',

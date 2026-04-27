@@ -30,6 +30,8 @@ class PropertyCard extends StatefulWidget {
 }
 
 class _PropertyCardState extends State<PropertyCard> {
+  static final _fmt = NumberFormat('#,##,###');
+
   int currentIndex = 0;
   bool _isFavourite = false;
   bool _sendingLead = false;
@@ -195,7 +197,7 @@ class _PropertyCardState extends State<PropertyCard> {
                       ),
                       Text(
                         property.price != null
-                            ? "₹ ${NumberFormat('#,##,###').format(property.price)}"
+                            ? "₹ ${_fmt.format(property.price)}"
                             : "-",
                         style: const TextStyle(
                             color: Colors.white,

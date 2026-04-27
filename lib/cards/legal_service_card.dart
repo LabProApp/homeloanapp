@@ -279,7 +279,8 @@ class LegalServiceDetailPage extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          IntrinsicHeight(
+                          SizedBox(
+                            height: 64,
                             child: Row(
                               children: [
                                 _stat(Icons.location_city_rounded,

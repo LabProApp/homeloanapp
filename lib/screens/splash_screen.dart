@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -173,10 +172,15 @@ class _SplashScreenState extends State<SplashScreen>
           // Background photo
           Image.asset('assets/images/splash_bg.jpg', fit: BoxFit.cover),
 
-          // Blur + dark tint
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(color: Colors.black.withOpacity(0.30)),
+          // Dark tint overlay (gradient replaces GPU-heavy blur)
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0x55000000), Color(0x88000000)],
+              ),
+            ),
           ),
 
           // Centre content
@@ -194,9 +198,9 @@ class _SplashScreenState extends State<SplashScreen>
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Glow ring
-                          Opacity(
-                            opacity: _glowFade.value,
+                          // Glow ring — FadeTransition avoids offscreen compositing
+                          FadeTransition(
+                            opacity: _glowFade,
                             child: Transform.scale(
                               scale: _glowScale.value,
                               child: Container(
@@ -210,8 +214,8 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                           ),
                           // Logo
-                          Opacity(
-                            opacity: _logoFade.value,
+                          FadeTransition(
+                            opacity: _logoFade,
                             child: Transform.scale(
                               scale: _logoScale.value,
                               child: Container(

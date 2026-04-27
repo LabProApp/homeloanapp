@@ -25,6 +25,8 @@ class PropertyDetailScreen extends StatefulWidget {
 }
 
 class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
+  static final _fmt = NumberFormat('#,##,###');
+
   int currentIndex = 0;
   /// ✅ OWNER CHECK
   bool get isOwner =>
@@ -60,11 +62,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   String get priceText {
     if (widget.property.rentOrSale == "RENT") {
       return widget.property.monthlyRent != null
-          ? "₹ ${NumberFormat('#,##,###').format(widget.property.monthlyRent)} / month"
+          ? "₹ ${_fmt.format(widget.property.monthlyRent)} / month"
           : "-";
     } else {
       return widget.property.price != null
-          ? "₹ ${NumberFormat('#,##,###').format(widget.property.price)}"
+          ? "₹ ${_fmt.format(widget.property.price)}"
           : "-";
     }
   }

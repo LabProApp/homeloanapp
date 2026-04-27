@@ -27,6 +27,8 @@ class RentalListingScreen extends StatefulWidget {
 }
 
 class _RentalListingScreenState extends State<RentalListingScreen> {
+  static final _fmt = NumberFormat('#,##,###');
+
   final TextEditingController _searchController = TextEditingController();
 
   List<PropertyModel> _properties = [];
@@ -378,7 +380,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   // ============================================================
 
   Widget _buildActiveFilterChips() {
-    final fmt = NumberFormat('#,##,###');
+    final fmt = _fmt;
     final chips = <Widget>[];
 
     // Sort chip at the START (if sort is not default)

@@ -29,6 +29,8 @@ class RentPropertyCard extends StatefulWidget {
 }
 
 class _RentPropertyCardState extends State<RentPropertyCard> {
+  static final _fmt = NumberFormat('#,##,###');
+
   int currentIndex = 0;
   bool _isFavourite = false;
   bool _sendingLead = false;
@@ -47,10 +49,10 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
 
   String get rent {
     if (widget.property.monthlyRent != null) {
-      return "₹ ${NumberFormat('#,##,###').format(widget.property.monthlyRent)} / month";
+      return "₹ ${_fmt.format(widget.property.monthlyRent)} / month";
     }
     if (widget.property.price != null) {
-      return "₹ ${NumberFormat('#,##,###').format(widget.property.price)} / month";
+      return "₹ ${_fmt.format(widget.property.price)} / month";
     }
     return "-";
   }

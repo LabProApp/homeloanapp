@@ -33,32 +33,46 @@ class _LegalServicePageState extends State<LegalServicePage> {
   void initState() {
     super.initState();
     _fetchProviders();
+    _scrollController.addListener(_onScroll);
+  }
 
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200 &&
-          !_isLoading &&
-          !_isLastPage) {
-        _fetchProviders();
-      }
-    });
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoading &&
+        !_isLastPage) {
+      _fetchProviders();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchProviders() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
       final response = await LegalServiceApi.fetchProviders(page: _page);
+      if (!mounted) return;
       setState(() {
         _page++;
         _isLastPage = response.last;
         _providers.addAll(response.content);
         _error = null;
+        _isLoading = false;
       });
     } catch (e) {
-      setState(() => _error = e.toString());
-    } finally {
-      setState(() => _isLoading = false);
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
     }
   }
 
