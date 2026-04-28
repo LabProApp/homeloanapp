@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../screens/dashboard_screen.dart';
@@ -15,7 +14,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  // Master controller for the whole intro sequence (1 800 ms)
+  // Master controller for the whole intro sequence (1 000 ms)
   late final AnimationController _introCtrl;
 
   // Logo: scale-in with spring bounce
@@ -40,11 +39,9 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    FlutterNativeSplash.remove();
-
     _introCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 1000),
     );
 
     // Logo: 0 ms → 600 ms, easeOutBack (bounces slightly past 1.0)
@@ -123,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _navigateNext() async {
     // Wait for animation + a brief moment to let the progress bar show
-    await Future.delayed(const Duration(milliseconds: 2400));
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('user_id');

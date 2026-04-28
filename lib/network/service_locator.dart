@@ -4,7 +4,7 @@ import '../services/emi_service.dart';
 
 final GetIt sl = GetIt.instance;
 
-Future<void> setupServiceLocator() async {
+void setupServiceLocator() {
   sl.registerLazySingleton<http.Client>(() => http.Client());
   sl.registerLazySingleton<LoanApiService>(() => LoanApiService(client: sl()));
 }
