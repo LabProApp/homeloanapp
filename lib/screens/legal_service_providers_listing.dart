@@ -231,9 +231,6 @@ class _LegalServicePageState extends State<LegalServicePage> {
       backgroundColor: AppColors.listingbackground,
       appBar: AppBar(
         title: const Text("Legal & Documentation"),
-        flexibleSpace: const DecoratedBox(
-          decoration: BoxDecoration(gradient: AppColors.primaryGradient),
-        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -241,9 +238,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
               onPressed: () => showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-                ),
+                backgroundColor: Colors.transparent,
                 builder: (_) => const InquiryDialog(),
               ),
               icon: const Icon(Icons.support_agent_rounded, size: 18),

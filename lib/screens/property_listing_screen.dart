@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -298,13 +298,6 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
         title: const Text("Sale : Residential & Commercial"),
         foregroundColor: Colors.white,
         backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.secondary],
-            ),
-          ),
-        ),
       ),
       body: Column(
         children: [

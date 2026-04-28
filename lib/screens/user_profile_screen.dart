@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -204,9 +204,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: AppColors.listingbackground,
       appBar: AppBar(
         title: const Text('My Profile'),
-        flexibleSpace: const DecoratedBox(
-          decoration: BoxDecoration(gradient: AppColors.primaryGradient),
-        ),
       ),
       body: child,
     );

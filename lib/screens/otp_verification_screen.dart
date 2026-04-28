@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:sms_autofill/sms_autofill.dart';
@@ -131,9 +131,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Verify Code'),
-        flexibleSpace: const DecoratedBox(
-          decoration: BoxDecoration(gradient: AppColors.primaryGradient),
-        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),

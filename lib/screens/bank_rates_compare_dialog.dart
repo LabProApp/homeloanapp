@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../models/bank_model.dart';
 import '../theme/app_colors.dart';
 import 'package:intl/intl.dart';
@@ -58,15 +58,6 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
       appBar: AppBar(
         title: const Text('Bank Comparison'),
         foregroundColor: Colors.white,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.secondary],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
       ),
       body: Column(
         children: [

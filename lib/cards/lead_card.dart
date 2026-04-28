@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../commons/common_util.dart';
 import '../theme/app_colors.dart';
 
@@ -192,15 +190,12 @@ class LeadCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.chat_rounded, size: 16),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.chat_outlined, size: 16),
                     label: const Text('WhatsApp'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.whatsAppGreen,
-                      foregroundColor: AppColors.white,
+                    style: OutlinedButton.styleFrom(
                       minimumSize: const Size(0, 36),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      elevation: 0,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),

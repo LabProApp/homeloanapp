@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/property_model.dart';
 import '../services/property_api_service.dart';
@@ -722,9 +722,6 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.propertyToEdit != null ? 'Edit Property' : 'Post Property'),
-        flexibleSpace: const DecoratedBox(
-          decoration: BoxDecoration(gradient: AppColors.primaryGradient),
-        ),
       ),
       body: Form(
         key: _formKey,

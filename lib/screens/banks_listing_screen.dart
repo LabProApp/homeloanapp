@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../models/bank_model.dart';
 import '../services/bank_service.dart';
 import '../theme/app_colors.dart';
@@ -92,15 +92,6 @@ class _BankPageState extends State<BankPage> {
       appBar: AppBar(
         title: const Text('Home Loans & Banks'),
         foregroundColor: Colors.white,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.secondary],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
