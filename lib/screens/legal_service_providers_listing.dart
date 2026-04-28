@@ -3,6 +3,7 @@ import '../theme/app_colors.dart';
 import '../models/legal_service_model.dart';
 import '../services/legal_service_api.dart';
 import '../screens/legal_inquiry_dialog.dart';
+import '../screens/rent_agreement_screen.dart';
 import '../cards/legal_service_card.dart';
 import '../commons/common_widget.dart';
 
@@ -229,6 +230,15 @@ class _LegalServicePageState extends State<LegalServicePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const RentAgreementScreen()),
+        ),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.description_outlined),
+        label: const Text('Rent Agreement'),
+      ),
       appBar: AppBar(
         title: const Text("Legal & Documentation"),
         actions: [

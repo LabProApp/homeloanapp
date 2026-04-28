@@ -13,6 +13,8 @@ import 'package:intl/intl.dart';
 import '../commons/common_widget.dart';
 import '../commons/common_util.dart';
 import 'property_add_screen.dart';
+import 'emi_calculator_screen.dart';
+import '../screens/bank_apply_loan_dialog.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
@@ -818,14 +820,55 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 ),
               ),
             ] else ...[
+              // EMI + Loan row (sale properties only)
+              if (!_isRent) ...[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.calculate_outlined, size: 16),
+                    label: const Text('EMI',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EmiCalculatorScreen(
+                          initialAmount: widget.property.price?.toDouble(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.account_balance_outlined, size: 16),
+                    label: const Text('Apply Loan',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.secondary,
+                      side: const BorderSide(color: AppColors.secondary),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () => LoanApplySheet.show(context),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: AppButton(
                   text: 'Call',
-                  onTap:
-                      phone.isEmpty ? null : () => AppUtils.call(phone),
+                  onTap: phone.isEmpty ? null : () => AppUtils.call(phone),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.chat_rounded, size: 18),
@@ -834,8 +877,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.whatsAppGreen,
                     foregroundColor: AppColors.white,
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),

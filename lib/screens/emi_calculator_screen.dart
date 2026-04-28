@@ -11,7 +11,9 @@ import '../services/emi_service.dart';
 import '../commons/common_widget.dart';
 
 class EmiCalculatorScreen extends StatefulWidget {
-  const EmiCalculatorScreen({super.key});
+  final double? initialAmount;
+
+  const EmiCalculatorScreen({super.key, this.initialAmount});
 
   @override
   State<EmiCalculatorScreen> createState() => _EmiCalculatorScreenState();
@@ -36,7 +38,12 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _resetForm());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resetForm();
+      if (widget.initialAmount != null) {
+        principalCtrl.text = widget.initialAmount!.toInt().toString();
+      }
+    });
   }
 
   void _resetForm() {
