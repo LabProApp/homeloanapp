@@ -55,11 +55,49 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           .where((u) => u.isNotEmpty)
           .toList();
     }
-    return [
-      'assets/images/house1.jpg',
-      'assets/images/house2.jpg',
-      'assets/images/house3.jpg',
-    ];
+    return [];
+  }
+
+  Widget _typePlaceholder() {
+    final type = widget.property.type?.toUpperCase() ?? '';
+    final category = widget.property.category?.toUpperCase() ?? '';
+    final isCommercial = ['SHOP', 'OFFICE', 'SHOWROOM', 'CO WORKING'].contains(type) || category == 'COMMERCIAL';
+    final isPlot = type == 'PLOT';
+
+    final IconData icon;
+    final Color bg;
+    final Color iconColor;
+    final String label;
+
+    if (isCommercial) {
+      icon = Icons.storefront_outlined;
+      bg = const Color(0xFFE8F5E9);
+      iconColor = const Color(0xFF2E7D32);
+      label = widget.property.type ?? 'Commercial';
+    } else if (isPlot) {
+      icon = Icons.landscape_outlined;
+      bg = const Color(0xFFFBE9E7);
+      iconColor = const Color(0xFF6D4C41);
+      label = 'Plot';
+    } else {
+      icon = Icons.home_outlined;
+      bg = const Color(0xFFFFF3E0);
+      iconColor = const Color(0xFFE65100);
+      label = widget.property.type ?? 'Property';
+    }
+
+    return Container(
+      color: bg,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: iconColor),
+          const SizedBox(height: 8),
+          Text(label,
+              style: TextStyle(color: iconColor.withOpacity(0.7), fontSize: 13)),
+        ],
+      ),
+    );
   }
 
   Widget _imgPlaceholder() => Container(
@@ -247,25 +285,20 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  PageView.builder(
+                  _images.isEmpty
+                      ? _typePlaceholder()
+                      : PageView.builder(
                     itemCount: _images.length,
                     onPageChanged: (i) =>
                         setState(() => _currentIndex = i),
-                    itemBuilder: (_, i) {
-                      final img = _images[i];
-                      return img.startsWith('assets/')
-                          ? Image.asset(img, fit: BoxFit.cover)
-                          : CachedNetworkImage(
-                              imageUrl: img,
+                    itemBuilder: (_, i) => CachedNetworkImage(
+                              imageUrl: _images[i],
                               fit: BoxFit.cover,
                               fadeInDuration:
                                   const Duration(milliseconds: 250),
                               placeholder: (_, __) => _imgPlaceholder(),
-                              errorWidget: (_, __, ___) => Image.asset(
-                                  'assets/images/house1.jpg',
-                                  fit: BoxFit.cover),
-                            );
-                    },
+                              errorWidget: (_, __, ___) => _typePlaceholder(),
+                            ),
                   ),
 
                   // Gradient overlay

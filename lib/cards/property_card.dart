@@ -47,11 +47,49 @@ class _PropertyCardState extends State<PropertyCard> {
           .toList();
       if (urls.isNotEmpty) return urls;
     }
-    return [
-      "assets/images/house1.jpg",
-      "assets/images/house2.jpg",
-      "assets/images/house3.jpg",
-    ];
+    return [];
+  }
+
+  Widget _typePlaceholder() {
+    final type = widget.property.type?.toUpperCase() ?? '';
+    final category = widget.property.category?.toUpperCase() ?? '';
+    final isCommercial = ['SHOP', 'OFFICE', 'SHOWROOM', 'CO WORKING'].contains(type) || category == 'COMMERCIAL';
+    final isPlot = type == 'PLOT';
+
+    final IconData icon;
+    final Color bg;
+    final Color iconColor;
+    final String label;
+
+    if (isCommercial) {
+      icon = Icons.storefront_outlined;
+      bg = const Color(0xFFE8F5E9);
+      iconColor = const Color(0xFF2E7D32);
+      label = widget.property.type ?? 'Commercial';
+    } else if (isPlot) {
+      icon = Icons.landscape_outlined;
+      bg = const Color(0xFFFBE9E7);
+      iconColor = const Color(0xFF6D4C41);
+      label = 'Plot';
+    } else {
+      icon = Icons.home_outlined;
+      bg = const Color(0xFFFFF3E0);
+      iconColor = const Color(0xFFE65100);
+      label = widget.property.type ?? 'Property';
+    }
+
+    return Container(
+      color: bg,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: iconColor),
+          const SizedBox(height: 8),
+          Text(label,
+              style: TextStyle(color: iconColor.withOpacity(0.7), fontSize: 13)),
+        ],
+      ),
+    );
   }
 
   @override
@@ -71,45 +109,42 @@ class _PropertyCardState extends State<PropertyCard> {
 
           /// IMAGE
           SizedBox(
-            height: 430, // reduced
+            height: 430,
             width: double.infinity,
-            child: PageView.builder(
-              itemCount: _images.length,
-              onPageChanged: (i) => setState(() => currentIndex = i),
-              itemBuilder: (_, i) {
-                final img = _images[i];
-
-                return img.startsWith('assets/')
-                    ? Image.asset(img, fit: BoxFit.cover)
-                    : CachedNetworkImage(
-                        imageUrl: img,
-                        fit: BoxFit.cover,
-                        fadeInDuration: const Duration(milliseconds: 250),
-                        placeholder: (_, __) => _loadingPlaceholder(),
-                        errorWidget: (_, __, ___) => _placeholderImage(),
-                      );
-              },
-            ),
+            child: _images.isEmpty
+                ? _typePlaceholder()
+                : PageView.builder(
+                    itemCount: _images.length,
+                    onPageChanged: (i) => setState(() => currentIndex = i),
+                    itemBuilder: (_, i) => CachedNetworkImage(
+                      imageUrl: _images[i],
+                      fit: BoxFit.cover,
+                      fadeInDuration: const Duration(milliseconds: 250),
+                      placeholder: (_, __) => _loadingPlaceholder(),
+                      errorWidget: (_, __, ___) => _typePlaceholder(),
+                    ),
+                  ),
           ),
 
           /// IMAGE COUNT
-          Positioned(
-            bottom: 155,
-            right: 12,
-            child: Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.imageOverlay,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                "${currentIndex + 1}/${_images.length}",
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 10),
+          if (_images.length > 1)
+            Positioned(
+              bottom: 155,
+              right: 12,
+              child: Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.imageOverlay,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "${currentIndex + 1}/${_images.length}",
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 10),
+                ),
               ),
             ),
-          ),
 
           /// STATUS
           Positioned(
@@ -308,10 +343,6 @@ class _PropertyCardState extends State<PropertyCard> {
         const TextStyle(fontSize: 10, color: Colors.white),
       ),
     );
-  }
-
-  Widget _placeholderImage() {
-    return Image.asset('assets/images/house1.jpg', fit: BoxFit.cover);
   }
 
   Widget _loadingPlaceholder() {

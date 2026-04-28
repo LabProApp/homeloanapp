@@ -45,7 +45,49 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
           .toList();
       if (urls.isNotEmpty) return urls;
     }
-    return ['assets/images/house1.jpg'];
+    return [];
+  }
+
+  Widget _typePlaceholder() {
+    final type = widget.property.type?.toUpperCase() ?? '';
+    final category = widget.property.category?.toUpperCase() ?? '';
+    final isCommercial = ['SHOP', 'OFFICE', 'SHOWROOM', 'CO WORKING'].contains(type) || category == 'COMMERCIAL';
+    final isPlot = type == 'PLOT';
+
+    final IconData icon;
+    final Color bg;
+    final Color iconColor;
+    final String label;
+
+    if (isCommercial) {
+      icon = Icons.business_outlined;
+      bg = const Color(0xFFE0F7FA);
+      iconColor = const Color(0xFF00695C);
+      label = widget.property.type ?? 'Commercial';
+    } else if (isPlot) {
+      icon = Icons.landscape_outlined;
+      bg = const Color(0xFFFBE9E7);
+      iconColor = const Color(0xFF6D4C41);
+      label = 'Plot';
+    } else {
+      icon = Icons.apartment_outlined;
+      bg = const Color(0xFFE8EAF6);
+      iconColor = const Color(0xFF283593);
+      label = widget.property.type ?? 'Rental';
+    }
+
+    return Container(
+      color: bg,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: iconColor),
+          const SizedBox(height: 8),
+          Text(label,
+              style: TextStyle(color: iconColor.withOpacity(0.7), fontSize: 13)),
+        ],
+      ),
+    );
   }
 
   String get rent {
@@ -73,24 +115,21 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
 
           /// IMAGE
           SizedBox(
-            height: 400, // reduced
+            height: 400,
             width: double.infinity,
-            child: PageView.builder(
-              itemCount: _images.length,
-              onPageChanged: (i) => setState(() => currentIndex = i),
-              itemBuilder: (_, i) {
-                final img = _images[i];
-                return img.startsWith('assets/')
-                    ? Image.asset(img, fit: BoxFit.cover)
-                    : CachedNetworkImage(
-                        imageUrl: img,
-                        fit: BoxFit.cover,
-                        fadeInDuration: const Duration(milliseconds: 250),
-                        placeholder: (_, __) => _loadingPlaceholder(),
-                        errorWidget: (_, __, ___) => _placeholderImage(),
-                      );
-              },
-            ),
+            child: _images.isEmpty
+                ? _typePlaceholder()
+                : PageView.builder(
+                    itemCount: _images.length,
+                    onPageChanged: (i) => setState(() => currentIndex = i),
+                    itemBuilder: (_, i) => CachedNetworkImage(
+                      imageUrl: _images[i],
+                      fit: BoxFit.cover,
+                      fadeInDuration: const Duration(milliseconds: 250),
+                      placeholder: (_, __) => _loadingPlaceholder(),
+                      errorWidget: (_, __, ___) => _typePlaceholder(),
+                    ),
+                  ),
           ),
 
           /// STATUS
@@ -269,10 +308,6 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
         const TextStyle(fontSize: 10, color: Colors.white),
       ),
     );
-  }
-
-  Widget _placeholderImage() {
-    return Image.asset('assets/images/house1.jpg', fit: BoxFit.cover);
   }
 
   Widget _loadingPlaceholder() {
