@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:readmore/readmore.dart';
@@ -58,6 +59,13 @@ class _RentalPropertyDetailScreenState
       'assets/images/house3.jpg',
     ];
   }
+
+  Widget _imgPlaceholder() => Container(
+        color: AppColors.surfaceSubtle,
+        child: const Center(
+          child: Icon(Icons.image_outlined, size: 40, color: AppColors.border),
+        ),
+      );
 
   List<String> get _amenities {
     if (widget.property.amenities != null &&
@@ -176,10 +184,13 @@ class _RentalPropertyDetailScreenState
                       final img = _images[i];
                       return img.startsWith('assets/')
                           ? Image.asset(img, fit: BoxFit.cover)
-                          : Image.network(
-                              img,
+                          : CachedNetworkImage(
+                              imageUrl: img,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Image.asset(
+                              fadeInDuration:
+                                  const Duration(milliseconds: 250),
+                              placeholder: (_, __) => _imgPlaceholder(),
+                              errorWidget: (_, __, ___) => Image.asset(
                                   'assets/images/house1.jpg',
                                   fit: BoxFit.cover),
                             );

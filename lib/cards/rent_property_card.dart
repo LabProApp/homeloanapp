@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../models/property_model.dart';
 import '../models/client_lead_model.dart';
@@ -81,11 +82,13 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                 final img = _images[i];
                 return img.startsWith('assets/')
                     ? Image.asset(img, fit: BoxFit.cover)
-                    : Image.network(
-                  img,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _placeholderImage(),
-                );
+                    : CachedNetworkImage(
+                        imageUrl: img,
+                        fit: BoxFit.cover,
+                        fadeInDuration: const Duration(milliseconds: 250),
+                        placeholder: (_, __) => _loadingPlaceholder(),
+                        errorWidget: (_, __, ___) => _placeholderImage(),
+                      );
               },
             ),
           ),
@@ -270,6 +273,15 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
 
   Widget _placeholderImage() {
     return Image.asset('assets/images/house1.jpg', fit: BoxFit.cover);
+  }
+
+  Widget _loadingPlaceholder() {
+    return Container(
+      color: AppColors.surfaceSubtle,
+      child: const Center(
+        child: Icon(Icons.image_outlined, size: 40, color: AppColors.border),
+      ),
+    );
   }
 
   Future<void> _toggleFavorite() async {

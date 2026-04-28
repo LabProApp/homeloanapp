@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -78,13 +79,15 @@ class _PropertyCardState extends State<PropertyCard> {
               itemBuilder: (_, i) {
                 final img = _images[i];
 
-                return img.startsWith("assets/")
+                return img.startsWith('assets/')
                     ? Image.asset(img, fit: BoxFit.cover)
-                    : Image.network(
-                  img,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _placeholderImage(),
-                );
+                    : CachedNetworkImage(
+                        imageUrl: img,
+                        fit: BoxFit.cover,
+                        fadeInDuration: const Duration(milliseconds: 250),
+                        placeholder: (_, __) => _loadingPlaceholder(),
+                        errorWidget: (_, __, ___) => _placeholderImage(),
+                      );
               },
             ),
           ),
@@ -308,8 +311,16 @@ class _PropertyCardState extends State<PropertyCard> {
   }
 
   Widget _placeholderImage() {
-    return Image.asset("assets/images/house1.jpg",
-        fit: BoxFit.cover);
+    return Image.asset('assets/images/house1.jpg', fit: BoxFit.cover);
+  }
+
+  Widget _loadingPlaceholder() {
+    return Container(
+      color: AppColors.surfaceSubtle,
+      child: const Center(
+        child: Icon(Icons.image_outlined, size: 40, color: AppColors.border),
+      ),
+    );
   }
 
   Future<void> _toggleFavorite() async {
