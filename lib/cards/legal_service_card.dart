@@ -146,7 +146,7 @@ class LegalServiceCard extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         side: const BorderSide(color: AppColors.whatsAppGreen),
-                        foregroundColor: const AppColors.whatsAppGreen,
+                        foregroundColor: AppColors.whatsAppGreen,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -289,7 +289,7 @@ class LegalServiceDetailPage extends StatelessWidget {
                           fontSize: 13, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    backgroundColor: const AppColors.whatsAppGreen,
+                    backgroundColor: AppColors.whatsAppGreen,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
