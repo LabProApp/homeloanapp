@@ -90,9 +90,9 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
       final n       = y * 12;
       final factor  = pow(1 + r, n).toDouble();
       final balance = r == 0
-          ? (_calcPrincipal - emi * n).clamp(0, double.infinity)
+          ? (_calcPrincipal - emi * n).clamp(0.0, double.infinity)
           : (_calcPrincipal * factor - emi * (factor - 1) / r)
-              .clamp(0, double.infinity);
+              .clamp(0.0, double.infinity);
       return FlSpot(y.toDouble(), balance);
     });
   }
