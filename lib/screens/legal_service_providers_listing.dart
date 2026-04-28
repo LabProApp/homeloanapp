@@ -127,7 +127,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
           color: selected ? AppColors.primary : AppColors.textSecondary,
         ),
         side: BorderSide(
-          color: selected ? AppColors.primary : Colors.grey.shade300,
+          color: selected ? AppColors.primary : AppColors.border,
         ),
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

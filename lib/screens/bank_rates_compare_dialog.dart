@@ -117,10 +117,10 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : Colors.grey.shade100,
+          color: selected ? AppColors.primary : AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: selected ? AppColors.primary : Colors.grey.shade300),
+              color: selected ? AppColors.primary : AppColors.border),
         ),
         child: Text(
           label,

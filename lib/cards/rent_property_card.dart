@@ -252,7 +252,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
     );
   }
 
-  Widget _pill(String text, {Color color = Colors.black}) {
+  Widget _pill(String text, {Color color = AppColors.textPrimary}) {
     return Container(
       padding:
       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -318,7 +318,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("You already contacted for this property"),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     } finally {
@@ -349,7 +349,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
       onTap: onTap,
       child: CircleAvatar(
         radius: 18,
-        backgroundColor: Colors.black45,
+        backgroundColor: AppColors.imageOverlay,
         child: _sendingLead && icon == Icons.star
             ? const SizedBox(
           height: 12,

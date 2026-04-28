@@ -183,14 +183,14 @@ class MyApp extends StatelessWidget {
       cardTheme: CardThemeData(
         color: AppColors.cardBg,
         elevation: 2,
-        shadowColor: Colors.black12,
+        shadowColor: AppColors.shadowLight,
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
 
       // ── Chips ──────────────────────────────────────────────────────────────
       chipTheme: ChipThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.white,
         selectedColor: AppColors.primary,
         disabledColor: AppColors.disabled.withOpacity(0.5),
         // unselected label
@@ -219,7 +219,7 @@ class MyApp extends StatelessWidget {
         unselectedLabelStyle: TextStyle(fontFamily: font, fontSize: 11),
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textMuted,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.white,
         elevation: 8,
         type: BottomNavigationBarType.fixed,
       ),

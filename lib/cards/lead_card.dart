@@ -1,162 +1,287 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../commons/common_util.dart';
 import '../theme/app_colors.dart';
-import '../commons/common_widget.dart';
 
 class LeadCard extends StatelessWidget {
   final Map lead;
   final VoidCallback onEdit;
 
-  const LeadCard({
-    super.key,
-    required this.lead,
-    required this.onEdit,
-  });
+  const LeadCard({super.key, required this.lead, required this.onEdit});
 
-  String _formatDate(String? date) {
-    if (date == null) return "-";
-    return DateFormat("dd MMM yyyy").format(DateTime.parse(date));
+  static final _dateFmt = DateFormat('dd MMM yyyy');
+
+  String _fmt(String? d) {
+    if (d == null || d.isEmpty) return '-';
+    try { return _dateFmt.format(DateTime.parse(d)); } catch (_) { return d; }
+  }
+
+  String get _initials {
+    final name = (lead['clientName'] ?? '') as String;
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    if (parts[0].isNotEmpty) return parts[0][0].toUpperCase();
+    return '?';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 3,
+    final tt = Theme.of(context).textTheme;
+    final status = (lead['status'] ?? '') as String;
+    final phone = lead['mobile'] as String?;
+    final followUp = _fmt(lead['nextFollowUpDate'] as String?);
+    final hasFollowUp = followUp != '-';
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  lead["clientName"] ?? "Client",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-              _statusBadge(lead["status"]),
-              IconButton(
-                icon: const Icon(Icons.edit, color: AppColors.primary),
-                onPressed: onEdit,
-              )
-            ],
-          ),
-
-          const SizedBox(height: 6),
-          _infoRow(Icons.phone_outlined, lead["mobile"] ?? "-"),
-          if (lead["email"] != null)
-            _infoRow(Icons.email_outlined, lead["email"]),
-
-          const Divider(),
-          _infoRow(Icons.home_outlined, lead["propertyTitle"] ?? "-"),
-          _infoRow(Icons.location_on_outlined, lead["propertyCity"] ?? "-"),
-          _infoRow(Icons.currency_rupee_outlined, "Price: ₹${lead["propertyPrice"] ?? "-"}"),
-
-          const Divider(),
-          _infoRow(Icons.tune_outlined, "Preference: ${lead["preferredPropertyType"] ?? "-"}"),
-          _infoRow(Icons.account_balance_wallet_outlined, "Budget: ₹${lead["preferredBudget"] ?? "-"}"),
-
-          const Divider(),
-          _infoRow(Icons.calendar_today_outlined, "Inquiry: ${_formatDate(lead["inquiryDate"])}"),
-          _infoRow(Icons.call_outlined, "Contacted: ${_formatDate(lead["contactedDate"])}"),
-          _infoRow(Icons.schedule_outlined, "Follow-up: ${_formatDate(lead["nextFollowUpDate"])}"),
-
-          const Divider(),
-          _infoRow(Icons.push_pin_outlined, "Source: ${lead["leadSource"] ?? "-"}"),
-          _infoRow(Icons.notes_outlined, "Remark: ${lead["remark"] ?? "-"}"),
-
-          const SizedBox(height: 10),
-
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 34,
-                  child: AppButton(
-                    text: "Call",
-                    onTap: () => _call(lead["mobile"]),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: SizedBox(
-                  height: 34,
-                  child: AppButton(
-                    text: "WhatsApp",
-                    onTap: () => _whatsapp(lead["mobile"]),
-                  ),
-                ),
-              ),
-            ],
-          )
-        ]),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(color: AppColors.shadowLight, blurRadius: 6, offset: Offset(0, 2)),
+        ],
       ),
-    );
-  }
-
-  Widget _infoRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 15, color: AppColors.textMuted),
-          const SizedBox(width: 6),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+
+          // ── Header ──────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 8, 10),
+            child: Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(_initials, style: const TextStyle(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    )),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Name + contact
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        lead['clientName'] ?? 'Client',
+                        style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (phone != null && phone.isNotEmpty)
+                        Text(phone, style: tt.bodySmall?.copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+                // Status + edit
+                _StatusBadge(status),
+                const SizedBox(width: 4),
+                InkWell(
+                  onTap: onEdit,
+                  borderRadius: BorderRadius.circular(8),
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(height: 1, thickness: 1, color: AppColors.border),
+
+          // ── Property info ────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _InfoRow(Icons.home_outlined, lead['propertyTitle'] ?? '-', bold: true),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(child: _InfoRow(Icons.location_on_outlined, lead['propertyCity'] ?? '-')),
+                    if (lead['propertyPrice'] != null)
+                      _InfoRow(Icons.currency_rupee_outlined,
+                          NumberFormat('#,##,###').format(lead['propertyPrice'])),
+                  ],
+                ),
+                if (lead['preferredPropertyType'] != null) ...[
+                  const SizedBox(height: 4),
+                  Row(children: [
+                    Expanded(child: _InfoRow(Icons.tune_outlined, lead['preferredPropertyType'])),
+                    if (lead['preferredBudget'] != null)
+                      _InfoRow(Icons.account_balance_wallet_outlined,
+                          'Budget ₹${NumberFormat('#,##,###').format(lead['preferredBudget'])}'),
+                  ]),
+                ],
+              ],
+            ),
+          ),
+
+          const Divider(height: 1, thickness: 1, color: AppColors.border),
+
+          // ── Timeline & source ────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _InfoRow(Icons.calendar_today_outlined,
+                      'Inquiry: ${_fmt(lead['inquiryDate'] as String?)}'),
+                ),
+                if (hasFollowUp)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.alarm_outlined, size: 12, color: AppColors.warning),
+                        const SizedBox(width: 4),
+                        Text(followUp, style: const TextStyle(
+                          fontSize: 11, color: AppColors.warning, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          if (lead['remark'] != null && (lead['remark'] as String).isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: _InfoRow(Icons.notes_outlined, lead['remark'] as String,
+                  maxLines: 2, color: AppColors.textMuted),
+            ),
+          ],
+
+          // ── Action buttons ───────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.call_outlined, size: 16),
+                    label: const Text('Call'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: phone != null ? () => AppUtils.call(phone) : null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.chat_rounded, size: 16),
+                    label: const Text('WhatsApp'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.whatsAppGreen,
+                      foregroundColor: AppColors.white,
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      elevation: 0,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: phone != null
+                        ? () => AppUtils.whatsapp(phone, 'Hi, following up on your inquiry.')
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _statusBadge(String? status) {
-    Color color;
+// ── Sub-widgets ───────────────────────────────────────────────────────────────
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  const _StatusBadge(this.status);
+
+  Color get _color {
     switch (status) {
-      case "NEW":
-        color = AppColors.info;
-        break;
-      case "CONTACTED":
-        color = AppColors.warning;
-        break;
-      case "CLOSED":
-        color = AppColors.success;
-        break;
-      case "DROPPED":
-        color = AppColors.error;
-        break;
-      default:
-        color = AppColors.textMuted;
+      case 'NEW': return AppColors.info;
+      case 'CONTACTED': return AppColors.warning;
+      case 'CLOSED': return AppColors.success;
+      case 'DROPPED': return AppColors.error;
+      default: return AppColors.textMuted;
     }
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: _color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: _color.withOpacity(0.3)),
       ),
       child: Text(
-        status ?? "-",
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+        status.isEmpty ? '-' : status,
+        style: TextStyle(color: _color, fontSize: 11, fontWeight: FontWeight.w700),
       ),
     );
   }
+}
 
-  Future<void> _call(String? phone) async {
-    if (phone == null || phone.isEmpty) return;
-    final uri = Uri.parse("tel:$phone");
-    await launchUrl(uri);
-  }
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final bool bold;
+  final int maxLines;
+  final Color? color;
 
-  Future<void> _whatsapp(String? phone) async {
-    if (phone == null || phone.isEmpty) return;
-    final uri = Uri.parse("https://wa.me/$phone");
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  const _InfoRow(this.icon, this.text,
+      {this.bold = false, this.maxLines = 1, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: color ?? AppColors.textMuted),
+        const SizedBox(width: 5),
+        Flexible(
+          child: Text(
+            text,
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              color: color ?? AppColors.textSecondary,
+              fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

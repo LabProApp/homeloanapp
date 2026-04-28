@@ -481,7 +481,7 @@ class BankDetailPage extends StatelessWidget {
       final isBest = rate.interestRate == best;
       return TableRow(
         decoration: BoxDecoration(
-            color: isBest ? Colors.orange.shade50 : Colors.transparent),
+            color: isBest ? AppColors.highlightBg : Colors.transparent),
         children: [
           Padding(
             padding: const EdgeInsets.all(8),

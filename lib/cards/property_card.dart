@@ -97,7 +97,7 @@ class _PropertyCardState extends State<PropertyCard> {
               padding:
               const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.black54,
+                color: AppColors.imageOverlay,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -291,7 +291,7 @@ class _PropertyCardState extends State<PropertyCard> {
     );
   }
 
-  Widget _pill(String text, {Color color = Colors.black}) {
+  Widget _pill(String text, {Color color = AppColors.textPrimary}) {
     return Container(
       padding:
       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -360,7 +360,7 @@ class _PropertyCardState extends State<PropertyCard> {
         const SnackBar(
             content: Text(
                 "You already showed interest in this property"),
-            backgroundColor: Colors.red),
+            backgroundColor: AppColors.error),
       );
     }
 
@@ -391,7 +391,7 @@ class _PropertyCardState extends State<PropertyCard> {
       onTap: onTap,
       child: CircleAvatar(
         radius: 18,
-        backgroundColor: Colors.black45,
+        backgroundColor: AppColors.imageOverlay,
         child: _sendingLead && icon == Icons.star
             ? const SizedBox(
           height: 12,
