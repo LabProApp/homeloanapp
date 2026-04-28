@@ -15,6 +15,9 @@ import '../commons/common_util.dart';
 import 'property_add_screen.dart';
 import 'emi_calculator_screen.dart';
 import '../screens/bank_apply_loan_dialog.dart';
+import '../screens/stamp_duty_screen.dart';
+import '../screens/rent_vs_buy_screen.dart';
+import '../screens/due_diligence_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
@@ -635,6 +638,12 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
                   const SizedBox(height: 20),
 
+                  // Quick Tools
+                  _sectionTitle('Quick Tools'),
+                  const SizedBox(height: 12),
+                  _quickToolsRow(),
+                  const SizedBox(height: 20),
+
                   // Owner Details
                   _sectionTitle('Owner Details'),
                   _card([
@@ -664,6 +673,57 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // ── Quick Tools ──────────────────────────────────────────────────────────────
+
+  Widget _quickToolsRow() {
+    final price = widget.property.price?.toDouble();
+    final tools = <_ToolItem>[
+      if (!_isRent) _ToolItem(
+        Icons.calculate_outlined, 'Stamp Duty', const Color(0xFF1565C0),
+        () => Navigator.push(context, MaterialPageRoute(
+          builder: (_) => StampDutyScreen(initialAmount: price),
+        )),
+      ),
+      if (!_isRent) _ToolItem(
+        Icons.balance_outlined, 'Rent vs Buy', const Color(0xFF2E7D32),
+        () => Navigator.push(context, MaterialPageRoute(
+          builder: (_) => RentVsBuyScreen(initialPropertyPrice: price),
+        )),
+      ),
+      _ToolItem(
+        Icons.checklist_outlined, 'Due Diligence', const Color(0xFF6A1B9A),
+        () => Navigator.push(context, MaterialPageRoute(
+          builder: (_) => const DueDiligenceScreen(),
+        )),
+      ),
+    ];
+
+    return Row(
+      children: tools.map((t) => Expanded(child: Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: InkWell(
+          onTap: t.onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: t.color.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: t.color.withOpacity(0.2)),
+            ),
+            child: Column(children: [
+              Icon(t.icon, color: t.color, size: 22),
+              const SizedBox(height: 4),
+              Text(t.label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11, color: t.color, fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        ),
+      ))).toList(),
     );
   }
 
@@ -925,6 +985,14 @@ class _Feature extends StatelessWidget {
       ],
     );
   }
+}
+
+class _ToolItem {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _ToolItem(this.icon, this.label, this.color, this.onTap);
 }
 
 class _DetailRow extends StatelessWidget {

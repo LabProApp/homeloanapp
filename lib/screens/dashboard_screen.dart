@@ -8,6 +8,8 @@ import 'rental_listing_screen.dart';
 import 'legal_service_providers_listing.dart';
 import 'banks_listing_screen.dart';
 import 'emi_calculator_screen.dart';
+import 'stamp_duty_screen.dart';
+import 'rent_vs_buy_screen.dart';
 import 'favourite_property_listing_screen.dart';
 import 'interested_users_screen.dart';
 import 'user_profile_screen.dart';
@@ -198,6 +200,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         _setPage(const EmiCalculatorScreen());
+                      },
+                    ),
+                    _drawerActionItem(
+                      Icons.receipt_long_outlined,
+                      'Stamp Duty Calculator',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => const StampDutyScreen(),
+                        ));
+                      },
+                    ),
+                    _drawerActionItem(
+                      Icons.balance_outlined,
+                      'Rent vs Buy',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => const RentVsBuyScreen(),
+                        ));
                       },
                     ),
 

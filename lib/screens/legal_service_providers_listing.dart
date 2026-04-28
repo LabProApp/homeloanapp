@@ -4,6 +4,8 @@ import '../models/legal_service_model.dart';
 import '../services/legal_service_api.dart';
 import '../screens/legal_inquiry_dialog.dart';
 import '../screens/rent_agreement_screen.dart';
+import '../screens/sale_agreement_screen.dart';
+import '../screens/due_diligence_screen.dart';
 import '../cards/legal_service_card.dart';
 import '../commons/common_widget.dart';
 
@@ -23,6 +25,7 @@ class LegalServicePage extends StatefulWidget {
 class _LegalServicePageState extends State<LegalServicePage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  bool _fabExpanded = false;
 
   final List<LegalService> _providers = [];
   bool _isLoading = false;
@@ -109,6 +112,30 @@ class _LegalServicePageState extends State<LegalServicePage> {
           p.city.toLowerCase().contains(q) ||
           p.services.any((s) => s.toLowerCase().contains(q));
     }).toList();
+  }
+
+  Widget _miniActionButton(IconData icon, String label, Color color, VoidCallback onTap) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)],
+          ),
+          child: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+        ),
+        const SizedBox(width: 8),
+        FloatingActionButton.small(
+          heroTag: label,
+          onPressed: onTap,
+          backgroundColor: color,
+          child: Icon(icon, size: 20),
+        ),
+      ],
+    );
   }
 
   Widget _buildFilterChip(String? value, String label) {
@@ -230,14 +257,37 @@ class _LegalServicePageState extends State<LegalServicePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const RentAgreementScreen()),
-        ),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.description_outlined),
-        label: const Text('Rent Agreement'),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (_fabExpanded) ...[
+            _miniActionButton(
+              Icons.checklist_outlined, 'Due Diligence', const Color(0xFF6A1B9A),
+              () { setState(() => _fabExpanded = false); Navigator.push(context, MaterialPageRoute(builder: (_) => const DueDiligenceScreen())); },
+            ),
+            const SizedBox(height: 8),
+            _miniActionButton(
+              Icons.handshake_outlined, 'Sale Agreement', const Color(0xFF2E7D32),
+              () { setState(() => _fabExpanded = false); Navigator.push(context, MaterialPageRoute(builder: (_) => const SaleAgreementScreen())); },
+            ),
+            const SizedBox(height: 8),
+            _miniActionButton(
+              Icons.description_outlined, 'Rent Agreement', AppColors.primary,
+              () { setState(() => _fabExpanded = false); Navigator.push(context, MaterialPageRoute(builder: (_) => const RentAgreementScreen())); },
+            ),
+            const SizedBox(height: 8),
+          ],
+          FloatingActionButton(
+            onPressed: () => setState(() => _fabExpanded = !_fabExpanded),
+            backgroundColor: AppColors.primary,
+            child: AnimatedRotation(
+              turns: _fabExpanded ? 0.125 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: const Icon(Icons.add),
+            ),
+          ),
+        ],
       ),
       appBar: AppBar(
         title: const Text("Legal & Documentation"),

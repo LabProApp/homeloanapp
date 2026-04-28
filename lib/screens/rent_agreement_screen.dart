@@ -1,13 +1,13 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
+import '../templates/rent_agreement_template.dart';
 
 // ── Main Form Screen ─────────────────────────────────────────────────────────
 
@@ -516,28 +516,6 @@ class RentAgreementPreviewScreen extends StatefulWidget {
 class _RentAgreementPreviewScreenState extends State<RentAgreementPreviewScreen> {
   bool _downloading = false;
 
-  static final _dateFmt = DateFormat('dd MMMM yyyy');
-  static final _moneyFmt = NumberFormat('#,##,###');
-
-  String _inWords(int amount) {
-    // Simple Indian number to words for common amounts
-    if (amount == 0) return 'Zero';
-    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
-      'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-
-    String convert(int n) {
-      if (n < 20) return ones[n];
-      if (n < 100) return '${tens[n ~/ 10]}${n % 10 > 0 ? " ${ones[n % 10]}" : ""}';
-      if (n < 1000) return '${ones[n ~/ 100]} Hundred${n % 100 > 0 ? " ${convert(n % 100)}" : ""}';
-      if (n < 100000) return '${convert(n ~/ 1000)} Thousand${n % 1000 > 0 ? " ${convert(n % 1000)}" : ""}';
-      if (n < 10000000) return '${convert(n ~/ 100000)} Lakh${n % 100000 > 0 ? " ${convert(n % 100000)}" : ""}';
-      return '${convert(n ~/ 10000000)} Crore${n % 10000000 > 0 ? " ${convert(n % 10000000)}" : ""}';
-    }
-
-    return '${convert(amount)} Only';
-  }
-
   Future<void> _downloadPdf() async {
     setState(() => _downloading = true);
     try {
@@ -571,172 +549,8 @@ class _RentAgreementPreviewScreenState extends State<RentAgreementPreviewScreen>
     await Printing.layoutPdf(onLayout: (_) async => pdf.save());
   }
 
-  Future<pw.Document> _buildPdf() async {
-    final d = widget.data;
-    final pdf = pw.Document();
-    final endDate = DateTime(d.startDate.year, d.startDate.month + d.durationMonths, d.startDate.day);
 
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(40),
-        build: (ctx) => [
-          // Header
-          pw.Center(
-            child: pw.Column(children: [
-              pw.Text('LEAVE AND LICENSE AGREEMENT',
-                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 4),
-              pw.Text('(Rent Agreement)',
-                  style: const pw.TextStyle(fontSize: 11)),
-              pw.SizedBox(height: 4),
-              pw.Text('This Agreement is made at ${d.propCity} on ${_dateFmt.format(d.startDate)}',
-                  style: const pw.TextStyle(fontSize: 10)),
-            ]),
-          ),
-          pw.Divider(height: 20),
-
-          // Parties
-          _pdfSection('BETWEEN THE PARTIES', [
-            _pdfPara(
-              'LICENSOR (Owner): ${d.ownerName}, residing at ${d.ownerAddress}, '
-              'bearing ${d.ownerIdType} No. ${d.ownerIdNo}, '
-              'hereinafter referred to as the "Owner" (of the First Part).',
-            ),
-            _pdfPara(
-              'LICENSEE (Tenant): ${d.tenantName}, residing at ${d.tenantAddress}, '
-              'bearing ${d.tenantIdType} No. ${d.tenantIdNo}, '
-              'hereinafter referred to as the "Tenant" (of the Second Part).',
-            ),
-          ]),
-
-          // Property
-          _pdfSection('SCHEDULE OF PROPERTY', [
-            _pdfPara(
-              'The Owner hereby grants leave and license to the Tenant for the following property: '
-              '${d.propType} situated at ${d.propAddress}, ${d.propCity}, ${d.propState} - ${d.propPincode}. '
-              'The property is ${d.furnishing.toLowerCase()}.',
-            ),
-          ]),
-
-          // Tenure
-          _pdfSection('DURATION', [
-            _pdfPara(
-              'This Agreement shall be valid for a period of ${d.durationMonths} months, '
-              'commencing from ${_dateFmt.format(d.startDate)} and ending on ${_dateFmt.format(endDate)}, '
-              'unless terminated earlier as per the terms herein.',
-            ),
-            if (d.lockIn > 0)
-              _pdfPara('Lock-in Period: ${d.lockIn} month(s) from the date of commencement.'),
-            _pdfPara('Notice Period: ${d.noticePeriod} month(s) written notice required by either party for termination.'),
-          ]),
-
-          // Financial
-          _pdfSection('LICENSE FEE AND DEPOSIT', [
-            _pdfPara(
-              'Monthly License Fee (Rent): ₹${_moneyFmt.format(d.monthlyRent)} '
-              '(Rupees ${_inWords(d.monthlyRent)}), payable on or before the ${d.rentDay} of each month.',
-            ),
-            _pdfPara(
-              'Security Deposit: ₹${_moneyFmt.format(d.securityDeposit)} '
-              '(Rupees ${_inWords(d.securityDeposit)}), '
-              'refundable at the end of the agreement period subject to deductions for damages if any.',
-            ),
-            if (d.maintenance > 0)
-              _pdfPara(
-                'Maintenance Charges: ₹${_moneyFmt.format(d.maintenance)} per month, payable along with the rent.',
-              ),
-          ]),
-
-          // Furnishing
-          if (d.furnishedItems.isNotEmpty)
-            _pdfSection('FURNISHING DETAILS', [
-              _pdfPara('The following items are provided by the Owner in the premises:'),
-              pw.Wrap(
-                spacing: 12,
-                children: d.furnishedItems
-                    .map((item) => pw.Text('• $item', style: const pw.TextStyle(fontSize: 10)))
-                    .toList(),
-              ),
-            ]),
-
-          // T&Cs
-          _pdfSection('TERMS AND CONDITIONS', [
-            _pdfPara(d.additionalTerms),
-          ]),
-
-          // Standard legal clauses
-          _pdfSection('GENERAL CONDITIONS', [
-            _pdfPara('1. This Agreement shall be governed by the laws of India.'),
-            _pdfPara('2. Any dispute arising out of this Agreement shall be subject to the jurisdiction of courts at ${d.propCity}.'),
-            _pdfPara('3. Both parties have read and understood the terms of this Agreement.'),
-            _pdfPara('4. This Agreement constitutes the entire agreement between the parties and supersedes all prior negotiations.'),
-          ]),
-
-          pw.SizedBox(height: 40),
-
-          // Signatures
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-                pw.Container(width: 150, height: 1, color: PdfColors.black),
-                pw.SizedBox(height: 4),
-                pw.Text('Owner Signature', style: const pw.TextStyle(fontSize: 10)),
-                pw.Text(d.ownerName, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                pw.Text('Date: ________________', style: const pw.TextStyle(fontSize: 9)),
-              ]),
-              pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-                pw.Container(width: 150, height: 1, color: PdfColors.black),
-                pw.SizedBox(height: 4),
-                pw.Text('Tenant Signature', style: const pw.TextStyle(fontSize: 10)),
-                pw.Text(d.tenantName, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                pw.Text('Date: ________________', style: const pw.TextStyle(fontSize: 9)),
-              ]),
-            ],
-          ),
-          pw.SizedBox(height: 20),
-          pw.Center(
-            child: pw.Text(
-              'Witness 1: _______________________    Witness 2: _______________________',
-              style: const pw.TextStyle(fontSize: 9),
-            ),
-          ),
-          pw.SizedBox(height: 8),
-          pw.Center(
-            child: pw.Text(
-              'Note: This agreement should be registered/notarized for legal validity as per applicable law.',
-              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
-            ),
-          ),
-        ],
-      ),
-    );
-    return pdf;
-  }
-
-  pw.Widget _pdfSection(String title, List<pw.Widget> children) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.SizedBox(height: 12),
-        pw.Text(title,
-            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold,
-                decoration: pw.TextDecoration.underline)),
-        pw.SizedBox(height: 6),
-        ...children,
-      ],
-    );
-  }
-
-  pw.Widget _pdfPara(String text) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 4),
-      child: pw.Text(text,
-          style: const pw.TextStyle(fontSize: 10),
-          textAlign: pw.TextAlign.justify),
-    );
-  }
+  Future<pw.Document> _buildPdf() => RentAgreementTemplate.buildPdf(widget.data);
 
   @override
   Widget build(BuildContext context) {
@@ -792,9 +606,8 @@ class _RentAgreementPreviewScreenState extends State<RentAgreementPreviewScreen>
     );
   }
 
-  Widget _previewDoc(RentAgreementData d) {
-    final endDate = DateTime(d.startDate.year, d.startDate.month + d.durationMonths, d.startDate.day);
 
+  Widget _previewDoc(RentAgreementData d) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -802,134 +615,7 @@ class _RentAgreementPreviewScreenState extends State<RentAgreementPreviewScreen>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Center(
-            child: Text('LEAVE AND LICENSE AGREEMENT',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-          ),
-          const Center(
-            child: Text('(Rent Agreement)',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-          ),
-          const SizedBox(height: 4),
-          Center(
-            child: Text(
-              'Made at ${d.propCity} on ${_dateFmt.format(d.startDate)}',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-            ),
-          ),
-          const Divider(height: 24),
-
-          _previewSection('BETWEEN THE PARTIES'),
-          _previewPara(
-            'LICENSOR (Owner): ${d.ownerName}, residing at ${d.ownerAddress}, '
-            'bearing ${d.ownerIdType} No. ${d.ownerIdNo}.',
-          ),
-          const SizedBox(height: 6),
-          _previewPara(
-            'LICENSEE (Tenant): ${d.tenantName}, residing at ${d.tenantAddress}, '
-            'bearing ${d.tenantIdType} No. ${d.tenantIdNo}.',
-          ),
-
-          _previewSection('SCHEDULE OF PROPERTY'),
-          _previewPara(
-            '${d.propType} at ${d.propAddress}, ${d.propCity}, ${d.propState} - ${d.propPincode}. '
-            '(${d.furnishing})',
-          ),
-
-          _previewSection('DURATION'),
-          _previewPara(
-            '${d.durationMonths} months: ${_dateFmt.format(d.startDate)} to ${_dateFmt.format(endDate)}.',
-          ),
-          if (d.lockIn > 0) _previewPara('Lock-in: ${d.lockIn} month(s).'),
-          _previewPara('Notice period: ${d.noticePeriod} month(s).'),
-
-          _previewSection('LICENSE FEE & DEPOSIT'),
-          _previewKV('Monthly Rent', '₹ ${_moneyFmt.format(d.monthlyRent)} (${_inWords(d.monthlyRent)})'),
-          _previewKV('Security Deposit', '₹ ${_moneyFmt.format(d.securityDeposit)} (${_inWords(d.securityDeposit)})'),
-          if (d.maintenance > 0)
-            _previewKV('Maintenance', '₹ ${_moneyFmt.format(d.maintenance)}/month'),
-          _previewKV('Rent Due', '${d.rentDay} of each month'),
-
-          if (d.furnishedItems.isNotEmpty) ...[
-            _previewSection('FURNISHING'),
-            _previewPara(d.furnishedItems.join(' • ')),
-          ],
-
-          _previewSection('TERMS & CONDITIONS'),
-          _previewPara(d.additionalTerms),
-
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _signatureBlock('Owner', d.ownerName),
-              _signatureBlock('Tenant', d.tenantName),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Center(
-            child: Text(
-              'Witness 1: ___________________    Witness 2: ___________________',
-              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _previewSection(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 6),
-      child: Text(title,
-          style: const TextStyle(
-              fontWeight: FontWeight.w700, fontSize: 13, decoration: TextDecoration.underline)),
-    );
-  }
-
-  Widget _previewPara(String text) {
-    return Text(text,
-        style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, height: 1.5),
-        textAlign: TextAlign.justify);
-  }
-
-  Widget _previewKV(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(label,
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-          ),
-          Expanded(
-            child: Text(value,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _signatureBlock(String role, String name) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(width: 130, height: 40, color: const Color(0xFFF5F5F5)),
-        const SizedBox(height: 4),
-        Text(role, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-        Text(name,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-        const Text('Date: ___________',
-            style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-      ],
+      child: RentAgreementTemplate.buildPreview(d),
     );
   }
 
@@ -967,30 +653,4 @@ class _RentAgreementPreviewScreenState extends State<RentAgreementPreviewScreen>
       ),
     );
   }
-}
-
-// ── Data model ───────────────────────────────────────────────────────────────
-
-class RentAgreementData {
-  final String propAddress, propCity, propState, propPincode, propType, furnishing;
-  final DateTime startDate;
-  final String ownerName, ownerAddress, ownerIdType, ownerIdNo, ownerPhone;
-  final String tenantName, tenantAddress, tenantIdType, tenantIdNo, tenantPhone;
-  final int monthlyRent, securityDeposit, maintenance;
-  final int durationMonths, noticePeriod, lockIn;
-  final String rentDay;
-  final List<String> furnishedItems;
-  final String additionalTerms;
-
-  const RentAgreementData({
-    required this.propAddress, required this.propCity, required this.propState,
-    required this.propPincode, required this.propType, required this.furnishing,
-    required this.startDate, required this.ownerName, required this.ownerAddress,
-    required this.ownerIdType, required this.ownerIdNo, required this.ownerPhone,
-    required this.tenantName, required this.tenantAddress, required this.tenantIdType,
-    required this.tenantIdNo, required this.tenantPhone, required this.monthlyRent,
-    required this.securityDeposit, required this.maintenance, required this.durationMonths,
-    required this.noticePeriod, required this.lockIn, required this.rentDay,
-    required this.furnishedItems, required this.additionalTerms,
-  });
 }

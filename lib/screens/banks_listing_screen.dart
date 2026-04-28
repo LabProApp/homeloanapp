@@ -6,6 +6,7 @@ import '../cards/bank_card.dart';
 import '../screens/bank_rates_compare_dialog.dart';
 import '../screens/bank_apply_loan_dialog.dart';
 import '../screens/loan_eligibility_screen.dart';
+import '../screens/loan_docs_checklist_screen.dart';
 import '../commons/common_widget.dart';
 
 class BankPage extends StatefulWidget {
@@ -94,6 +95,14 @@ class _BankPageState extends State<BankPage> {
         title: const Text('Home Loans & Banks'),
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.checklist_outlined),
+            tooltip: 'Loan Document Checklist',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LoanDocsChecklistScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.calculate_outlined),
             tooltip: 'Loan Eligibility',
