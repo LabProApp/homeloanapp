@@ -185,30 +185,62 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   }
 
   String _generateDescription() {
-    final carpet = double.tryParse(_carpetAreaCtrl.text.trim());
-    final superAreaVal = double.tryParse(_superAreaCtrl.text.trim());
-    final parts = <String>[];
+    final title       = _titleCtrl.text.trim();
+    final city        = selectedCity?.value ?? '';
+    final carpet      = double.tryParse(_carpetAreaCtrl.text.trim());
+    final superArea   = double.tryParse(_superAreaCtrl.text.trim());
+    final typeLabel   = _toTitleCase(propertyType.replaceAll('_', ' '));
+    final action      = _isRent ? 'rent' : 'sale';
+
+    final buf = StringBuffer();
+
+    // ── Opening sentence ────────────────────────────────────────────────
     if (_isResidential) {
       final adj = bedrooms >= 4 ? 'Spacious' : bedrooms == 1 ? 'Cozy' : 'Well-designed';
-      parts.add('$adj $bedrooms BHK ${_toTitleCase(propertyType)}');
+      buf.write('$adj $bedrooms BHK $typeLabel available for $action');
     } else {
-      parts.add('Premium ${_toTitleCase(propertyType)}');
+      buf.write('Premium $typeLabel space available for $action');
     }
-    parts.add('$facing-facing');
-    if (_isResidential && bathrooms > 0) {
-      parts.add('with $bathrooms bathroom${bathrooms > 1 ? 's' : ''}');
+    if (city.isNotEmpty) buf.write(' in $city');
+    buf.write('.');
+
+    // ── Property title / name ───────────────────────────────────────────
+    if (title.isNotEmpty) {
+      buf.write(' $title is a $facing-facing property');
+      if (_isResidential && bathrooms > 0) {
+        buf.write(' with $bathrooms ${bathrooms == 1 ? 'bathroom' : 'bathrooms'}');
+      }
+      buf.write('.');
+    } else {
+      buf.write(' This $facing-facing property');
+      if (_isResidential && bathrooms > 0) {
+        buf.write(' features $bathrooms ${bathrooms == 1 ? 'bathroom' : 'bathrooms'}');
+      }
+      buf.write('.');
     }
-    var desc = '${parts.join(', ')}.';
-    if (carpet != null && carpet > 0) {
-      desc += ' Carpet area: ${carpet.toStringAsFixed(0)} sq.ft.';
-    } else if (superAreaVal != null && superAreaVal > 0) {
-      desc += ' Built-up area: ${superAreaVal.toStringAsFixed(0)} sq.ft.';
+
+    // ── Area details ─────────────────────────────────────────────────────
+    if (carpet != null && carpet > 0 && superArea != null && superArea > 0) {
+      buf.write(' It offers ${carpet.toStringAsFixed(0)} sq.ft. carpet area'
+          ' and ${superArea.toStringAsFixed(0)} sq.ft. built-up area.');
+    } else if (carpet != null && carpet > 0) {
+      buf.write(' It offers ${carpet.toStringAsFixed(0)} sq.ft. of carpet area.');
+    } else if (superArea != null && superArea > 0) {
+      buf.write(' Built-up area of ${superArea.toStringAsFixed(0)} sq.ft.');
     }
-    desc += ' Available for ${_isRent ? 'rent' : 'sale'}.';
+
+    // ── Amenities ─────────────────────────────────────────────────────────
     if (_selectedAmenities.isNotEmpty) {
-      desc += ' Amenities include ${_selectedAmenities.take(3).join(', ')}.';
+      final list = _selectedAmenities.take(4).toList();
+      if (list.length == 1) {
+        buf.write(' Amenity: ${list[0]}.');
+      } else {
+        final last = list.removeLast();
+        buf.write(' Amenities include ${list.join(', ')} and $last.');
+      }
     }
-    return desc;
+
+    return buf.toString();
   }
 
   String _toTitleCase(String s) => s

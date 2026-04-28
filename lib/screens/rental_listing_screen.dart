@@ -309,9 +309,6 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
       backgroundColor: AppColors.listingbackground,
       appBar: AppBar(
         title: const Text("Leasing : Commercial, Rental & PG"),
-        foregroundColor: Colors.white,
-        elevation: 1,
-        backgroundColor: Colors.transparent,
       ),
       body: Column(
         children: [

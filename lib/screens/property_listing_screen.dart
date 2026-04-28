@@ -296,8 +296,6 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       backgroundColor: AppColors.listingbackground,
       appBar: AppBar(
         title: const Text("Sale : Residential & Commercial"),
-        foregroundColor: Colors.white,
-        backgroundColor: Colors.transparent,
       ),
       body: Column(
         children: [

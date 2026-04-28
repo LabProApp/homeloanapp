@@ -20,7 +20,7 @@ void showLegalServiceDetailSheet(BuildContext context, LegalService service) {
       expand: false,
       builder: (ctx, controller) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: LegalServiceDetailPage(
@@ -100,16 +100,6 @@ class LegalServiceCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (service.status == 'ACTIVE')
-                    Container(
-                      width: 8,
-                      height: 8,
-                      margin: const EdgeInsets.only(right: 6),
-                      decoration: const BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
                   const Icon(Icons.chevron_right_rounded,
                       color: AppColors.textMuted),
                 ],
@@ -155,20 +145,30 @@ class LegalServiceCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _call(service.phone1),
-                      icon: const Icon(Icons.call_rounded, size: 16),
-                      label: const Text('Call Now',
-                          style: TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.primary, AppColors.secondary],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: () => _call(service.phone1),
+                        icon: const Icon(Icons.call_rounded, size: 16),
+                        label: const Text('Call Now',
+                            style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600)),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          foregroundColor: AppColors.white,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                       ),
                     ),
                   ),
@@ -202,9 +202,7 @@ class LegalServiceDetailPage extends StatelessWidget {
     showModalBottomSheet(
       context: sheetContext ?? context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (_) => InquiryDialog(
         providerName: service.legalName,
         preselectedService: preservice,
@@ -290,7 +288,7 @@ class LegalServiceDetailPage extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     backgroundColor: AppColors.whatsAppGreen,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -308,7 +306,7 @@ class LegalServiceDetailPage extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -468,13 +466,17 @@ class LegalServiceDetailPage extends StatelessWidget {
                     children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: service.services
-                              .map(_serviceChipLarge)
-                              .toList(),
-                        ),
+                        child: service.services.isEmpty
+                            ? const Text('No services listed',
+                                style: TextStyle(
+                                    fontSize: 13, color: AppColors.textMuted))
+                            : Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: service.services
+                                    .map(_serviceChipLarge)
+                                    .toList(),
+                              ),
                       ),
                     ],
                   ),

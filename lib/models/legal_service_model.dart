@@ -106,7 +106,9 @@ class LegalService {
       phone2: json["phone2"],
       email: json["email"],
       planPackage: json["planPackage"],
-      services: List<String>.from(json["services"]),
+      services: json["services"] != null
+          ? List<String>.from(json["services"])
+          : [],
       status: json["status"],
       createdBy: json["createdBy"],
       updatedBy: json["updatedBy"],
