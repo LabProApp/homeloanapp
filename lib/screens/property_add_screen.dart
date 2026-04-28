@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/property_model.dart';
 import '../services/property_api_service.dart';
 import '../services/state_api_service.dart';
@@ -70,6 +71,9 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
   final List<String> _selectedAmenities = [];
 
+  String _userName = '';
+  String _userEmail = '';
+
   bool get _isResidential => category == 'Residential';
   bool get _isRent => rentOrSale == 'Rent';
 
@@ -97,10 +101,18 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     super.initState();
     _prefillFromEdit();
     _loadStates();
+    _loadUserData();
+    if (widget.propertyToEdit == null) {
+      _titleCtrl.addListener(_refreshDescIfEmpty);
+      _carpetAreaCtrl.addListener(_refreshDescIfEmpty);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _refreshDescIfEmpty());
+    }
   }
 
   @override
   void dispose() {
+    _titleCtrl.removeListener(_refreshDescIfEmpty);
+    _carpetAreaCtrl.removeListener(_refreshDescIfEmpty);
     _titleCtrl.dispose();
     _descCtrl.dispose();
     _priceCtrl.dispose();
@@ -150,6 +162,59 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       );
     }
   }
+
+  // ── User data & description helpers ──────────────────────────────────────────
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final name = prefs.getString('userName') ?? '';
+    final email = prefs.getString('userEmail') ?? '';
+    final mobile = prefs.getString('userMobile') ?? '';
+    setState(() {
+      _userName = name;
+      _userEmail = email;
+      if (_contactCtrl.text.isEmpty) _contactCtrl.text = mobile;
+    });
+  }
+
+  void _refreshDescIfEmpty() {
+    if (!mounted || _descCtrl.text.isNotEmpty) return;
+    final d = _generateDescription();
+    if (d.isNotEmpty) _descCtrl.text = d;
+  }
+
+  String _generateDescription() {
+    final carpet = double.tryParse(_carpetAreaCtrl.text.trim());
+    final superAreaVal = double.tryParse(_superAreaCtrl.text.trim());
+    final parts = <String>[];
+    if (_isResidential) {
+      final adj = bedrooms >= 4 ? 'Spacious' : bedrooms == 1 ? 'Cozy' : 'Well-designed';
+      parts.add('$adj $bedrooms BHK ${_toTitleCase(propertyType)}');
+    } else {
+      parts.add('Premium ${_toTitleCase(propertyType)}');
+    }
+    parts.add('$facing-facing');
+    if (_isResidential && bathrooms > 0) {
+      parts.add('with $bathrooms bathroom${bathrooms > 1 ? 's' : ''}');
+    }
+    var desc = '${parts.join(', ')}.';
+    if (carpet != null && carpet > 0) {
+      desc += ' Carpet area: ${carpet.toStringAsFixed(0)} sq.ft.';
+    } else if (superAreaVal != null && superAreaVal > 0) {
+      desc += ' Built-up area: ${superAreaVal.toStringAsFixed(0)} sq.ft.';
+    }
+    desc += ' Available for ${_isRent ? 'rent' : 'sale'}.';
+    if (_selectedAmenities.isNotEmpty) {
+      desc += ' Amenities include ${_selectedAmenities.take(3).join(', ')}.';
+    }
+    return desc;
+  }
+
+  String _toTitleCase(String s) => s
+      .split(' ')
+      .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1).toLowerCase())
+      .join(' ');
 
   // ── Location loaders ──────────────────────────────────────────────────────────
 
@@ -684,17 +749,42 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                       return null;
                     },
                   ),
-                  _textField(
-                    controller: _descCtrl,
-                    label: 'Description',
-                    maxLines: 4,
-                    hint: 'Describe key features, nearby landmarks…',
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFormField(
+                          controller: _descCtrl,
+                          maxLines: 4,
+                          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                          decoration: _inputDeco('Description', hint: 'Describe key features, nearby landmarks…'),
+                        ),
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: () => setState(() => _descCtrl.text = _generateDescription()),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.auto_fix_high_outlined, size: 13, color: AppColors.primary),
+                                SizedBox(width: 4),
+                                Text('Auto-fill from details', style: TextStyle(fontSize: 12, color: AppColors.primary)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
                   // ── 2. Listing Type ─────────────────────────────────────────
                   _section('Listing Type'),
-                  _chipSelector(_rentSaleOptions, rentOrSale,
-                      (v) => setState(() => rentOrSale = v)),
+                  _chipSelector(_rentSaleOptions, rentOrSale, (v) => setState(() {
+                    rentOrSale = v;
+                    _refreshDescIfEmpty();
+                  })),
 
                   // ── 3. Category & Property Type ─────────────────────────────
                   _section('Category'),
@@ -801,6 +891,8 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                             final n = double.tryParse(v.trim());
                             if (n == null) return 'Invalid number';
                             if (n <= 0) return 'Must be > 0';
+                            final sa = double.tryParse(_superAreaCtrl.text.trim());
+                            if (sa != null && n > sa) return 'Cannot exceed super area';
                             return null;
                           },
                         ),
@@ -811,14 +903,23 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                   // ── 7. Rooms (Residential only) ─────────────────────────────
                   if (_isResidential) ...[
                     _section('Rooms'),
-                    _stepper('Bedrooms', bedrooms, (v) => bedrooms = v, min: 1),
-                    _stepper('Bathrooms', bathrooms, (v) => bathrooms = v, min: 1),
+                    _stepper('Bedrooms', bedrooms, (v) {
+                      bedrooms = v;
+                      _refreshDescIfEmpty();
+                    }, min: 1),
+                    _stepper('Bathrooms', bathrooms, (v) {
+                      bathrooms = v;
+                      _refreshDescIfEmpty();
+                    }, min: 1),
                   ],
 
                   // ── 8. Floor Info ───────────────────────────────────────────
                   _section('Floor Info'),
-                  _stepper('Floor Number', floorNumber, (v) => floorNumber = v, max: 60),
-                  _stepper('Total Floors', totalFloors, (v) => totalFloors = v, min: 1, max: 60),
+                  _stepper('Floor Number', floorNumber, (v) => floorNumber = v, max: totalFloors),
+                  _stepper('Total Floors', totalFloors, (v) {
+                    totalFloors = v;
+                    if (floorNumber > totalFloors) floorNumber = totalFloors;
+                  }, min: 1, max: 60),
 
                   // ── 9. Property Details ─────────────────────────────────────
                   _section('Property Details'),
@@ -838,7 +939,10 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                     label: 'Facing',
                     value: facing,
                     items: _facingOptions,
-                    onChanged: (v) => setState(() => facing = v),
+                    onChanged: (v) => setState(() {
+                      facing = v;
+                      _refreshDescIfEmpty();
+                    }),
                   ),
                   _dropdownField<String>(
                     label: 'Property Age',
@@ -887,6 +991,39 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
                   // ── 11. Contact ─────────────────────────────────────────────
                   _section('Contact'),
+                  if (_userName.isNotEmpty || _userEmail.isNotEmpty) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceSubtle,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        children: [
+                          if (_userName.isNotEmpty)
+                            Row(children: [
+                              const Icon(Icons.person_outline_rounded, size: 16, color: AppColors.textMuted),
+                              const SizedBox(width: 8),
+                              const Text('Name', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                              const Spacer(),
+                              Text(_userName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                            ]),
+                          if (_userName.isNotEmpty && _userEmail.isNotEmpty)
+                            const Divider(height: 12, thickness: 0.5),
+                          if (_userEmail.isNotEmpty)
+                            Row(children: [
+                              const Icon(Icons.email_outlined, size: 16, color: AppColors.textMuted),
+                              const SizedBox(width: 8),
+                              const Text('Email', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                              const Spacer(),
+                              Flexible(child: Text(_userEmail, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary))),
+                            ]),
+                        ],
+                      ),
+                    ),
+                  ],
                   _textField(
                     controller: _contactCtrl,
                     label: 'Mobile Number',

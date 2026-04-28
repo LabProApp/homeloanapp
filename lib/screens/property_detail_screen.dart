@@ -62,10 +62,15 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   List<String> get _amenities {
-    if (widget.property.amenitiesAsList != null) {
-      return widget.property.amenitiesAsList!
-          .map((e) => e.toString())
+    if (widget.property.amenities != null && widget.property.amenities!.isNotEmpty) {
+      return widget.property.amenities!
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
           .toList();
+    }
+    if (widget.property.amenitiesAsList != null && widget.property.amenitiesAsList!.isNotEmpty) {
+      return widget.property.amenitiesAsList!.map((e) => e.toString()).toList();
     }
     return [];
   }
@@ -218,7 +223,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
+      backgroundColor: AppColors.listingbackground,
       bottomNavigationBar: _bottomBar(),
       body: CustomScrollView(
         slivers: [
@@ -409,6 +414,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       if (widget.property.preferredTenants != null)
                         _DetailRow('Preferred Tenants',
                             widget.property.preferredTenants!),
+                      if (widget.property.leaseDuration != null)
+                        _DetailRow('Lease Duration', widget.property.leaseDuration!),
+                      if (widget.property.noticePeriod != null)
+                        _DetailRow('Notice Period', widget.property.noticePeriod!),
+                      if (widget.property.maintenanceIncluded != null)
+                        _DetailRow('Maintenance',
+                            widget.property.maintenanceIncluded! ? 'Included' : 'Not Included'),
                     ] else ...[
                       if (widget.property.price != null)
                         _DetailRow('Price',
@@ -450,8 +462,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     if (widget.property.type != null)
                       _DetailRow('Type', widget.property.type!),
                     if (widget.property.category != null)
-                      _DetailRow(
-                          'Category', widget.property.category!),
+                      _DetailRow('Category', widget.property.category!),
+                    if (widget.property.projectName != null &&
+                        widget.property.projectName!.isNotEmpty)
+                      _DetailRow('Project', widget.property.projectName!),
                     if (_isResidential &&
                         widget.property.bedrooms != null)
                       _DetailRow('Bedrooms',
