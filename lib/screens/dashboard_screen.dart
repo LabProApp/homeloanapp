@@ -11,6 +11,8 @@ import 'emi_calculator_screen.dart';
 import 'stamp_duty_screen.dart';
 import 'rent_vs_buy_screen.dart';
 import 'due_diligence_screen.dart';
+import 'rent_agreement_screen.dart';
+import 'sale_agreement_screen.dart';
 import 'favourite_property_listing_screen.dart';
 import 'interested_users_screen.dart';
 import 'user_profile_screen.dart';
@@ -113,7 +115,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _selectTab(2);
         break;
       case '_HomeAction.rentAgreement':
-        _selectTab(3);
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const RentAgreementScreen()));
+        break;
+      case '_HomeAction.saleAgreement':
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const SaleAgreementScreen()));
         break;
     }
   }

@@ -16,6 +16,7 @@ enum _HomeAction {
   rentVsBuy,
   legalServices,
   rentAgreement,
+  saleAgreement,
   dueDiligence,
   loanEligibility,
   banks,
@@ -46,34 +47,42 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── Properties ──────────────────────────────────────────
                   _section(context, 'Properties', Icons.home_rounded,
                       AppColors.primary, [
-                    _Tile(Icons.sell_outlined,       'Buy / Sell',    'Find or list properties',  const Color(0xFF1565C0), _HomeAction.buySell),
-                    _Tile(Icons.apartment_outlined,  'Rent / PG',     'Rental & PG listings',     const Color(0xFF00838F), _HomeAction.rentPg),
-                    _Tile(Icons.favorite_outlined,   'My Favourites', 'Saved properties',          AppColors.error,        _HomeAction.myFavourites),
-                    _Tile(Icons.business_center_outlined, 'My Postings', 'Your listed properties', const Color(0xFF4527A0), _HomeAction.myPostings),
+                    _Tile(Icons.sell_outlined,      'Buy / Sell',    'Find & list sale properties',  const Color(0xFF1565C0), _HomeAction.buySell),
+                    _Tile(Icons.apartment_outlined, 'Rent / PG',     'Rental & PG listings',         const Color(0xFF00838F), _HomeAction.rentPg),
+                    _Tile(Icons.favorite_outlined,  'My Favourites', 'Properties you have saved',    AppColors.error,        _HomeAction.myFavourites),
                   ]),
                   const SizedBox(height: 24),
+
+                  // ── Finance & Loans ─────────────────────────────────────
                   _section(context, 'Finance & Loans', Icons.account_balance_rounded,
                       const Color(0xFF1B5E20), [
-                    _Tile(Icons.calculate_outlined,        'EMI Calculator',    'Monthly instalment',     const Color(0xFF2E7D32), _HomeAction.emiCalculator),
-                    _Tile(Icons.account_balance_outlined,  'Apply Home Loan',   'Explore bank offers',    const Color(0xFF1565C0), _HomeAction.homeLoan),
-                    _Tile(Icons.verified_outlined,         'Loan Eligibility',  'Check your eligibility', const Color(0xFF00796B), _HomeAction.loanEligibility),
-                    _Tile(Icons.corporate_fare_outlined,   'Banks & Rates',     'Compare interest rates', const Color(0xFF4527A0), _HomeAction.banks),
+                    _Tile(Icons.calculate_outlined,       'EMI Calculator',  'Estimate monthly instalment',  const Color(0xFF2E7D32), _HomeAction.emiCalculator),
+                    _Tile(Icons.account_balance_outlined, 'Apply Home Loan', 'Explore bank loan offers',     const Color(0xFF1565C0), _HomeAction.homeLoan),
+                    _Tile(Icons.verified_outlined,        'Loan Eligibility','Check your loan eligibility',  const Color(0xFF00796B), _HomeAction.loanEligibility),
+                    _Tile(Icons.corporate_fare_outlined,  'Banks & Rates',   'Compare bank interest rates',  const Color(0xFF4527A0), _HomeAction.banks),
+                    _Tile(Icons.balance_outlined,         'Rent vs Buy',     'Compare renting vs buying',    const Color(0xFF00838F), _HomeAction.rentVsBuy),
                   ]),
                   const SizedBox(height: 24),
+
+                  // ── Legal & Documentation ───────────────────────────────
                   _section(context, 'Legal & Documentation', Icons.gavel_rounded,
                       const Color(0xFF6A1B9A), [
-                    _Tile(Icons.receipt_long_outlined,  'Stamp Duty',      'Calculate stamp duty',    const Color(0xFF1565C0), _HomeAction.stampDuty),
-                    _Tile(Icons.description_outlined,   'Rent Agreement',  'Generate agreement',       const Color(0xFF00838F), _HomeAction.rentAgreement),
-                    _Tile(Icons.assignment_rounded,     'Legal Services',  'Find legal vendors',       const Color(0xFF6A1B9A), _HomeAction.legalServices),
-                    _Tile(Icons.checklist_outlined,     'Due Diligence',   'Property checklist',       const Color(0xFFE65100), _HomeAction.dueDiligence),
+                    _Tile(Icons.receipt_long_outlined, 'Stamp Duty',      'Calculate stamp duty charges',   const Color(0xFF1565C0), _HomeAction.stampDuty),
+                    _Tile(Icons.description_outlined,  'Rent Agreement',  'Generate rental agreement',      const Color(0xFF00838F), _HomeAction.rentAgreement),
+                    _Tile(Icons.handshake_outlined,    'Sale Agreement',  'Generate sale deed agreement',   const Color(0xFF4E342E), _HomeAction.saleAgreement),
+                    _Tile(Icons.assignment_rounded,    'Legal Services',  'Find verified legal vendors',    const Color(0xFF6A1B9A), _HomeAction.legalServices),
+                    _Tile(Icons.checklist_outlined,    'Due Diligence',   'Property verification checklist',const Color(0xFFE65100), _HomeAction.dueDiligence),
                   ]),
                   const SizedBox(height: 24),
+
+                  // ── My Activity ─────────────────────────────────────────
                   _section(context, 'My Activity', Icons.person_rounded,
                       const Color(0xFF4527A0), [
-                    _Tile(Icons.groups_outlined,     'Client Inquiries', 'Leads & follow-ups',   AppColors.primary,      _HomeAction.myInquiries),
-                    _Tile(Icons.balance_outlined,    'Rent vs Buy',      'Compare options',      const Color(0xFF2E7D32),_HomeAction.rentVsBuy),
+                    _Tile(Icons.business_center_outlined, 'My Postings',     'Properties you have listed',   const Color(0xFF4527A0), _HomeAction.myPostings),
+                    _Tile(Icons.groups_outlined,          'Client Inquiries', 'Leads, follow-ups & status',  AppColors.primary,      _HomeAction.myInquiries),
                   ]),
                 ],
               ),
@@ -84,7 +93,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // ── Hero / greeting ──────────────────────────────────────────────────────────
+  // ── Hero / greeting ────────────────────────────────────────────────────────
   Widget _buildHero(BuildContext context) {
     return SliverToBoxAdapter(
       child: Container(
@@ -105,14 +114,13 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Colors.white70),
             ),
             const SizedBox(height: 20),
-            // Quick stats row
             Row(
               children: [
-                _heroPill(Icons.home_rounded,        'Buy/Sell',   () => onNavigate(_HomeAction.buySell)),
+                _heroPill(Icons.home_rounded,       'Buy/Sell',     () => onNavigate(_HomeAction.buySell)),
                 const SizedBox(width: 8),
-                _heroPill(Icons.apartment_rounded,   'Rent/PG',    () => onNavigate(_HomeAction.rentPg)),
+                _heroPill(Icons.apartment_rounded,  'Rent/PG',      () => onNavigate(_HomeAction.rentPg)),
                 const SizedBox(width: 8),
-                _heroPill(Icons.calculate_outlined,  'EMI Calc',   () => onNavigate(_HomeAction.emiCalculator)),
+                _heroPill(Icons.calculate_outlined, 'EMI Calculator', () => onNavigate(_HomeAction.emiCalculator)),
               ],
             ),
           ],
@@ -138,8 +146,9 @@ class HomeScreen extends StatelessWidget {
               Icon(icon, color: Colors.white, size: 20),
               const SizedBox(height: 4),
               Text(label,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
-                      color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                      color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
             ],
           ),
         ),
@@ -147,9 +156,9 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // ── Category section ─────────────────────────────────────────────────────────
-  Widget _section(BuildContext context, String title, IconData icon, Color accent,
-      List<_Tile> tiles) {
+  // ── Category section ───────────────────────────────────────────────────────
+  Widget _section(BuildContext context, String title, IconData icon,
+      Color accent, List<_Tile> tiles) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -164,7 +173,7 @@ class HomeScreen extends StatelessWidget {
             Icon(icon, size: 18, color: accent),
             const SizedBox(width: 6),
             Text(title,
-                style: TextStyle(
+                style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary)),
@@ -177,15 +186,17 @@ class HomeScreen extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
-          childAspectRatio: 1.9,
-          children: tiles.map((t) => _TileCard(tile: t, onTap: () => onNavigate(t.action))).toList(),
+          childAspectRatio: 2.6,
+          children: tiles
+              .map((t) => _TileCard(tile: t, onTap: () => onNavigate(t.action)))
+              .toList(),
         ),
       ],
     );
   }
 }
 
-// ── Tile model ────────────────────────────────────────────────────────────────
+// ── Tile model ─────────────────────────────────────────────────────────────────
 
 class _Tile {
   final IconData icon;
@@ -196,7 +207,7 @@ class _Tile {
   const _Tile(this.icon, this.title, this.subtitle, this.color, this.action);
 }
 
-// ── Tile card widget ──────────────────────────────────────────────────────────
+// ── Tile card widget ───────────────────────────────────────────────────────────
 
 class _TileCard extends StatelessWidget {
   final _Tile tile;
@@ -210,24 +221,28 @@ class _TileCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: tile.color.withOpacity(0.18)),
           boxShadow: const [
-            BoxShadow(color: AppColors.shadowLight, blurRadius: 6, offset: Offset(0, 2)),
+            BoxShadow(
+                color: AppColors.shadowLight,
+                blurRadius: 6,
+                offset: Offset(0, 2)),
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              width: 40, height: 40,
+              width: 38, height: 38,
               decoration: BoxDecoration(
                 color: tile.color.withOpacity(0.10),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(tile.icon, color: tile.color, size: 20),
+              child: Icon(tile.icon, color: tile.color, size: 19),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -235,19 +250,25 @@ class _TileCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(tile.title,
-                      style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 2),
-                  Text(tile.subtitle,
-                      style: const TextStyle(
-                          fontSize: 10, color: AppColors.textMuted),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    tile.title,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    tile.subtitle,
+                    style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textMuted,
+                        height: 1.3),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
