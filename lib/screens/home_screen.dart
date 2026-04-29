@@ -51,9 +51,10 @@ class HomeScreen extends StatelessWidget {
                   // ── Properties ──────────────────────────────────────────
                   _section(context, 'Properties', Icons.home_rounded,
                       AppColors.primary, [
-                    _Tile(Icons.sell_outlined,      'Buy / Sell',    'Find & list sale properties',  const Color(0xFF1565C0), _HomeAction.buySell),
-                    _Tile(Icons.apartment_outlined, 'Rent / PG',     'PG & Rental properties',         const Color(0xFF00838F), _HomeAction.rentPg),
-                    _Tile(Icons.favorite_outlined,  'My Favourites', 'Your favourite properties',    AppColors.error,        _HomeAction.myFavourites),
+                    _Tile(Icons.sell_outlined,      'Buy / Sell',         'Find & list sale properties',       const Color(0xFF1565C0), _HomeAction.buySell),
+                    _Tile(Icons.apartment_outlined, 'Rent / PG',          'PG & Rental properties',            const Color(0xFF00838F), _HomeAction.rentPg),
+                    _Tile(Icons.favorite_outlined,  'My Favourites',      'Your favourite properties',         AppColors.error,        _HomeAction.myFavourites),
+                    _Tile(Icons.post_add_outlined,  'Post Requirement',   'Share what you\'re looking for',    const Color(0xFF4527A0), _HomeAction.postRequirement),
                   ]),
                   const SizedBox(height: 24),
 
@@ -123,8 +124,7 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 _heroPill(Icons.apartment_rounded,   'Rent/PG',        () => onNavigate(_HomeAction.rentPg)),
                 const SizedBox(width: 8),
-                _heroPill(Icons.post_add_outlined,   'Post Home/Office Requirement',      () => onNavigate(_HomeAction.postRequirement),
-                    highlight: true),
+                _heroPill(Icons.post_add_outlined,   'Post Home/Office Requirement',      () => onNavigate(_HomeAction.postRequirement)),
               ],
             ),
           ],

@@ -46,6 +46,10 @@ class LeadCard extends StatelessWidget {
       case 'PROPERTY_REGISTRATION': return 'Registration';
       case 'RENT_AGREEMENT':      return 'Rent';
       case 'DOCUMENT_SERVICES':   return 'Documents';
+      case 'BUY_HOME':            return 'Buy Home';
+      case 'SELL_HOME':           return 'Sell Home';
+      case 'HOME_RENTAL':         return 'Home Rental';
+      case 'COMMERCIAL':          return 'Commercial';
       default:                    return raw.replaceAll('_', ' ');
     }
   }
@@ -60,6 +64,10 @@ class LeadCard extends StatelessWidget {
       case 'PROPERTY_REGISTRATION':
       case 'RENT_AGREEMENT':
       case 'DOCUMENT_SERVICES':   return AppColors.textMuted;
+      case 'BUY_HOME':            return const Color(0xFF2E7D32);
+      case 'SELL_HOME':           return const Color(0xFFFF6B35);
+      case 'HOME_RENTAL':         return const Color(0xFF00838F);
+      case 'COMMERCIAL':          return const Color(0xFF4527A0);
       default:                    return AppColors.primary;
     }
   }
@@ -342,13 +350,15 @@ class _StatusBadge extends StatelessWidget {
 
   Color get _color {
     switch (status) {
-      case 'NEW':             return AppColors.info;
-      case 'CONTACTED':       return AppColors.warning;
-      case 'INTERESTED':      return const Color(0xFF2E7D32);
-      case 'NOT_INTERESTED':  return AppColors.error;
-      case 'CONVERTED':       return AppColors.success;
-      case 'CLOSED':          return AppColors.textMuted;
-      default:                return AppColors.textMuted;
+      case 'NEW':           return AppColors.info;
+      case 'CONTACTED':     return AppColors.warning;
+      case 'VISIT_PLANNED': return const Color(0xFF7B61FF);
+      case 'VISIT_DONE':    return const Color(0xFF2E7D32);
+      case 'NEGOTIATING':   return const Color(0xFFFF6B35);
+      case 'CLOSED_WON':    return AppColors.success;
+      case 'CLOSED_LOST':   return AppColors.error;
+      case 'DROPPED':       return AppColors.textMuted;
+      default:              return AppColors.textMuted;
     }
   }
 

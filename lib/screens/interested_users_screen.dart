@@ -22,16 +22,19 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
   String _selectedStatus = 'ALL';
 
   static const _statuses = [
-    'ALL', 'NEW', 'CONTACTED', 'INTERESTED', 'NOT_INTERESTED', 'CONVERTED', 'CLOSED',
+    'ALL', 'NEW', 'CONTACTED', 'VISIT_PLANNED', 'VISIT_DONE', 'NEGOTIATING',
+    'CLOSED_WON', 'CLOSED_LOST', 'DROPPED',
   ];
 
   static const _statusColors = {
-    'NEW':            AppColors.info,
-    'CONTACTED':      AppColors.warning,
-    'INTERESTED':     Color(0xFF2E7D32),
-    'NOT_INTERESTED': AppColors.error,
-    'CONVERTED':      AppColors.success,
-    'CLOSED':         AppColors.textMuted,
+    'NEW':           AppColors.info,
+    'CONTACTED':     AppColors.warning,
+    'VISIT_PLANNED': Color(0xFF7B61FF),
+    'VISIT_DONE':    Color(0xFF2E7D32),
+    'NEGOTIATING':   Color(0xFFFF6B35),
+    'CLOSED_WON':    AppColors.success,
+    'CLOSED_LOST':   AppColors.error,
+    'DROPPED':       AppColors.textMuted,
   };
 
   @override
@@ -61,7 +64,7 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
       'clientName': 'Priya Mehta',
       'mobile': '9123456780',
       'email': 'priya.mehta@email.com',
-      'status': 'CONTACTED',
+      'status': 'VISIT_PLANNED',
       'leadType': 'HOME_LOAN',
       'propertyTitle': '2BHK Flat – Wakad, Pune',
       'propertyCity': 'Pune',
@@ -75,17 +78,19 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
   ];
 
   Future<void> _loadLeads() async {
+    if (!mounted) return;
     setState(() => _loading = true);
     try {
       final data = await LeadApiService.fetchBrokerLeads(brokerId: widget.brokerId);
+      if (!mounted) return;
       _leads = data.isEmpty ? List.from(_dummyLeads) : data;
-      _applyFilters();
     } catch (e) {
       debugPrint('Error loading leads: $e');
+      if (!mounted) return;
       _leads = List.from(_dummyLeads);
-      _applyFilters();
     }
-    setState(() => _loading = false);
+    _applyFilters();
+    if (mounted) setState(() => _loading = false);
   }
 
   void _applyFilters() {
@@ -96,7 +101,7 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
       return (name.contains(_search) || mobile.contains(_search))
           && (_selectedStatus == 'ALL' || status == _selectedStatus);
     }).toList();
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   int _count(String status) =>
@@ -109,15 +114,15 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       child: Row(
         children: [
-          _StatTile(label: 'Total',     count: _leads.length,            color: AppColors.primary),
+          _StatTile(label: 'Total',      count: _leads.length,               color: AppColors.primary),
           const SizedBox(width: 8),
-          _StatTile(label: 'New',       count: _count('NEW'),            color: AppColors.info),
+          _StatTile(label: 'New',        count: _count('NEW'),               color: AppColors.info),
           const SizedBox(width: 8),
-          _StatTile(label: 'Contacted', count: _count('CONTACTED'),      color: AppColors.warning),
+          _StatTile(label: 'Contacted',  count: _count('CONTACTED'),         color: AppColors.warning),
           const SizedBox(width: 8),
-          _StatTile(label: 'Interested',count: _count('INTERESTED'),     color: const Color(0xFF2E7D32)),
+          _StatTile(label: 'Visit Done', count: _count('VISIT_DONE'),        color: const Color(0xFF2E7D32)),
           const SizedBox(width: 8),
-          _StatTile(label: 'Converted', count: _count('CONVERTED'),      color: AppColors.success),
+          _StatTile(label: 'Won',        count: _count('CLOSED_WON'),        color: AppColors.success),
         ],
       ),
     );
@@ -294,7 +299,8 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  'NEW', 'CONTACTED', 'INTERESTED', 'NOT_INTERESTED', 'CONVERTED', 'CLOSED'
+                  'NEW', 'CONTACTED', 'VISIT_PLANNED', 'VISIT_DONE',
+                  'NEGOTIATING', 'CLOSED_WON', 'CLOSED_LOST', 'DROPPED'
                 ].map((s) {
                   final color = _statusColors[s] ?? AppColors.primary;
                   final active = s == selectedStatus;

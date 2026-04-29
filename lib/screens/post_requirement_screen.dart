@@ -4,6 +4,20 @@ import '../theme/app_colors.dart';
 import '../services/leads_service.dart';
 import '../models/client_lead_model.dart';
 
+const _kPropertyTypeLabels = {
+  'APARTMENT':     'Apartment',
+  'HOUSE':         'Independent House',
+  'BUILDER_FLOOR': 'Builder Floor',
+  'PLOT':          'Plot',
+  'PG':            'PG / Studio',
+  'OFFICE':        'Office',
+  'SHOP':          'Shop',
+  'SHOWROOM':      'Showroom',
+  'CO_WORKING':    'Co-Working',
+  'PLOT_SHOP':     'Plot/Shop',
+  'AGRICULTURAL':  'Agricultural',
+};
+
 class PostRequirementScreen extends StatefulWidget {
   final int userId;
   const PostRequirementScreen({super.key, required this.userId});
@@ -223,7 +237,7 @@ class _RequirementCard extends StatelessWidget {
             // Property type + category
             Wrap(spacing: 8, runSpacing: 6, children: [
               if ((req['propertyType'] ?? '').toString().isNotEmpty)
-                _chip(Icons.home_outlined, req['propertyType'] as String),
+                _chip(Icons.home_outlined, _kPropertyTypeLabels[req['propertyType']] ?? req['propertyType'] as String),
               if ((req['propertyCity'] ?? '').toString().isNotEmpty)
                 _chip(Icons.location_on_outlined, req['propertyCity'] as String),
               if (budgetText != null)
@@ -293,9 +307,9 @@ class _RequirementFormScreenState extends State<_RequirementFormScreen> {
   // Category
   String _category = 'Residential'; // Residential | Commercial
 
-  // Property type options
-  static const _residentialTypes = ['Apartment', 'Villa', 'Independent House', 'Studio', 'Plot', 'Row House'];
-  static const _commercialTypes  = ['Shop', 'Office', 'Showroom', 'Warehouse', 'Co-Working'];
+  // Property type options (API enum values)
+  static const _residentialTypes = ['APARTMENT', 'HOUSE', 'BUILDER_FLOOR', 'PLOT', 'PG'];
+  static const _commercialTypes  = ['OFFICE', 'SHOP', 'SHOWROOM', 'CO_WORKING', 'PLOT_SHOP'];
   String? _propertyType;
 
   // Residential specs
@@ -337,7 +351,7 @@ class _RequirementFormScreenState extends State<_RequirementFormScreen> {
       if (part.startsWith('Baths:')) _baths = part.replaceFirst('Baths:', '').trim();
       if (part.startsWith('Floor:')) _floor = part.replaceFirst('Floor:', '').trim();
     }
-    if (['Shop', 'Office', 'Showroom', 'Warehouse', 'Co-Working'].contains(_propertyType)) {
+    if (['OFFICE', 'SHOP', 'SHOWROOM', 'CO_WORKING', 'PLOT_SHOP'].contains(_propertyType)) {
       _category = 'Commercial';
     }
   }
@@ -445,7 +459,7 @@ class _RequirementFormScreenState extends State<_RequirementFormScreen> {
             Wrap(
               spacing: 8, runSpacing: 8,
               children: _typeOptions.map((t) => _selectChip(
-                t, _propertyType == t,
+                _kPropertyTypeLabels[t] ?? t, _propertyType == t,
                 () => setState(() => _propertyType = t),
               )).toList(),
             ),
