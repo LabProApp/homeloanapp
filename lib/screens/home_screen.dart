@@ -139,20 +139,22 @@ class HomeScreen extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          height: 72,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
           decoration: BoxDecoration(
-            color: highlight ? Colors.white.withOpacity(0.30) : Colors.white.withOpacity(0.15),
+            color: Colors.white.withOpacity(0.15),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: highlight ? Colors.white.withOpacity(0.70) : Colors.white.withOpacity(0.25),
-                width: highlight ? 1.5 : 1.0),
+            border: Border.all(color: Colors.white.withOpacity(0.25)),
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: Colors.white, size: 20),
               const SizedBox(height: 4),
               Text(label,
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                       color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
             ],
