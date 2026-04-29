@@ -17,6 +17,8 @@ import 'favourite_property_listing_screen.dart';
 import 'interested_users_screen.dart';
 import 'user_profile_screen.dart';
 import 'home_screen.dart';
+import 'bank_apply_loan_dialog.dart';
+import 'post_requirement_screen.dart';
 
 import '../theme/app_colors.dart';
 
@@ -77,8 +79,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _selectTab(1);
         break;
       case '_HomeAction.homeLoan':
+        LoanApplySheet.show(context);
+        break;
       case '_HomeAction.banks':
         _selectTab(2);
+        break;
+      case '_HomeAction.postRequirement':
+        _setPage(PostRequirementScreen(userId: widget.userId));
         break;
       case '_HomeAction.legalServices':
         _selectTab(3);

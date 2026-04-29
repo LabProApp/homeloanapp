@@ -20,6 +20,7 @@ enum _HomeAction {
   dueDiligence,
   loanEligibility,
   banks,
+  postRequirement,
 }
 
 class HomeScreen extends StatelessWidget {
@@ -51,7 +52,7 @@ class HomeScreen extends StatelessWidget {
                   _section(context, 'Properties', Icons.home_rounded,
                       AppColors.primary, [
                     _Tile(Icons.sell_outlined,      'Buy / Sell',    'Find & list sale properties',  const Color(0xFF1565C0), _HomeAction.buySell),
-                    _Tile(Icons.apartment_outlined, 'Rent / PG',     'Rental & PG listings',         const Color(0xFF00838F), _HomeAction.rentPg),
+                    _Tile(Icons.apartment_outlined, 'Rent / PG',     'PG & Rental properties',         const Color(0xFF00838F), _HomeAction.rentPg),
                     _Tile(Icons.favorite_outlined,  'My Favourites', 'Your favourite properties',    AppColors.error,        _HomeAction.myFavourites),
                   ]),
                   const SizedBox(height: 24),
@@ -59,10 +60,10 @@ class HomeScreen extends StatelessWidget {
                   // ── Finance & Loans ─────────────────────────────────────
                   _section(context, 'Finance & Loans', Icons.account_balance_rounded,
                       const Color(0xFF1B5E20), [
-                    _Tile(Icons.calculate_outlined,       'EMI Calculator',  'Estimate monthly instalment',  const Color(0xFF2E7D32), _HomeAction.emiCalculator),
-                    _Tile(Icons.account_balance_outlined, 'Apply Home Loan', 'Explore bank loan offers',     const Color(0xFF1565C0), _HomeAction.homeLoan),
-                    _Tile(Icons.verified_outlined,        'Home Loan Eligibility', 'Check your loan eligibility', const Color(0xFF00796B), _HomeAction.loanEligibility),
                     _Tile(Icons.corporate_fare_outlined,  'Banks & Rates',   'Compare bank interest rates',  const Color(0xFF4527A0), _HomeAction.banks),
+                    _Tile(Icons.account_balance_outlined, 'Inquire Home Loan', 'Explore bank loan offers',     const Color(0xFF1565C0), _HomeAction.homeLoan),
+                    _Tile(Icons.calculate_outlined,       'EMI Calculator',  'Estimate monthly installment',  const Color(0xFF2E7D32), _HomeAction.emiCalculator),
+                    _Tile(Icons.verified_outlined,        'Home Loan Eligibility', 'Check your Home loan eligibility', const Color(0xFF00796B), _HomeAction.loanEligibility),
                     _Tile(Icons.balance_outlined,         'Rent vs Buy Calculator', 'Compare renting vs buying', const Color(0xFF00838F), _HomeAction.rentVsBuy),
                   ]),
                   const SizedBox(height: 24),
@@ -70,11 +71,13 @@ class HomeScreen extends StatelessWidget {
                   // ── Legal & Documentation ───────────────────────────────
                   _section(context, 'Legal & Documentation', Icons.gavel_rounded,
                       const Color(0xFF6A1B9A), [
-                    _Tile(Icons.receipt_long_outlined, 'Stamp Duty Charges', 'Calculate stamp duty charges', const Color(0xFF1565C0), _HomeAction.stampDuty),
+                   
+                    _Tile(Icons.assignment_rounded,    'Legal Services',  'Reach out to Verified legal vendors',    const Color(0xFF6A1B9A), _HomeAction.legalServices),
                     _Tile(Icons.description_outlined,  'Rent Agreement',  'Generate rental agreement',      const Color(0xFF00838F), _HomeAction.rentAgreement),
                     _Tile(Icons.handshake_outlined,    'Sale Agreement',  'Generate sale deed agreement',   const Color(0xFF4E342E), _HomeAction.saleAgreement),
-                    _Tile(Icons.assignment_rounded,    'Legal Services',  'Find verified legal vendors',    const Color(0xFF6A1B9A), _HomeAction.legalServices),
                     _Tile(Icons.checklist_outlined,    'Property Checklist', 'Property verification checklist', const Color(0xFFE65100), _HomeAction.dueDiligence),
+                    _Tile(Icons.receipt_long_outlined, 'Stamp Duty Charges', 'Calculate stamp duty charges', const Color(0xFF1565C0), _HomeAction.stampDuty),
+                 
                   ]),
                   const SizedBox(height: 24),
 
@@ -116,11 +119,14 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Row(
               children: [
-                _heroPill(Icons.home_rounded,       'Buy/Sell',     () => onNavigate(_HomeAction.buySell)),
+                _heroPill(Icons.home_rounded,        'Buy/Sell',       () => onNavigate(_HomeAction.buySell)),
                 const SizedBox(width: 8),
-                _heroPill(Icons.apartment_rounded,  'Rent/PG',      () => onNavigate(_HomeAction.rentPg)),
+                _heroPill(Icons.apartment_rounded,   'Rent/PG',        () => onNavigate(_HomeAction.rentPg)),
                 const SizedBox(width: 8),
-                _heroPill(Icons.calculate_outlined, 'EMI Calculator', () => onNavigate(_HomeAction.emiCalculator)),
+                _heroPill(Icons.calculate_outlined,  'EMI Calc',       () => onNavigate(_HomeAction.emiCalculator)),
+                const SizedBox(width: 8),
+                _heroPill(Icons.post_add_outlined,   'Post Req.',      () => onNavigate(_HomeAction.postRequirement),
+                    highlight: true),
               ],
             ),
           ],
@@ -129,7 +135,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _heroPill(IconData icon, String label, VoidCallback onTap) {
+  Widget _heroPill(IconData icon, String label, VoidCallback onTap, {bool highlight = false}) {
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -137,9 +143,11 @@ class HomeScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: highlight ? Colors.white.withOpacity(0.30) : Colors.white.withOpacity(0.15),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.25)),
+            border: Border.all(
+                color: highlight ? Colors.white.withOpacity(0.70) : Colors.white.withOpacity(0.25),
+                width: highlight ? 1.5 : 1.0),
           ),
           child: Column(
             children: [

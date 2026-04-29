@@ -73,6 +73,26 @@ class LeadApiService {
     throw Exception('Failed to update status (${response.statusCode})');
   }
 
+  static Future<List<dynamic>> fetchUserRequirements(int userId) async {
+    final uri = Uri.parse(ApiUrls.searchLeads).replace(queryParameters: {
+      'userId': userId.toString(),
+      'leadType': 'PROPERTY_INQUIRY',
+    });
+    final response = await ApiClient.get(uri);
+    if (response.statusCode == 200) return json.decode(response.body);
+    throw Exception('Failed to load requirements (${response.statusCode})');
+  }
+
+  static Future<void> deleteLead(int leadId) async {
+    final uri = Uri.parse(
+      ApiUrls.updateBrokerLeads.replaceFirst('{leadId}', leadId.toString()),
+    );
+    final response = await ApiClient.delete(uri);
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete lead (${response.statusCode})');
+    }
+  }
+
   static Future<Map<String, dynamic>> scheduleFollowUp({
     required int leadId,
     required DateTime followUpDate,

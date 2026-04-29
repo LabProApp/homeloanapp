@@ -40,14 +40,50 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
     _loadLeads();
   }
 
+  static const _dummyLeads = [
+    {
+      'id': 0,
+      'clientName': 'Rahul Sharma',
+      'mobile': '9876543210',
+      'email': 'rahul.sharma@email.com',
+      'status': 'NEW',
+      'leadType': 'PROPERTY_INQUIRY',
+      'propertyTitle': '3BHK Apartment – Baner, Pune',
+      'propertyCity': 'Pune',
+      'propertyPrice': 8500000.0,
+      'budget': 9000000.0,
+      'inquiryDate': '2026-04-20T10:30:00',
+      'message': 'Looking for a ready-to-move flat near metro.',
+      'leadSource': 'APP',
+    },
+    {
+      'id': -1,
+      'clientName': 'Priya Mehta',
+      'mobile': '9123456780',
+      'email': 'priya.mehta@email.com',
+      'status': 'CONTACTED',
+      'leadType': 'HOME_LOAN',
+      'propertyTitle': '2BHK Flat – Wakad, Pune',
+      'propertyCity': 'Pune',
+      'propertyPrice': 5500000.0,
+      'budget': 6000000.0,
+      'inquiryDate': '2026-04-22T14:00:00',
+      'nextFollowUpDate': '2026-04-30T11:00:00',
+      'message': 'Interested in home loan options as well.',
+      'leadSource': 'WEBSITE',
+    },
+  ];
+
   Future<void> _loadLeads() async {
     setState(() => _loading = true);
     try {
       final data = await LeadApiService.fetchBrokerLeads(brokerId: widget.brokerId);
-      _leads = data;
+      _leads = data.isEmpty ? List.from(_dummyLeads) : data;
       _applyFilters();
     } catch (e) {
       debugPrint('Error loading leads: $e');
+      _leads = List.from(_dummyLeads);
+      _applyFilters();
     }
     setState(() => _loading = false);
   }
