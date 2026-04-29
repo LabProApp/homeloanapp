@@ -818,117 +818,103 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
   // ── Bottom bar ───────────────────────────────────────────────────────────────
 
+  void _openEmiSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.92,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: EmiCalculatorScreen(
+            initialAmount: widget.property.price?.toDouble(),
+            scrollController: controller,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _bottomBar() {
     final phone = widget.property.contactNumber;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       decoration: BoxDecoration(
         color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            blurRadius: 8,
-            color: Colors.black.withOpacity(0.06),
-            offset: const Offset(0, -2),
+            blurRadius: 10,
+            color: Colors.black.withOpacity(0.07),
+            offset: const Offset(0, -3),
           ),
         ],
       ),
       child: SafeArea(
         top: false,
-        child: Row(
-          children: [
-            if (isOwner) ...[
-              Expanded(
-                child: AppButton(
-                  text: 'Modify',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PostPropertyScreen(
-                        userId: widget.userId,
-                        propertyToEdit: widget.property,
-                      ),
-                    ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+          child: isOwner ? _ownerBar() : _buyerBar(phone),
+        ),
+      ),
+    );
+  }
+
+  Widget _ownerBar() => Row(
+        children: [
+          Expanded(
+            child: AppButton(
+              text: 'Modify',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PostPropertyScreen(
+                    userId: widget.userId,
+                    propertyToEdit: widget.property,
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                    side: const BorderSide(color: AppColors.error),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: _deleting ? null : _confirmDelete,
-                  child: _deleting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.error),
-                        )
-                      : const Text(
-                          'Delete',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: const BorderSide(color: AppColors.error),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-            ] else ...[
-              // EMI + Loan row (sale properties only)
-              if (!_isRent) ...[
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.calculate_outlined, size: 16),
-                    label: const Text('EMI',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
-                      padding: const EdgeInsets.symmetric(vertical: 11),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => EmiCalculatorScreen(
-                          initialAmount: widget.property.price?.toDouble(),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.account_balance_outlined, size: 16),
-                    label: const Text('Apply Loan',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.secondary,
-                      side: const BorderSide(color: AppColors.secondary),
-                      padding: const EdgeInsets.symmetric(vertical: 11),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    onPressed: () => LoanApplySheet.show(context),
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
+              onPressed: _deleting ? null : _confirmDelete,
+              child: _deleting
+                  ? const SizedBox(
+                      width: 18, height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.error))
+                  : const Text('Delete',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      );
+
+  Widget _buyerBar(String phone) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Primary: Contact buttons ───────────────────────────────────
+          Row(
+            children: [
               Expanded(
                 child: AppButton(
-                  text: 'Call',
+                  text: 'Call Owner',
                   onTap: phone.isEmpty ? null : () => AppUtils.call(phone),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.chat_rounded, size: 18),
@@ -947,7 +933,52 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 ),
               ),
             ],
+          ),
+          // ── Secondary: Quick tool chips (sale only) ────────────────────
+          if (!_isRent) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _toolChip(Icons.calculate_outlined, 'EMI Calc',
+                    AppColors.primary, _openEmiSheet),
+                const SizedBox(width: 8),
+                _toolChip(Icons.account_balance_outlined, 'Apply Loan',
+                    AppColors.secondary, () => LoanApplySheet.show(context)),
+                const SizedBox(width: 8),
+                _toolChip(Icons.checklist_outlined, 'Due Diligence',
+                    const Color(0xFF6A1B9A),
+                    () => Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => const DueDiligenceScreen()))),
+              ],
+            ),
           ],
+        ],
+      );
+
+  Widget _toolChip(IconData icon, String label, Color color, VoidCallback onTap) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withOpacity(0.25)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(height: 3),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: color,
+                      fontWeight: FontWeight.w600)),
+            ],
+          ),
         ),
       ),
     );

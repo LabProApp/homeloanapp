@@ -30,40 +30,26 @@ class _FavouritePropertyListingScreenState
   @override
   void initState() {
     super.initState();
-    _refreshFromApi();
+    _loadProperties();
   }
 
   Future<void> _loadProperties() async {
+    setState(() { _isLoading = true; _error = ""; });
     try {
-      setState(() {
-        _isLoading = true;
-        _error = "";
-      });
-
-      final service = PropertyApiService();
-
-      final data = await service.fetchFavouriteProperties(widget.userId!);
-
-      setState(() {
-        _properties = data;
-        _isLoading = false;
-      });
+      final data =
+          await PropertyApiService().fetchFavouriteProperties(widget.userId);
+      setState(() { _properties = data; _isLoading = false; });
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      setState(() { _error = e.toString(); _isLoading = false; });
     }
   }
-
-  void _refreshFromApi() => _loadProperties();
 
   Future<void> _toggleFavourite(int propertyId) async {
     await PropertyApiService.toggleFavourite(
       userId: widget.userId,
       propertyId: propertyId,
     );
-    _refreshFromApi();
+    _loadProperties();
   }
 
   @override
@@ -78,7 +64,7 @@ class _FavouritePropertyListingScreenState
       body: Column(
         children: [
           _buildSearchBar(),
-          _buildList(),
+          Expanded(child: _buildList()),
         ],
       ),
     );
@@ -90,133 +76,87 @@ class _FavouritePropertyListingScreenState
       child: AppSearchField(
         controller: _searchController,
         hintText: "Search favourite properties",
-        onSubmitted: (_) => _refreshFromApi(),
+        onSubmitted: (_) => _loadProperties(),
       ),
     );
   }
 
   Widget _buildList() {
-    return Expanded(
-      child: RefreshIndicator(
-        onRefresh: () async => _refreshFromApi(),
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _error.isNotEmpty
-            ? Center(child: Text(_error))
-            : _properties.isEmpty
-            ? const Center(
-          child: Text(
-            "No favourite properties yet",
-            style: TextStyle(fontSize: 16),
-          ),
-        )
-            : ListView.builder(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 8, vertical: 4),
-          itemCount: _properties.length,
-          itemBuilder: (context, index) {
-            final property = _properties[index];
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_error.isNotEmpty) return Center(child: Text(_error));
+    if (_properties.isEmpty) {
+      return const Center(
+        child: Text("No favourite properties yet",
+            style: TextStyle(fontSize: 16)),
+      );
+    }
 
-            return Dismissible(
-              key: ValueKey(property.id),
-              direction: DismissDirection.endToStart,
-              background: Container(
-                alignment: Alignment.centerRight,
-                padding:
-                const EdgeInsets.symmetric(horizontal: 20),
-                color: Colors.red,
-                child: const Icon(Icons.delete,
-                    color: Colors.white),
-              ),
-              confirmDismiss: (_) async {
-                return await showDialog(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text(
-                        "Remove from favourites?"),
-                    content: const Text(
-                        "Do you want to remove this property from favourites?"),
-                    actions: [
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.pop(context, false),
-                        child: const Text("Cancel"),
-                      ),
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.pop(context, true),
-                        child: const Text("Remove"),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              onDismissed: (_) async {
-                await _toggleFavourite(property.id!);
+    return RefreshIndicator(
+      onRefresh: _loadProperties,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        itemCount: _properties.length,
+        itemBuilder: (context, index) {
+          final property = _properties[index];
 
+          return Dismissible(
+            key: ValueKey(property.id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              color: Colors.red,
+              child: const Icon(Icons.delete, color: Colors.white),
+            ),
+            confirmDismiss: (_) async {
+              return await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text("Remove from favourites?"),
+                  content: const Text(
+                      "Do you want to remove this property from favourites?"),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text("Cancel"),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text("Remove"),
+                    ),
+                  ],
+                ),
+              );
+            },
+            onDismissed: (_) async {
+              await _toggleFavourite(property.id!);
+              if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content:
-                    Text("Removed from favourites"),
-                  ),
+                  const SnackBar(content: Text("Removed from favourites")),
                 );
-              },
-              child: Stack(
-                children: [
-                  InkWell(
-                    onTap: () async {
-                      final updated =
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              PropertyDetailScreen(
-                                property: property,
-                                userId: widget.userId,
-                              ),
-                        ),
-                      );
-
-                      if (updated == true) {
-                        _refreshFromApi();
-                      }
-                    },
-                    child: PropertyCard(property: property),
-                  ),
-
-                  /// ❤️ HEART REMOVE BUTTON
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: GestureDetector(
-                      onTap: () async {
-                        await _toggleFavourite(
-                            property.id!);
-
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                "Removed from favourites"),
-                          ),
-                        );
-                      },
-                      child: const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.white,
-                        child: Icon(
-                          Icons.favorite,
-                          color: Colors.red,
-                          size: 18,
-                        ),
-                      ),
+              }
+            },
+            // Pass userId so the card's heart icon toggles favourite via API
+            child: InkWell(
+              onTap: () async {
+                final updated = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PropertyDetailScreen(
+                      property: property,
+                      userId: widget.userId,
                     ),
                   ),
-                ],
+                );
+                if (updated == true) _loadProperties();
+              },
+              child: PropertyCard(
+                property: property,
+                userId: widget.userId,
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

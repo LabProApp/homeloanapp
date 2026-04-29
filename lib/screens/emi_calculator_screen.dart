@@ -12,8 +12,9 @@ import '../commons/common_widget.dart';
 
 class EmiCalculatorScreen extends StatefulWidget {
   final double? initialAmount;
+  final ScrollController? scrollController;
 
-  const EmiCalculatorScreen({super.key, this.initialAmount});
+  const EmiCalculatorScreen({super.key, this.initialAmount, this.scrollController});
 
   @override
   State<EmiCalculatorScreen> createState() => _EmiCalculatorScreenState();
@@ -107,30 +108,54 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final isSheet = widget.scrollController != null;
+
+    final content = SingleChildScrollView(
+      controller: widget.scrollController,
+      padding: EdgeInsets.fromLTRB(16, isSheet ? 0 : 16, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isSheet) ...[
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(top: 12, bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ],
+          Text('EMI Calculator',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          _formCard(),
+          const SizedBox(height: 20),
+          if (response != null) ...[
+            _resultCard(),
+            const SizedBox(height: 16),
+            _pieSection(),
+            const SizedBox(height: 16),
+            _lineSection(),
+            const SizedBox(height: 24),
+          ],
+        ],
+      ),
+    );
+
+    if (isSheet) {
+      return Container(
+        color: AppColors.listingbackground,
+        child: content,
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('EMI Calculator',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 12),
-            _formCard(),
-            const SizedBox(height: 20),
-            if (response != null) ...[
-              _resultCard(),
-              const SizedBox(height: 16),
-              _pieSection(),
-              const SizedBox(height: 16),
-              _lineSection(),
-              const SizedBox(height: 24),
-            ],
-          ],
-        ),
-      ),
+      body: content,
     );
   }
 
