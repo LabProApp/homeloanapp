@@ -5,9 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../theme/app_colors.dart';
-import '../models/calc_loan_request.dart';
-import '../models/calc_loan_response.dart';
-import '../services/emi_service.dart';
 import '../commons/common_widget.dart';
 import '../utility/money_input_formatter.dart';
 
@@ -28,13 +25,15 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   final interestCtrl  = TextEditingController();
   final tenureCtrl    = TextEditingController();
 
-  bool loading = false;
-  CalcLoanResponse? response;
+  bool _hasResult = false;
 
-  double _calcPrincipal   = 0;
-  double _calcRate        = 0;
-  int    _calcTenure      = 0;
-  int    _touchedPieIndex = -1;
+  double _calcPrincipal    = 0;
+  double _calcRate         = 0;
+  int    _calcTenure       = 0;
+  double _emi              = 0;
+  double _totalInterest    = 0;
+  double _totalPayment     = 0;
+  int    _touchedPieIndex  = -1;
 
   static final _fmt = NumberFormat('#,##,###');
 
@@ -54,7 +53,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     principalCtrl.clear();
     interestCtrl.clear();
     tenureCtrl.clear();
-    setState(() { response = null; loading = false; });
+    setState(() => _hasResult = false);
   }
 
   @override
@@ -65,37 +64,36 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     super.dispose();
   }
 
-  Future<void> _calculateEmi() async {
+  void _calculateEmi() {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => loading = true);
-    try {
-      _calcPrincipal = MoneyInputFormatter.parse(principalCtrl.text) ?? 0;
-      _calcRate      = double.parse(interestCtrl.text);
-      _calcTenure    = int.parse(tenureCtrl.text);
+    FocusScope.of(context).unfocus();
 
-      final request = CalcLoanRequest(
-        principal: _calcPrincipal,
-        annualInterestRate: _calcRate,
-        tenureYears: _calcTenure,
-        includeSchedule: false,
-      );
-      final res = await LoanApiService.calculateLoan(request);
-      setState(() => response = res);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Calculation failed')),
-        );
-      }
-    } finally {
-      setState(() => loading = false);
-    }
+    final p = MoneyInputFormatter.parse(principalCtrl.text) ?? 0;
+    final annualRate = double.tryParse(interestCtrl.text) ?? 0;
+    final years      = int.tryParse(tenureCtrl.text) ?? 0;
+    final n          = years * 12;
+    final r          = annualRate / 12 / 100;
+
+    final emi = r == 0
+        ? p / n
+        : p * r * pow(1 + r, n) / (pow(1 + r, n) - 1);
+
+    setState(() {
+      _calcPrincipal = p;
+      _calcRate      = annualRate;
+      _calcTenure    = years;
+      _emi           = emi;
+      _totalPayment  = emi * n;
+      _totalInterest = emi * n - p;
+      _hasResult     = true;
+      _touchedPieIndex = -1;
+    });
   }
 
   // ── Amortization: balance remaining at end of each year ────────────────────
   List<FlSpot> _balanceSpots() {
     final r   = _calcRate / 12 / 100;
-    final emi = response!.monthlyPayment;
+    final emi = _emi;
     return List.generate(_calcTenure + 1, (y) {
       final n       = y * 12;
       final factor  = pow(1 + r, n).toDouble();
@@ -136,7 +134,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
           const SizedBox(height: 12),
           _formCard(),
           const SizedBox(height: 20),
-          if (response != null) ...[
+          if (_hasResult) ...[
             _resultCard(),
             const SizedBox(height: 16),
             _pieSection(),
@@ -191,7 +189,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
               return null;
             }),
             const SizedBox(height: 14),
-            AppButton(text: 'Calculate EMI', isLoading: loading, onTap: _calculateEmi),
+            AppButton(text: 'Calculate EMI', onTap: _calculateEmi),
           ]),
         ),
       ),
@@ -224,7 +222,6 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
 
   // ── Result card ───────────────────────────────────────────────────────────
   Widget _resultCard() {
-    final r = response!;
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -241,16 +238,16 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
               const Text('Monthly EMI',
                   style: TextStyle(color: AppColors.white70, fontSize: 13)),
               const SizedBox(height: 4),
-              Text('₹ ${_fmt.format(r.monthlyPayment.toInt())}',
+              Text('₹ ${_fmt.format(_emi.toInt())}',
                   style: const TextStyle(
                       color: AppColors.white, fontSize: 26, fontWeight: FontWeight.w700)),
             ]),
           ),
           const SizedBox(height: 16),
           _row('Principal Amount', '₹ ${_fmt.format(_calcPrincipal.toInt())}'),
-          _row('Total Interest',   '₹ ${_fmt.format(r.totalInterest.toInt())}'),
+          _row('Total Interest',   '₹ ${_fmt.format(_totalInterest.toInt())}'),
           const Divider(height: 16),
-          _row('Total Payment',    '₹ ${_fmt.format(r.totalPayment.toInt())}', bold: true),
+          _row('Total Payment',    '₹ ${_fmt.format(_totalPayment.toInt())}', bold: true),
         ]),
       ),
     );
@@ -278,7 +275,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   // ── Pie chart — principal vs interest ─────────────────────────────────────
   Widget _pieSection() {
     final principal = _calcPrincipal;
-    final interest  = response!.totalInterest;
+    final interest  = _totalInterest;
     final total     = principal + interest;
     final pPct = total > 0 ? (principal / total * 100).toStringAsFixed(1) : '0';
     final iPct = total > 0 ? (interest  / total * 100).toStringAsFixed(1) : '0';
@@ -361,7 +358,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                     label: 'Principal  ₹ ${_fmt.format(_calcPrincipal.toInt())}'),
                 const SizedBox(width: 20),
                 _Legend(color: AppColors.error,
-                    label: 'Interest  ₹ ${_fmt.format(response!.totalInterest.toInt())}'),
+                    label: 'Interest  ₹ ${_fmt.format(_totalInterest.toInt())}'),
               ],
             ),
           ],
@@ -478,7 +475,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   // ── Annual breakdown bar chart ────────────────────────────────────────────
   Widget _barSection() {
     final r   = _calcRate / 12 / 100;
-    final emi = response!.monthlyPayment;
+    final emi = _emi;
     double balance = _calcPrincipal;
     double maxTotal = 0;
     final groups = <BarChartGroupData>[];
