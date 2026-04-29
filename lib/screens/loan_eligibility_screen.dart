@@ -91,9 +91,8 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('Loan Eligibility Check'),
-        foregroundColor: AppColors.white,
+      appBar: GradientAppBar(
+        title: 'Loan Eligibility Check',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

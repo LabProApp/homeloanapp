@@ -91,9 +91,8 @@ class _BankPageState extends State<BankPage> {
 
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('Home Loans & Banks'),
-        foregroundColor: Colors.white,
+      appBar: GradientAppBar(
+        title: 'Home Loans & Banks',
         actions: [
           IconButton(
             icon: const Icon(Icons.checklist_outlined),

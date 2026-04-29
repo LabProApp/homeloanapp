@@ -21,6 +21,7 @@ import 'bank_apply_loan_dialog.dart';
 import 'post_requirement_screen.dart';
 
 import '../theme/app_colors.dart';
+import '../commons/common_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   final int userId;
@@ -182,8 +183,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: AppColors.listingbackground,
 
       // ── AppBar ────────────────────────────────────────────────────────────
-      appBar: AppBar(
-        title: const Text(
+      appBar: GradientAppBar(
+        titleWidget: const Text(
           'KeyBricks',
           style: TextStyle(
             fontSize: 22,

@@ -90,10 +90,7 @@ class _StampDutyScreenState extends State<StampDutyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('Stamp Duty Calculator'),
-        foregroundColor: AppColors.white,
-      ),
+      appBar: GradientAppBar(title: 'Stamp Duty Calculator'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

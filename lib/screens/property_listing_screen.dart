@@ -294,9 +294,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text("Sale : Residential & Commercial"),
-      ),
+      appBar: GradientAppBar(title: 'Sale : Residential & Commercial'),
       body: Column(
         children: [
           _buildSearchBar(),

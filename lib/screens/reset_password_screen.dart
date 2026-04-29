@@ -92,9 +92,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Set New Password'),
-      ),
+      appBar: GradientAppBar(title: 'Set New Password'),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(

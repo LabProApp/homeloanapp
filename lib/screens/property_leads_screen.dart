@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../services/leads_service.dart';
 import '../commons/common_util.dart';
+import '../commons/common_widget.dart';
 
 /// Shows all users who have expressed interest in a specific property.
 /// Navigate to this from the property detail screen.
@@ -72,8 +73,8 @@ class _PropertyLeadsScreenState extends State<PropertyLeadsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: Column(
+      appBar: GradientAppBar(
+        titleWidget: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Interested Buyers'),

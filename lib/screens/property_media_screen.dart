@@ -284,8 +284,8 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
     final hasMedia = _mediaList.isNotEmpty;
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: Column(
+      appBar: GradientAppBar(
+        titleWidget: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Property Photos'),

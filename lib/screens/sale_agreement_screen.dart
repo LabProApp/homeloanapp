@@ -113,9 +113,8 @@ class _SaleAgreementScreenState extends State<SaleAgreementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('Sale Agreement / Beana'),
-        foregroundColor: AppColors.white,
+      appBar: GradientAppBar(
+        title: 'Sale Agreement / Beana',
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(
@@ -391,9 +390,8 @@ class _SaleAgreementPreviewState extends State<SaleAgreementPreviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('Agreement Preview'),
-        foregroundColor: AppColors.white,
+      appBar: GradientAppBar(
+        title: 'Agreement Preview',
         actions: [
           IconButton(icon: const Icon(Icons.print_outlined), onPressed: _print, tooltip: 'Print'),
         ],

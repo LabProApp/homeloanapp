@@ -202,9 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildScaffold({required Widget child}) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('My Profile'),
-      ),
+      appBar: GradientAppBar(title: 'My Profile'),
       body: child,
     );
   }

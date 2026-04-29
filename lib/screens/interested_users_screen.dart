@@ -567,8 +567,8 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: Column(
+      appBar: GradientAppBar(
+        titleWidget: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Customer Inquiries'),

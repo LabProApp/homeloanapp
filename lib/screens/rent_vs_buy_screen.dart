@@ -154,10 +154,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('Rent vs Buy Calculator'),
-        foregroundColor: AppColors.white,
-      ),
+      appBar: GradientAppBar(title: 'Rent vs Buy Calculator'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

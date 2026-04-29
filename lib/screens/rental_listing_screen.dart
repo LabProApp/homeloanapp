@@ -307,9 +307,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text("Leasing : Commercial, Rental & PG"),
-      ),
+      appBar: GradientAppBar(title: 'Leasing : Commercial, Rental & PG'),
       body: Column(
         children: [
           _buildSearchBar(),

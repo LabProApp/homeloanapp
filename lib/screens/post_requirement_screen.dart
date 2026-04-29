@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
+import '../commons/common_widget.dart';
 import '../services/leads_service.dart';
 import '../models/client_lead_model.dart';
 import '../utility/money_input_formatter.dart';
@@ -87,8 +88,8 @@ class _PostRequirementScreenState extends State<PostRequirementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: Column(
+      appBar: GradientAppBar(
+        titleWidget: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('My Requirements'),
@@ -432,7 +433,7 @@ class _RequirementFormScreenState extends State<_RequirementFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(title: Text(isEdit ? 'Edit Requirement' : 'Post Requirement')),
+      appBar: GradientAppBar(title: isEdit ? 'Edit Requirement' : 'Post Requirement'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

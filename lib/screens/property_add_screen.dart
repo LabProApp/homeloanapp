@@ -756,8 +756,8 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
         propertyTypes.contains(propertyType) ? propertyType : propertyTypes.first;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.propertyToEdit != null ? 'Edit Property' : 'Post Property'),
+      appBar: GradientAppBar(
+        title: widget.propertyToEdit != null ? 'Edit Property' : 'Post Property',
       ),
       body: Form(
         key: _formKey,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../commons/common_widget.dart';
 
 class DueDiligenceScreen extends StatefulWidget {
   const DueDiligenceScreen({super.key});
@@ -122,9 +123,8 @@ class _DueDiligenceScreenState extends State<DueDiligenceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('Property Due Diligence'),
-        foregroundColor: AppColors.white,
+      appBar: GradientAppBar(
+        title: 'Property Due Diligence',
       ),
       body: Column(children: [
         _progressHeader(),

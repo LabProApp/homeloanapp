@@ -69,11 +69,11 @@ class MyApp extends StatelessWidget {
 
       // ── AppBar ─────────────────────────────────────────────────────────────
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.primary,  // fallback; GradientAppBar overrides with transparent
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
-        toolbarHeight: 48,
+        toolbarHeight: 56,
         titleTextStyle: TextStyle(
           fontFamily: font,
           fontSize: 18,

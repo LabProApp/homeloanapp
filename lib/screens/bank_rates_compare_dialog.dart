@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import '../models/bank_model.dart';
 import '../theme/app_colors.dart';
+import '../commons/common_widget.dart';
 import 'package:intl/intl.dart';
 
 class BankCompareDialog extends StatefulWidget {
@@ -55,9 +56,8 @@ class _BankCompareDialogState extends State<BankCompareDialog> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bank Comparison'),
-        foregroundColor: Colors.white,
+      appBar: GradientAppBar(
+        title: 'Bank Comparison',
       ),
       body: Column(
         children: [

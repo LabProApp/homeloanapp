@@ -151,9 +151,8 @@ class _RentAgreementScreenState extends State<RentAgreementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('Rent Agreement'),
-        foregroundColor: AppColors.white,
+      appBar: GradientAppBar(
+        title: 'Rent Agreement',
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(
@@ -559,9 +558,8 @@ class _RentAgreementPreviewScreenState extends State<RentAgreementPreviewScreen>
     final d = widget.data;
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('Agreement Preview'),
-        foregroundColor: AppColors.white,
+      appBar: GradientAppBar(
+        title: 'Agreement Preview',
         actions: [
           IconButton(
             icon: const Icon(Icons.print_outlined),

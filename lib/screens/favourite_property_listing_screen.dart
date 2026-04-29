@@ -56,10 +56,8 @@ class _FavouritePropertyListingScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text("My Favourites"),
-        foregroundColor: Colors.white,
-        backgroundColor: AppColors.primary,
+      appBar: GradientAppBar(
+        title: 'My Favourites',
       ),
       body: Column(
         children: [

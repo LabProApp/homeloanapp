@@ -129,3 +129,49 @@ class AppButton extends StatelessWidget {
     );
   }
 }
+
+/// Gradient app bar — primary→secondary left-to-right.
+/// Drop-in replacement for [AppBar]; pass [title] for a plain text title
+/// or [titleWidget] for a custom title widget.
+class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String? title;
+  final Widget? titleWidget;
+  final List<Widget>? actions;
+  final Widget? leading;
+  final PreferredSizeWidget? bottom;
+  final bool centerTitle;
+  final bool automaticallyImplyLeading;
+
+  const GradientAppBar({
+    super.key,
+    this.title,
+    this.titleWidget,
+    this.actions,
+    this.leading,
+    this.bottom,
+    this.centerTitle = false,
+    this.automaticallyImplyLeading = true,
+  });
+
+  @override
+  Size get preferredSize => Size.fromHeight(
+      kToolbarHeight + (bottom?.preferredSize.height ?? 0));
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: titleWidget ?? (title != null ? Text(title!) : null),
+      actions: actions,
+      leading: leading,
+      bottom: bottom,
+      centerTitle: centerTitle,
+      automaticallyImplyLeading: automaticallyImplyLeading,
+      backgroundColor: Colors.transparent,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+      ),
+    );
+  }
+}

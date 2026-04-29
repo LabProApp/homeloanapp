@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../commons/common_widget.dart';
 
 class LoanDocsChecklistScreen extends StatefulWidget {
   const LoanDocsChecklistScreen({super.key});
@@ -117,9 +118,8 @@ class _LoanDocsChecklistScreenState extends State<LoanDocsChecklistScreen>
 
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: AppBar(
-        title: const Text('Loan Document Checklist'),
-        foregroundColor: AppColors.white,
+      appBar: GradientAppBar(
+        title: 'Loan Document Checklist',
         bottom: TabBar(
           controller: _tab,
           indicatorColor: AppColors.white,

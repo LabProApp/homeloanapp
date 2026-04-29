@@ -289,8 +289,8 @@ class _LegalServicePageState extends State<LegalServicePage> {
           ),
         ],
       ),
-      appBar: AppBar(
-        title: const Text("Legal & Documentation"),
+      appBar: GradientAppBar(
+        title: 'Legal & Documentation',
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),

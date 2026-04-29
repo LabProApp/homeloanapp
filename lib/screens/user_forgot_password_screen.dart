@@ -89,9 +89,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Forgot Password'),
-      ),
+      appBar: GradientAppBar(title: 'Forgot Password'),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(

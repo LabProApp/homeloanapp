@@ -129,8 +129,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
     final canResend = _countdown == 0 && !_resending;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verify Code'),
+      appBar: GradientAppBar(
+        title: 'Verify Code',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
