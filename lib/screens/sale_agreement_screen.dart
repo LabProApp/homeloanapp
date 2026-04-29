@@ -413,30 +413,33 @@ class _SaleAgreementPreviewState extends State<SaleAgreementPreviewScreen> {
           const SizedBox(height: 80),
         ]),
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, -2))],
-        ),
-        child: SafeArea(top: false, child: Row(children: [
-          OutlinedButton.icon(
-            icon: const Icon(Icons.share_outlined, size: 18),
-            label: const Text('Share'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: _downloading ? null : _downloadPdf,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, -2))],
           ),
-          const SizedBox(width: 10),
-          Expanded(child: AppButton(
-            text: _downloading ? 'Generating...' : 'Download PDF',
-            onTap: _downloading ? null : _downloadPdf,
-          )),
-        ])),
+          child: Row(children: [
+            OutlinedButton.icon(
+              icon: const Icon(Icons.share_outlined, size: 18),
+              label: const Text('Share'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: _downloading ? null : _downloadPdf,
+            ),
+            const SizedBox(width: 10),
+            Expanded(child: AppButton(
+              text: _downloading ? 'Generating...' : 'Download PDF',
+              onTap: _downloading ? null : _downloadPdf,
+            )),
+          ]),
+        ),
       ),
     );
   }

@@ -88,20 +88,6 @@ class _PostRequirementScreenState extends State<PostRequirementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
-      appBar: GradientAppBar(
-        titleWidget: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('My Requirements'),
-            if (!_loading)
-              Text('${_requirements.length} posted',
-                  style: const TextStyle(fontSize: 12, color: AppColors.white70, fontWeight: FontWeight.w400)),
-          ],
-        ),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh_outlined), onPressed: _load),
-        ],
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final posted = await Navigator.push<bool>(
