@@ -360,7 +360,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(width: 60), // space for FAB
               _navItem(Icons.account_balance_wallet_outlined,
                   Icons.account_balance_wallet_rounded, 'Loans', 2),
-              _navItem(Icons.assignment_outlined, Icons.assignment_rounded, 'Docs', 3),
+              _navItem(Icons.assignment_outlined, Icons.assignment_rounded, 'Documentation', 3),
             ],
           ),
         ),
