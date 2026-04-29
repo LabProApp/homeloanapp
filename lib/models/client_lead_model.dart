@@ -55,6 +55,9 @@ class ClientLeadModel {
   final bool? contacted;
   final String? status;
 
+  // Structured preference data (e.g. "Looking To: Buy | Beds: 3 | Baths: 2")
+  final String? specifications;
+
   // Enriched display fields (read-only from API)
   final String? ownerName;
   final String? ownerMobile;
@@ -102,6 +105,7 @@ class ClientLeadModel {
     this.expectedPurchaseDate,
     this.contacted,
     this.status,
+    this.specifications,
     this.ownerName,
     this.ownerMobile,
     this.ownerEmail,
@@ -150,6 +154,7 @@ class ClientLeadModel {
       expectedPurchaseDate: json['expectedPurchaseDate'],
       contacted: json['contacted'],
       status: json['status'],
+      specifications: json['specifications'],
       ownerName: json['ownerName'],
       ownerMobile: json['ownerMobile'],
       ownerEmail: json['ownerEmail'],
@@ -194,6 +199,7 @@ class ClientLeadModel {
       if (status != null) 'status': status,
       if (nextFollowUpDate != null) 'nextFollowUpDate': nextFollowUpDate,
       if (expectedPurchaseDate != null) 'expectedPurchaseDate': expectedPurchaseDate,
+      if (specifications != null) 'specifications': specifications,
     };
   }
 }
