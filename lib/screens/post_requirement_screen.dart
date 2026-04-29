@@ -86,47 +86,56 @@ class _PostRequirementScreenState extends State<PostRequirementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.listingbackground,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final posted = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(builder: (_) => _RequirementFormScreen(userId: widget.userId)),
-          );
-          if (posted == true) _load();
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Post Requirement'),
-        backgroundColor: AppColors.primary,
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _requirements.isEmpty
-              ? _emptyState()
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
-                    itemCount: _requirements.length,
-                    itemBuilder: (_, i) => _RequirementCard(
-                      req: _requirements[i],
-                      onEdit: () async {
-                        final updated = await Navigator.push<bool>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => _RequirementFormScreen(
-                              userId: widget.userId,
-                              existing: _requirements[i],
-                            ),
+    final body = _loading
+        ? const Center(child: CircularProgressIndicator())
+        : _requirements.isEmpty
+            ? _emptyState()
+            : RefreshIndicator(
+                onRefresh: _load,
+                child: ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
+                  itemCount: _requirements.length,
+                  itemBuilder: (_, i) => _RequirementCard(
+                    req: _requirements[i],
+                    onEdit: () async {
+                      final updated = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => _RequirementFormScreen(
+                            userId: widget.userId,
+                            existing: _requirements[i],
                           ),
-                        );
-                        if (updated == true) _load();
-                      },
-                      onDelete: () => _delete(_requirements[i]['id'] as int),
-                    ),
+                        ),
+                      );
+                      if (updated == true) _load();
+                    },
+                    onDelete: () => _delete(_requirements[i]['id'] as int),
                   ),
                 ),
+              );
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ColoredBox(color: AppColors.listingbackground, child: body),
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: FloatingActionButton.extended(
+            heroTag: 'postReqFab',
+            onPressed: () async {
+              final posted = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (_) => _RequirementFormScreen(userId: widget.userId)),
+              );
+              if (posted == true) _load();
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Post Requirement'),
+            backgroundColor: AppColors.primary,
+          ),
+        ),
+      ],
     );
   }
 
