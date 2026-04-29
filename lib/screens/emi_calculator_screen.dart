@@ -9,6 +9,7 @@ import '../models/calc_loan_request.dart';
 import '../models/calc_loan_response.dart';
 import '../services/emi_service.dart';
 import '../commons/common_widget.dart';
+import '../utility/money_input_formatter.dart';
 
 class EmiCalculatorScreen extends StatefulWidget {
   final double? initialAmount;
@@ -42,7 +43,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _resetForm();
       if (widget.initialAmount != null) {
-        principalCtrl.text = widget.initialAmount!.toInt().toString();
+        principalCtrl.text = MoneyInputFormatter.format(widget.initialAmount!);
       }
     });
   }
@@ -67,7 +68,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => loading = true);
     try {
-      _calcPrincipal = double.parse(principalCtrl.text);
+      _calcPrincipal = MoneyInputFormatter.parse(principalCtrl.text) ?? 0;
       _calcRate      = double.parse(interestCtrl.text);
       _calcTenure    = int.parse(tenureCtrl.text);
 
@@ -168,7 +169,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
         child: Form(
           key: _formKey,
           child: Column(children: [
-            _field('Loan Amount (₹)', principalCtrl),
+            _field('Loan Amount (₹)', principalCtrl, isMoney: true),
             _field('Interest Rate (%)', interestCtrl),
             _field('Tenure (Years)', tenureCtrl),
             const SizedBox(height: 14),
@@ -179,12 +180,13 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     );
   }
 
-  Widget _field(String label, TextEditingController ctrl) {
+  Widget _field(String label, TextEditingController ctrl, {bool isMoney = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextFormField(
         controller: ctrl,
         keyboardType: TextInputType.number,
+        inputFormatters: isMoney ? [MoneyInputFormatter()] : null,
         validator: (v) => v == null || v.isEmpty ? 'Required' : null,
         decoration: InputDecoration(
           labelText: label,

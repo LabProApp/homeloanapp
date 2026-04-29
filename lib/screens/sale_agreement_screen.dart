@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../utility/money_input_formatter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
@@ -92,8 +93,8 @@ class _SaleAgreementScreenState extends State<SaleAgreementScreen> {
     buyerIdType: _buyerIdType,
     buyerIdNo: _buyerIdNoCtrl.text.trim(),
     buyerPhone: _buyerPhoneCtrl.text.trim(),
-    saleConsideration: int.tryParse(_priceCtrl.text.trim()) ?? 0,
-    tokenAmount: int.tryParse(_tokenCtrl.text.trim()) ?? 0,
+    saleConsideration: MoneyInputFormatter.parseInt(_priceCtrl.text) ?? 0,
+    tokenAmount: MoneyInputFormatter.parseInt(_tokenCtrl.text) ?? 0,
     tokenDate: _tokenDate,
     balanceDate: _balanceDate,
     possessionDate: _possessionDate,
@@ -195,8 +196,8 @@ class _SaleAgreementScreenState extends State<SaleAgreementScreen> {
   ]);
 
   Widget _stepFinancial() => _card([
-    _field(_priceCtrl, 'Total Sale Price (₹)', required: true, keyboard: TextInputType.number),
-    _field(_tokenCtrl, 'Token / Advance (Beana) Amount (₹)', required: true, keyboard: TextInputType.number),
+    _field(_priceCtrl, 'Total Sale Price (₹)', required: true, keyboard: TextInputType.number, isMoney: true),
+    _field(_tokenCtrl, 'Token / Advance (Beana) Amount (₹)', required: true, keyboard: TextInputType.number, isMoney: true),
     _dropdown('Payment Mode', _payModes, _paymentMode, (v) => setState(() => _paymentMode = v!)),
     _datePicker('Token Date', _tokenDate, (d) => setState(() => _tokenDate = d)),
     _datePicker('Balance Payment Due By', _balanceDate, (d) => setState(() => _balanceDate = d)),
@@ -210,8 +211,8 @@ class _SaleAgreementScreenState extends State<SaleAgreementScreen> {
           const Text('Balance Payable', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
           Text(
             () {
-              final price = int.tryParse(_priceCtrl.text.trim()) ?? 0;
-              final token = int.tryParse(_tokenCtrl.text.trim()) ?? 0;
+              final price = MoneyInputFormatter.parseInt(_priceCtrl.text) ?? 0;
+              final token = MoneyInputFormatter.parseInt(_tokenCtrl.text) ?? 0;
               return '₹ ${NumberFormat('#,##,###').format(price - token)}';
             }(),
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary),
@@ -295,9 +296,10 @@ class _SaleAgreementScreenState extends State<SaleAgreementScreen> {
   );
 
   Widget _field(TextEditingController ctrl, String label,
-      {bool required = false, int maxLines = 1, TextInputType? keyboard}) =>
+      {bool required = false, int maxLines = 1, TextInputType? keyboard, bool isMoney = false}) =>
     TextFormField(
       controller: ctrl, maxLines: maxLines, keyboardType: keyboard,
+      inputFormatters: isMoney ? [MoneyInputFormatter()] : null,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),

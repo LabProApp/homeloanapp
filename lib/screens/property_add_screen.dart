@@ -1,10 +1,12 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/property_model.dart';
 import '../services/property_api_service.dart';
 import '../services/state_api_service.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
+import '../utility/money_input_formatter.dart';
 import 'property_media_screen.dart';
 
 class PostPropertyScreen extends StatefulWidget {
@@ -134,8 +136,8 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     final isEditRent = p.rentOrSale?.toUpperCase() == 'RENT';
     _titleCtrl.text = p.title ?? '';
     _descCtrl.text = p.description ?? '';
-    _priceCtrl.text = (isEditRent ? p.monthlyRent : p.price)?.toString() ?? '';
-    _depositCtrl.text = p.securityDeposit?.toString() ?? '';
+    _priceCtrl.text   = (isEditRent ? p.monthlyRent : p.price) != null ? MoneyInputFormatter.format((isEditRent ? p.monthlyRent : p.price)!) : '';
+    _depositCtrl.text = p.securityDeposit != null ? MoneyInputFormatter.format(p.securityDeposit!) : '';
     _superAreaCtrl.text = p.superArea?.toString() ?? '';
     _carpetAreaCtrl.text = p.carpetArea?.toString() ?? '';
     _addressCtrl.text = p.address ?? '';
@@ -356,7 +358,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
 
     setState(() => _submitting = true);
 
-    final price = double.tryParse(_priceCtrl.text.trim());
+    final price = MoneyInputFormatter.parse(_priceCtrl.text);
 
     final property = PropertyModel(
       id: widget.propertyToEdit?.id,
@@ -364,7 +366,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
       price: _isRent ? null : price,
       monthlyRent: _isRent ? price : null,
-      securityDeposit: _isRent ? double.tryParse(_depositCtrl.text.trim()) : null,
+      securityDeposit: _isRent ? MoneyInputFormatter.parse(_depositCtrl.text) : null,
       superArea: double.tryParse(_superAreaCtrl.text.trim()),
       carpetArea: double.tryParse(_carpetAreaCtrl.text.trim()),
       address: _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
@@ -501,6 +503,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     int maxLines = 1,
     TextInputType keyboard = TextInputType.text,
     String? hint,
+    List<TextInputFormatter>? formatters,
     String? Function(String?)? validator,
   }) {
     return Padding(
@@ -509,6 +512,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboard,
+        inputFormatters: formatters,
         style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
         decoration: _inputDeco(label, required: required, hint: hint),
         validator: validator,
@@ -859,11 +863,12 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                     label: _isRent ? 'Monthly Rent (₹)' : 'Price (₹)',
                     required: true,
                     keyboard: TextInputType.number,
+                    formatters: [MoneyInputFormatter()],
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
                         return _isRent ? 'Monthly rent is required' : 'Price is required';
                       }
-                      final n = double.tryParse(v.trim());
+                      final n = MoneyInputFormatter.parse(v);
                       if (n == null) return 'Enter a valid amount';
                       if (n <= 0) return 'Amount must be greater than zero';
                       return null;
@@ -874,9 +879,10 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                       controller: _depositCtrl,
                       label: 'Security Deposit (₹)',
                       keyboard: TextInputType.number,
+                      formatters: [MoneyInputFormatter()],
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return null;
-                        final n = double.tryParse(v.trim());
+                        final n = MoneyInputFormatter.parse(v);
                         if (n == null) return 'Enter a valid amount';
                         if (n < 0) return 'Amount cannot be negative';
                         return null;

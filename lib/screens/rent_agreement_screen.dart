@@ -1,6 +1,7 @@
 ﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../utility/money_input_formatter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -124,9 +125,9 @@ class _RentAgreementScreenState extends State<RentAgreementScreen> {
       tenantIdType: _tenantIdType,
       tenantIdNo: _tenantIdNoCtrl.text.trim(),
       tenantPhone: _tenantPhoneCtrl.text.trim(),
-      monthlyRent: int.tryParse(_rentCtrl.text.trim()) ?? 0,
-      securityDeposit: int.tryParse(_depositCtrl.text.trim()) ?? 0,
-      maintenance: int.tryParse(_maintenanceCtrl.text.trim()) ?? 0,
+      monthlyRent: MoneyInputFormatter.parseInt(_rentCtrl.text) ?? 0,
+      securityDeposit: MoneyInputFormatter.parseInt(_depositCtrl.text) ?? 0,
+      maintenance: MoneyInputFormatter.parseInt(_maintenanceCtrl.text) ?? 0,
       durationMonths: _durationMonths,
       noticePeriod: _noticePeriod,
       lockIn: _lockIn,
@@ -267,9 +268,9 @@ class _RentAgreementScreenState extends State<RentAgreementScreen> {
 
   Widget _stepFinancial() {
     return _card([
-      _field(_rentCtrl, 'Monthly Rent (₹)', required: true, keyboard: TextInputType.number),
-      _field(_depositCtrl, 'Security Deposit (₹)', required: true, keyboard: TextInputType.number),
-      _field(_maintenanceCtrl, 'Maintenance Charges (₹/month)', keyboard: TextInputType.number),
+      _field(_rentCtrl, 'Monthly Rent (₹)', required: true, keyboard: TextInputType.number, isMoney: true),
+      _field(_depositCtrl, 'Security Deposit (₹)', required: true, keyboard: TextInputType.number, isMoney: true),
+      _field(_maintenanceCtrl, 'Maintenance Charges (₹/month)', keyboard: TextInputType.number, isMoney: true),
       _dropdown('Rent Due Day', _rentDays, _rentDay, (v) => setState(() => _rentDay = v!)),
       _stepper('Duration (months)', _durationMonths, 1, 60, (v) => setState(() => _durationMonths = v)),
       _stepper('Lock-in Period (months)', _lockIn, 0, 12, (v) => setState(() => _lockIn = v)),
@@ -414,11 +415,12 @@ class _RentAgreementScreenState extends State<RentAgreementScreen> {
   }
 
   Widget _field(TextEditingController ctrl, String label,
-      {bool required = false, int maxLines = 1, TextInputType? keyboard}) {
+      {bool required = false, int maxLines = 1, TextInputType? keyboard, bool isMoney = false}) {
     return TextFormField(
       controller: ctrl,
       maxLines: maxLines,
       keyboardType: keyboard,
+      inputFormatters: isMoney ? [MoneyInputFormatter()] : null,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),

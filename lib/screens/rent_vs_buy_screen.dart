@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
+import '../utility/money_input_formatter.dart';
 
 class RentVsBuyScreen extends StatefulWidget {
   final double? initialPropertyPrice;
@@ -39,8 +39,8 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen>
     super.initState();
     _tab = TabController(length: 2, vsync: this);
     if (widget.initialPropertyPrice != null) {
-      _propPriceCtrl.text = widget.initialPropertyPrice!.toInt().toString();
-      _downPaymentCtrl.text = (widget.initialPropertyPrice! * 0.2).toInt().toString();
+      _propPriceCtrl.text   = MoneyInputFormatter.format(widget.initialPropertyPrice!);
+      _downPaymentCtrl.text = MoneyInputFormatter.format(widget.initialPropertyPrice! * 0.2);
     }
   }
 
@@ -58,10 +58,10 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen>
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
 
-    final propPrice     = double.parse(_propPriceCtrl.text.trim());
-    final downPayment   = double.parse(_downPaymentCtrl.text.trim());
-    final monthlyRent   = double.parse(_monthlyRentCtrl.text.trim());
-    final initSavings   = double.tryParse(_currentSavingsCtrl.text.trim()) ?? 0;
+    final propPrice   = MoneyInputFormatter.parse(_propPriceCtrl.text) ?? 0;
+    final downPayment = MoneyInputFormatter.parse(_downPaymentCtrl.text) ?? 0;
+    final monthlyRent = MoneyInputFormatter.parse(_monthlyRentCtrl.text) ?? 0;
+    final initSavings = MoneyInputFormatter.parse(_currentSavingsCtrl.text) ?? 0;
 
     final loanAmount    = propPrice - downPayment;
     final n             = (_tenureYears * 12).toInt();
@@ -255,7 +255,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen>
     return TextFormField(
       controller: ctrl,
       keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      inputFormatters: [MoneyInputFormatter()],
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,

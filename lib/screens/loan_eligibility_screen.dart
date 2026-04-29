@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
+import '../utility/money_input_formatter.dart';
 
 class LoanEligibilityScreen extends StatefulWidget {
   const LoanEligibilityScreen({super.key});
@@ -37,9 +37,9 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
 
-    final salary      = double.parse(_salaryCtrl.text.trim());
-    final existingEmi = double.tryParse(_existingEmiCtrl.text.trim()) ?? 0;
-    final required    = double.tryParse(_loanAmountCtrl.text.trim()) ?? 0;
+    final salary      = MoneyInputFormatter.parse(_salaryCtrl.text) ?? 0;
+    final existingEmi = MoneyInputFormatter.parse(_existingEmiCtrl.text) ?? 0;
+    final required    = MoneyInputFormatter.parse(_loanAmountCtrl.text) ?? 0;
     final tenureYears = int.tryParse(_tenureCtrl.text.trim()) ?? 20;
 
     // Available EMI based on FOIR
@@ -166,8 +166,9 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
             _field(
               ctrl: _salaryCtrl,
               label: 'Gross Monthly Salary (₹)',
-              hint: 'e.g. 80000',
+              hint: 'e.g. 80,000',
               required: true,
+              isMoney: true,
             ),
             const SizedBox(height: 12),
             _field(
@@ -175,13 +176,15 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
               label: 'Existing Monthly EMIs (₹)',
               hint: '0 if none',
               required: false,
+              isMoney: true,
             ),
             const SizedBox(height: 12),
             _field(
               ctrl: _loanAmountCtrl,
               label: 'Required Loan Amount (₹)',
-              hint: 'e.g. 5000000',
+              hint: 'e.g. 50,00,000',
               required: false,
+              isMoney: true,
             ),
             const SizedBox(height: 12),
             _field(
@@ -487,12 +490,13 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
     required String hint,
     required bool required,
     bool isInt = false,
+    bool isMoney = false,
     int? max,
   }) {
     return TextFormField(
       controller: ctrl,
       keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      inputFormatters: isMoney ? [MoneyInputFormatter()] : null,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -504,7 +508,7 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
       validator: (v) {
         if (required && (v == null || v.trim().isEmpty)) return 'Required';
         if (v != null && v.isNotEmpty) {
-          final n = double.tryParse(v);
+          final n = isMoney ? MoneyInputFormatter.parse(v) : double.tryParse(v);
           if (n == null || n < 0) return 'Enter a valid amount';
           if (max != null && n > max) return 'Max $max years';
         }

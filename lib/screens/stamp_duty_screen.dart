@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
+import '../utility/money_input_formatter.dart';
 
 class StampDutyScreen extends StatefulWidget {
   final double? initialAmount;
@@ -26,7 +26,7 @@ class _StampDutyScreenState extends State<StampDutyScreen> {
   void initState() {
     super.initState();
     if (widget.initialAmount != null) {
-      _priceCtrl.text = widget.initialAmount!.toInt().toString();
+      _priceCtrl.text = MoneyInputFormatter.format(widget.initialAmount!);
     }
   }
 
@@ -62,7 +62,7 @@ class _StampDutyScreenState extends State<StampDutyScreen> {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
 
-    final price     = double.parse(_priceCtrl.text.trim());
+    final price     = MoneyInputFormatter.parse(_priceCtrl.text) ?? 0;
     final rateMap   = _rates[_selectedState]!;
     final sdPct     = (_ownerGender == 'Female' ? rateMap['female'] : rateMap['male']) as double;
     final regPct    = rateMap['reg'] as double;
@@ -171,10 +171,10 @@ class _StampDutyScreenState extends State<StampDutyScreen> {
           TextFormField(
             controller: _priceCtrl,
             keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            inputFormatters: [MoneyInputFormatter()],
             decoration: InputDecoration(
               labelText: 'Property Value (₹)',
-              hintText: 'e.g. 5000000',
+              hintText: 'e.g. 50,00,000',
               prefixIcon: const Icon(Icons.currency_rupee, size: 18),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

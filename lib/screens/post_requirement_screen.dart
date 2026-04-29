@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../services/leads_service.dart';
 import '../models/client_lead_model.dart';
+import '../utility/money_input_formatter.dart';
 
 const _kPropertyTypeLabels = {
   'APARTMENT':     'Apartment',
@@ -341,9 +342,9 @@ class _RequirementFormScreenState extends State<_RequirementFormScreen> {
     _propertyType = e['propertyType'] as String?;
     _cityCtrl.text     = (e['propertyCity'] ?? '') as String;
     _messageCtrl.text  = (e['message'] ?? '') as String;
-    if (e['minBudget'] != null) _minBudgetCtrl.text = (e['minBudget'] as num).toInt().toString();
+    if (e['minBudget'] != null) _minBudgetCtrl.text = MoneyInputFormatter.format((e['minBudget'] as num));
     if (e['budget'] != null || e['maxBudget'] != null)
-      _maxBudgetCtrl.text = ((e['budget'] ?? e['maxBudget']) as num).toInt().toString();
+      _maxBudgetCtrl.text = MoneyInputFormatter.format(((e['budget'] ?? e['maxBudget']) as num));
 
     final specs = (e['specifications'] ?? '') as String;
     for (final part in specs.split('|').map((s) => s.trim())) {
@@ -391,9 +392,9 @@ class _RequirementFormScreenState extends State<_RequirementFormScreen> {
       leadSource: 'APP',
       propertyType: _propertyType,
       propertyCity: _cityCtrl.text.trim().isEmpty ? null : _cityCtrl.text.trim(),
-      minBudget: _minBudgetCtrl.text.trim().isEmpty ? null : double.tryParse(_minBudgetCtrl.text.trim()),
-      budget: _maxBudgetCtrl.text.trim().isEmpty ? null : double.tryParse(_maxBudgetCtrl.text.trim()),
-      maxBudget: _maxBudgetCtrl.text.trim().isEmpty ? null : double.tryParse(_maxBudgetCtrl.text.trim()),
+      minBudget: MoneyInputFormatter.parse(_minBudgetCtrl.text),
+      budget: MoneyInputFormatter.parse(_maxBudgetCtrl.text),
+      maxBudget: MoneyInputFormatter.parse(_maxBudgetCtrl.text),
       message: _messageCtrl.text.trim().isEmpty ? null : _messageCtrl.text.trim(),
       specifications: _buildSpecs(),
       status: 'NEW',
@@ -503,9 +504,9 @@ class _RequirementFormScreenState extends State<_RequirementFormScreen> {
             const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(child: _textField(_minBudgetCtrl, 'Min Budget', Icons.arrow_downward_outlined, isNumber: true)),
+                Expanded(child: _textField(_minBudgetCtrl, 'Min Budget', Icons.arrow_downward_outlined, isNumber: true, isMoney: true)),
                 const SizedBox(width: 12),
-                Expanded(child: _textField(_maxBudgetCtrl, 'Max Budget', Icons.arrow_upward_outlined, isNumber: true)),
+                Expanded(child: _textField(_maxBudgetCtrl, 'Max Budget', Icons.arrow_upward_outlined, isNumber: true, isMoney: true)),
               ],
             ),
 
@@ -604,10 +605,11 @@ class _RequirementFormScreenState extends State<_RequirementFormScreen> {
     );
   }
 
-  Widget _textField(TextEditingController ctrl, String hint, IconData icon, {bool isNumber = false}) {
+  Widget _textField(TextEditingController ctrl, String hint, IconData icon, {bool isNumber = false, bool isMoney = false}) {
     return TextField(
       controller: ctrl,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      inputFormatters: isMoney ? [MoneyInputFormatter()] : null,
       decoration: InputDecoration(
         hintText: hint,
         prefixIcon: Icon(icon, size: 18, color: AppColors.textMuted),

@@ -3,6 +3,7 @@ import '../services/legal_service_api.dart';
 import '../models/inquiry_request.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
+import '../utility/money_input_formatter.dart';
 
 class LoanApplySheet extends StatefulWidget {
   const LoanApplySheet({super.key});
@@ -114,13 +115,15 @@ class _LoanApplySheetState extends State<LoanApplySheet> {
                           ctrl: _incomeCtrl,
                           icon: Icons.currency_rupee,
                           keyboard: TextInputType.number,
-                          optional: true),
+                          optional: true,
+                          isMoney: true),
                       const SizedBox(height: 10),
                       _field(
                           label: 'Required Loan Amount',
                           ctrl: _loanAmountCtrl,
                           icon: Icons.money,
-                          keyboard: TextInputType.number),
+                          keyboard: TextInputType.number,
+                          isMoney: true),
                       const SizedBox(height: 10),
                       _field(
                           label: 'Loan Tenure (Years)',
@@ -198,10 +201,10 @@ class _LoanApplySheetState extends State<LoanApplySheet> {
       applicantName: _nameCtrl.text.trim(),
       mobileNumber: _mobileCtrl.text.trim(),
       email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
-      monthlyIncome: double.tryParse(_incomeCtrl.text.trim()),
+      monthlyIncome: MoneyInputFormatter.parse(_incomeCtrl.text),
       inquiryType: 'HOME_LOAN',
       comments: _commentsCtrl.text.trim().isEmpty ? null : _commentsCtrl.text.trim(),
-      requiredLoanAmount: double.tryParse(_loanAmountCtrl.text.trim()),
+      requiredLoanAmount: MoneyInputFormatter.parse(_loanAmountCtrl.text),
       loanTenureYears: int.tryParse(_tenureCtrl.text.trim()),
       propertyType: _selectedPropertyType,
       propertyState: _stateCtrl.text.trim().isEmpty ? null : _stateCtrl.text.trim(),
@@ -240,11 +243,13 @@ class _LoanApplySheetState extends State<LoanApplySheet> {
     TextInputType keyboard = TextInputType.text,
     int maxLines = 1,
     bool optional = false,
+    bool isMoney = false,
   }) {
     return TextFormField(
       controller: ctrl,
       keyboardType: keyboard,
       maxLines: maxLines,
+      inputFormatters: isMoney ? [MoneyInputFormatter()] : null,
       validator: (val) {
         if (!optional && (val == null || val.trim().isEmpty)) {
           return 'Please enter $label';
