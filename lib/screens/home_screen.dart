@@ -52,7 +52,7 @@ class HomeScreen extends StatelessWidget {
                       AppColors.primary, [
                     _Tile(Icons.sell_outlined,      'Buy / Sell',    'Find & list sale properties',  const Color(0xFF1565C0), _HomeAction.buySell),
                     _Tile(Icons.apartment_outlined, 'Rent / PG',     'Rental & PG listings',         const Color(0xFF00838F), _HomeAction.rentPg),
-                    _Tile(Icons.favorite_outlined,  'My Favourites', 'Properties you have saved',    AppColors.error,        _HomeAction.myFavourites),
+                    _Tile(Icons.favorite_outlined,  'My Favourites', 'Your favourite properties',    AppColors.error,        _HomeAction.myFavourites),
                   ]),
                   const SizedBox(height: 24),
 
@@ -61,16 +61,16 @@ class HomeScreen extends StatelessWidget {
                       const Color(0xFF1B5E20), [
                     _Tile(Icons.calculate_outlined,       'EMI Calculator',  'Estimate monthly instalment',  const Color(0xFF2E7D32), _HomeAction.emiCalculator),
                     _Tile(Icons.account_balance_outlined, 'Apply Home Loan', 'Explore bank loan offers',     const Color(0xFF1565C0), _HomeAction.homeLoan),
-                    _Tile(Icons.verified_outlined,        'Loan Eligibility','Check your loan eligibility',  const Color(0xFF00796B), _HomeAction.loanEligibility),
+                    _Tile(Icons.verified_outlined,        'Home Loan Eligibility', 'Check your loan eligibility', const Color(0xFF00796B), _HomeAction.loanEligibility),
                     _Tile(Icons.corporate_fare_outlined,  'Banks & Rates',   'Compare bank interest rates',  const Color(0xFF4527A0), _HomeAction.banks),
-                    _Tile(Icons.balance_outlined,         'Rent vs Buy',     'Compare renting vs buying',    const Color(0xFF00838F), _HomeAction.rentVsBuy),
+                    _Tile(Icons.balance_outlined,         'Rent vs Buy Calculator', 'Compare renting vs buying', const Color(0xFF00838F), _HomeAction.rentVsBuy),
                   ]),
                   const SizedBox(height: 24),
 
                   // ── Legal & Documentation ───────────────────────────────
                   _section(context, 'Legal & Documentation', Icons.gavel_rounded,
                       const Color(0xFF6A1B9A), [
-                    _Tile(Icons.receipt_long_outlined, 'Stamp Duty',      'Calculate stamp duty charges',   const Color(0xFF1565C0), _HomeAction.stampDuty),
+                    _Tile(Icons.receipt_long_outlined, 'Stamp Duty Charges', 'Calculate stamp duty charges', const Color(0xFF1565C0), _HomeAction.stampDuty),
                     _Tile(Icons.description_outlined,  'Rent Agreement',  'Generate rental agreement',      const Color(0xFF00838F), _HomeAction.rentAgreement),
                     _Tile(Icons.handshake_outlined,    'Sale Agreement',  'Generate sale deed agreement',   const Color(0xFF4E342E), _HomeAction.saleAgreement),
                     _Tile(Icons.assignment_rounded,    'Legal Services',  'Find verified legal vendors',    const Color(0xFF6A1B9A), _HomeAction.legalServices),
