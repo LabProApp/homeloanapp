@@ -86,7 +86,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _selectTab(2);
         break;
       case '_HomeAction.postRequirement':
-        _setPage(PostRequirementScreen(userId: widget.userId));
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => PostRequirementScreen(userId: widget.userId),
+        ));
         break;
       case '_HomeAction.legalServices':
         _selectTab(3);

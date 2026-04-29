@@ -159,18 +159,20 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      title: titleWidget ?? (title != null ? Text(title!) : null),
-      actions: actions,
-      leading: leading,
-      bottom: bottom,
-      centerTitle: centerTitle,
-      automaticallyImplyLeading: automaticallyImplyLeading,
-      backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
-      elevation: 0,
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+    return DecoratedBox(
+      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+      child: AppBar(
+        title: titleWidget ?? (title != null ? Text(title!) : null),
+        actions: actions,
+        leading: leading,
+        bottom: bottom,
+        centerTitle: centerTitle,
+        automaticallyImplyLeading: automaticallyImplyLeading,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
       ),
     );
   }
