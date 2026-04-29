@@ -102,7 +102,7 @@ class HomeScreen extends StatelessWidget {
     return SliverToBoxAdapter(
       child: Container(
         padding: EdgeInsets.fromLTRB(
-            20, MediaQuery.of(context).padding.top + 16, 20, 24),
+            20, (MediaQuery.maybeOf(context)?.padding.top ?? 0) + 16, 20, 24),
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,15 +118,17 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Colors.white70),
             ),
             const SizedBox(height: 20),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _heroPill(Icons.home_rounded,      'Buy/Sell',                    () => onNavigate(_HomeAction.buySell)),
-                const SizedBox(width: 8),
-                _heroPill(Icons.apartment_rounded, 'Rent/PG',                    () => onNavigate(_HomeAction.rentPg)),
-                const SizedBox(width: 8),
-                _heroPill(Icons.post_add_outlined, 'Post Home/\nOffice Req.',    () => onNavigate(_HomeAction.postRequirement)),
-              ],
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _heroPill(Icons.home_rounded,      'Buy/Sell',               () => onNavigate(_HomeAction.buySell)),
+                  const SizedBox(width: 8),
+                  _heroPill(Icons.apartment_rounded, 'Rent/PG',                () => onNavigate(_HomeAction.rentPg)),
+                  const SizedBox(width: 8),
+                  _heroPill(Icons.post_add_outlined, 'Post Home/\nOffice Req.', () => onNavigate(_HomeAction.postRequirement)),
+                ],
+              ),
             ),
           ],
         ),
