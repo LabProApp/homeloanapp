@@ -14,9 +14,14 @@ class ApiUrls {
   static const String userlogout = "$baseUrl/user/logout";
 
   // Leads APIs
-  static const String getBrokerLeads = "$baseUrl/leads/broker/{brokerId}";
-  static const String postBrokerLeads = "$baseUrl/leads";
-  static const String updateBrokerLeads = "$baseUrl/leads/{leadId}";
+  static const String searchLeads          = "$baseUrl/leads/search";
+  static const String postBrokerLeads      = "$baseUrl/leads";
+  static const String updateBrokerLeads    = "$baseUrl/leads/{leadId}";
+  static const String updateLeadStatus     = "$baseUrl/leads/{leadId}/status";
+  static const String scheduleLeadFollowUp = "$baseUrl/leads/{leadId}/followup";
+
+  static String propertyLeadsSummary(int propertyId) =>
+      "$baseUrl/leads/property/$propertyId/summary";
 
 
   static String userProfileById(String userId) =>

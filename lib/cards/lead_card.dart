@@ -6,14 +6,24 @@ import '../theme/app_colors.dart';
 class LeadCard extends StatelessWidget {
   final Map lead;
   final VoidCallback onEdit;
+  final VoidCallback onFollowUp;
 
-  const LeadCard({super.key, required this.lead, required this.onEdit});
+  const LeadCard({
+    super.key,
+    required this.lead,
+    required this.onEdit,
+    required this.onFollowUp,
+  });
 
   static final _dateFmt = DateFormat('dd MMM yyyy');
 
   String _fmt(String? d) {
     if (d == null || d.isEmpty) return '-';
-    try { return _dateFmt.format(DateTime.parse(d)); } catch (_) { return d; }
+    try {
+      return _dateFmt.format(DateTime.parse(d));
+    } catch (_) {
+      return d;
+    }
   }
 
   String get _initials {
@@ -24,13 +34,46 @@ class LeadCard extends StatelessWidget {
     return '?';
   }
 
+  // Human-readable label for leadType enum value
+  String _leadTypeLabel(String? raw) {
+    if (raw == null || raw.isEmpty) return '';
+    switch (raw) {
+      case 'PROPERTY_INQUIRY':    return 'Property';
+      case 'HOME_LOAN':           return 'Home Loan';
+      case 'LAP':                 return 'LAP';
+      case 'BALANCE_TRANSFER':    return 'Balance Transfer';
+      case 'LOAN_TRANSFER':       return 'Loan Transfer';
+      case 'PROPERTY_REGISTRATION': return 'Registration';
+      case 'RENT_AGREEMENT':      return 'Rent';
+      case 'DOCUMENT_SERVICES':   return 'Documents';
+      default:                    return raw.replaceAll('_', ' ');
+    }
+  }
+
+  Color _leadTypeColor(String? raw) {
+    switch (raw) {
+      case 'PROPERTY_INQUIRY':    return AppColors.primary;
+      case 'HOME_LOAN':           return AppColors.info;
+      case 'LAP':                 return const Color(0xFF7B61FF);
+      case 'BALANCE_TRANSFER':    return AppColors.warning;
+      case 'LOAN_TRANSFER':       return const Color(0xFFFF6B35);
+      case 'PROPERTY_REGISTRATION':
+      case 'RENT_AGREEMENT':
+      case 'DOCUMENT_SERVICES':   return AppColors.textMuted;
+      default:                    return AppColors.primary;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final status = (lead['status'] ?? '') as String;
-    final phone = lead['mobile'] as String?;
+    final status   = (lead['status']   ?? '') as String;
+    final leadType = lead['leadType']  as String?;
+    final phone    = lead['mobile']    as String?;
     final followUp = _fmt(lead['nextFollowUpDate'] as String?);
     final hasFollowUp = followUp != '-';
+    final message = (lead['message'] ?? '') as String;
+    final remark  = (lead['remark']  ?? '') as String;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -46,7 +89,7 @@ class LeadCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          // ── Header ──────────────────────────────────────────────────────
+          // ── Header ─────────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 8, 10),
             child: Row(
@@ -79,13 +122,20 @@ class LeadCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (phone != null && phone.isNotEmpty)
-                        Text(phone, style: tt.bodySmall?.copyWith(color: AppColors.textMuted)),
+                        Text(phone,
+                            style: tt.bodySmall?.copyWith(color: AppColors.textMuted)),
                     ],
                   ),
                 ),
-                // Status + edit
+                // Lead type badge
+                if (leadType != null && leadType.isNotEmpty) ...[
+                  _TypeBadge(_leadTypeLabel(leadType), _leadTypeColor(leadType)),
+                  const SizedBox(width: 6),
+                ],
+                // Status badge
                 _StatusBadge(status),
                 const SizedBox(width: 4),
+                // Edit button
                 InkWell(
                   onTap: onEdit,
                   borderRadius: BorderRadius.circular(8),
@@ -100,7 +150,7 @@ class LeadCard extends StatelessWidget {
 
           const Divider(height: 1, thickness: 1, color: AppColors.border),
 
-          // ── Property info ────────────────────────────────────────────────
+          // ── Property info ──────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Column(
@@ -110,20 +160,28 @@ class LeadCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Expanded(child: _InfoRow(Icons.location_on_outlined, lead['propertyCity'] ?? '-')),
+                    Expanded(
+                      child: _InfoRow(Icons.location_on_outlined,
+                          [lead['propertyCity'], lead['propertyLocality']]
+                              .whereType<String>()
+                              .where((s) => s.isNotEmpty)
+                              .join(', ')
+                              .takeIf((s) => s.isNotEmpty) ?? '-'),
+                    ),
                     if (lead['propertyPrice'] != null)
                       _InfoRow(Icons.currency_rupee_outlined,
                           NumberFormat('#,##,###').format(lead['propertyPrice'])),
                   ],
                 ),
-                if (lead['preferredPropertyType'] != null) ...[
+                if ((lead['budget'] ?? lead['preferredBudget']) != null) ...[
                   const SizedBox(height: 4),
-                  Row(children: [
-                    Expanded(child: _InfoRow(Icons.tune_outlined, lead['preferredPropertyType'])),
-                    if (lead['preferredBudget'] != null)
-                      _InfoRow(Icons.account_balance_wallet_outlined,
-                          'Budget ₹${NumberFormat('#,##,###').format(lead['preferredBudget'])}'),
-                  ]),
+                  _InfoRow(Icons.account_balance_wallet_outlined,
+                    'Budget ₹${NumberFormat('#,##,###').format(lead['budget'] ?? lead['preferredBudget'])}'),
+                ],
+                if (message.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  _InfoRow(Icons.chat_bubble_outline, message,
+                      maxLines: 2, color: AppColors.textSecondary),
                 ],
               ],
             ),
@@ -131,7 +189,7 @@ class LeadCard extends StatelessWidget {
 
           const Divider(height: 1, thickness: 1, color: AppColors.border),
 
-          // ── Timeline & source ────────────────────────────────────────────
+          // ── Timeline ───────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
@@ -141,69 +199,48 @@ class LeadCard extends StatelessWidget {
                       'Inquiry: ${_fmt(lead['inquiryDate'] as String?)}'),
                 ),
                 if (hasFollowUp)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.warning.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.alarm_outlined, size: 12, color: AppColors.warning),
-                        const SizedBox(width: 4),
-                        Text(followUp, style: const TextStyle(
-                          fontSize: 11, color: AppColors.warning, fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                  ),
+                  _FollowUpBadge(followUp),
               ],
             ),
           ),
 
-          if (lead['remark'] != null && (lead['remark'] as String).isNotEmpty) ...[
+          if (remark.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: _InfoRow(Icons.notes_outlined, lead['remark'] as String,
+              child: _InfoRow(Icons.notes_outlined, remark,
                   maxLines: 2, color: AppColors.textMuted),
             ),
-          ],
 
-          // ── Action buttons ───────────────────────────────────────────────
+          // ── Action buttons ─────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: Row(
               children: [
+                // Call
                 Expanded(
                   child: OutlinedButton.icon(
-                    icon: const Icon(Icons.call_outlined, size: 16),
+                    icon: const Icon(Icons.call_outlined, size: 15),
                     label: const Text('Call'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 36),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
+                    style: _btnStyle(),
                     onPressed: phone != null ? () => AppUtils.call(phone) : null,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
+                // WhatsApp
                 Expanded(
                   child: OutlinedButton.icon(
-                    icon: const Icon(Icons.chat_outlined, size: 16),
+                    icon: const Icon(Icons.chat_outlined, size: 15),
                     label: const Text('WhatsApp'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 36),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
+                    style: _btnStyle(color: const Color(0xFF25D366)),
                     onPressed: phone != null
-                        ? () => AppUtils.whatsapp(phone, 'Hi, following up on your inquiry.')
+                        ? () => AppUtils.whatsapp(phone,
+                            'Hi ${lead['clientName'] ?? ''}, following up on your inquiry.')
                         : null,
                   ),
                 ),
+                const SizedBox(width: 6),
+                // Follow Up — 99acres-style compact button
+                _FollowUpButton(onPressed: onFollowUp, hasFollowUp: hasFollowUp),
               ],
             ),
           ),
@@ -211,9 +248,93 @@ class LeadCard extends StatelessWidget {
       ),
     );
   }
+
+  static ButtonStyle _btnStyle({Color? color}) => OutlinedButton.styleFrom(
+        foregroundColor: color ?? AppColors.primary,
+        side: BorderSide(color: (color ?? AppColors.primary).withOpacity(0.4)),
+        minimumSize: const Size(0, 34),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      );
 }
 
-// ── Sub-widgets ───────────────────────────────────────────────────────────────
+// ── Follow Up compact button ──────────────────────────────────────────────────
+
+class _FollowUpButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final bool hasFollowUp;
+
+  const _FollowUpButton({required this.onPressed, required this.hasFollowUp});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = hasFollowUp ? AppColors.warning : AppColors.primary;
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        height: 34,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.35)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              hasFollowUp ? Icons.alarm_on_outlined : Icons.alarm_add_outlined,
+              size: 14,
+              color: color,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Follow Up',
+              style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w700, color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Follow-up scheduled badge ─────────────────────────────────────────────────
+
+class _FollowUpBadge extends StatelessWidget {
+  final String date;
+  const _FollowUpBadge(this.date);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.alarm_outlined, size: 12, color: AppColors.warning),
+          const SizedBox(width: 4),
+          Text(date,
+              style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.warning,
+                  fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Status badge ──────────────────────────────────────────────────────────────
 
 class _StatusBadge extends StatelessWidget {
   final String status;
@@ -221,13 +342,17 @@ class _StatusBadge extends StatelessWidget {
 
   Color get _color {
     switch (status) {
-      case 'NEW': return AppColors.info;
-      case 'CONTACTED': return AppColors.warning;
-      case 'CLOSED': return AppColors.success;
-      case 'DROPPED': return AppColors.error;
-      default: return AppColors.textMuted;
+      case 'NEW':             return AppColors.info;
+      case 'CONTACTED':       return AppColors.warning;
+      case 'INTERESTED':      return const Color(0xFF2E7D32);
+      case 'NOT_INTERESTED':  return AppColors.error;
+      case 'CONVERTED':       return AppColors.success;
+      case 'CLOSED':          return AppColors.textMuted;
+      default:                return AppColors.textMuted;
     }
   }
+
+  String get _label => status.isEmpty ? '-' : status.replaceAll('_', ' ');
 
   @override
   Widget build(BuildContext context) {
@@ -239,12 +364,37 @@ class _StatusBadge extends StatelessWidget {
         border: Border.all(color: _color.withOpacity(0.3)),
       ),
       child: Text(
-        status.isEmpty ? '-' : status,
-        style: TextStyle(color: _color, fontSize: 11, fontWeight: FontWeight.w700),
+        _label,
+        style: TextStyle(color: _color, fontSize: 10, fontWeight: FontWeight.w700),
       ),
     );
   }
 }
+
+// ── Lead type badge ───────────────────────────────────────────────────────────
+
+class _TypeBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _TypeBadge(this.label, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+// ── Info row ──────────────────────────────────────────────────────────────────
 
 class _InfoRow extends StatelessWidget {
   final IconData icon;
@@ -279,4 +429,8 @@ class _InfoRow extends StatelessWidget {
       ],
     );
   }
+}
+
+extension _StringExt on String {
+  String? takeIf(bool Function(String) pred) => pred(this) ? this : null;
 }
