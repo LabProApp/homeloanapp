@@ -31,9 +31,10 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
   bool loading = false;
   CalcLoanResponse? response;
 
-  double _calcPrincipal = 0;
-  double _calcRate      = 0;
-  int    _calcTenure    = 0;
+  double _calcPrincipal   = 0;
+  double _calcRate        = 0;
+  int    _calcTenure      = 0;
+  int    _touchedPieIndex = -1;
 
   static final _fmt = NumberFormat('#,##,###');
 
@@ -141,6 +142,8 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
             _pieSection(),
             const SizedBox(height: 16),
             _lineSection(),
+            const SizedBox(height: 16),
+            _barSection(),
             const SizedBox(height: 24),
           ],
         ],
@@ -169,9 +172,24 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
         child: Form(
           key: _formKey,
           child: Column(children: [
-            _field('Loan Amount (₹)', principalCtrl, isMoney: true),
-            _field('Interest Rate (%)', interestCtrl),
-            _field('Tenure (Years)', tenureCtrl),
+            _field('Loan Amount (₹)', principalCtrl, isMoney: true, validator: (v) {
+              if (v == null || v.isEmpty) return 'Required';
+              final n = MoneyInputFormatter.parse(v) ?? 0;
+              if (n < 10000) return 'Minimum ₹10,000';
+              return null;
+            }),
+            _field('Interest Rate (%)', interestCtrl, validator: (v) {
+              if (v == null || v.isEmpty) return 'Required';
+              final n = double.tryParse(v) ?? -1;
+              if (n < 1 || n > 30) return 'Rate must be 1–30%';
+              return null;
+            }),
+            _field('Tenure (Years)', tenureCtrl, validator: (v) {
+              if (v == null || v.isEmpty) return 'Required';
+              final n = int.tryParse(v) ?? -1;
+              if (n < 1 || n > 40) return 'Tenure must be 1–40 years';
+              return null;
+            }),
             const SizedBox(height: 14),
             AppButton(text: 'Calculate EMI', isLoading: loading, onTap: _calculateEmi),
           ]),
@@ -180,14 +198,15 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     );
   }
 
-  Widget _field(String label, TextEditingController ctrl, {bool isMoney = false}) {
+  Widget _field(String label, TextEditingController ctrl,
+      {bool isMoney = false, String? Function(String?)? validator}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextFormField(
         controller: ctrl,
         keyboardType: TextInputType.number,
         inputFormatters: isMoney ? [MoneyInputFormatter()] : null,
-        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+        validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
         decoration: InputDecoration(
           labelText: label,
           isDense: true,
@@ -264,6 +283,19 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
     final pPct = total > 0 ? (principal / total * 100).toStringAsFixed(1) : '0';
     final iPct = total > 0 ? (interest  / total * 100).toStringAsFixed(1) : '0';
 
+    String centerLabel;
+    Color  centerColor;
+    if (_touchedPieIndex == 0) {
+      centerLabel = '₹ ${_fmt.format(principal.toInt())}';
+      centerColor = AppColors.primary;
+    } else if (_touchedPieIndex == 1) {
+      centerLabel = '₹ ${_fmt.format(interest.toInt())}';
+      centerColor = AppColors.error;
+    } else {
+      centerLabel = '${(total / 100000).toStringAsFixed(1)}L\nTotal';
+      centerColor = AppColors.textSecondary;
+    }
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -272,47 +304,64 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Payment Breakdown',
-                style: TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-            const SizedBox(height: 16),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            const SizedBox(height: 4),
+            const Text('Tap a segment to see amount',
+                style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+            const SizedBox(height: 14),
             SizedBox(
-              height: 180,
-              child: PieChart(
-                PieChartData(
-                  sectionsSpace: 3,
-                  centerSpaceRadius: 36,
-                  sections: [
-                    PieChartSectionData(
-                      color: AppColors.primary,
-                      value: principal,
-                      title: '$pPct%',
-                      radius: 72,
-                      titleStyle: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white),
+              height: 200,
+              child: Stack(alignment: Alignment.center, children: [
+                PieChart(
+                  PieChartData(
+                    pieTouchData: PieTouchData(
+                      touchCallback: (FlTouchEvent event, resp) {
+                        setState(() {
+                          if (!event.isInterestedForInteractions ||
+                              resp == null || resp.touchedSection == null) {
+                            _touchedPieIndex = -1;
+                            return;
+                          }
+                          _touchedPieIndex = resp.touchedSection!.touchedSectionIndex;
+                        });
+                      },
                     ),
-                    PieChartSectionData(
-                      color: AppColors.error,
-                      value: interest,
-                      title: '$iPct%',
-                      radius: 72,
-                      titleStyle: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white),
-                    ),
-                  ],
+                    sectionsSpace: 3,
+                    centerSpaceRadius: 52,
+                    sections: [
+                      PieChartSectionData(
+                        color: AppColors.primary,
+                        value: principal,
+                        title: '$pPct%',
+                        radius: _touchedPieIndex == 0 ? 80 : 68,
+                        titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white),
+                      ),
+                      PieChartSectionData(
+                        color: AppColors.error,
+                        value: interest,
+                        title: '$iPct%',
+                        radius: _touchedPieIndex == 1 ? 80 : 68,
+                        titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                // Center label
+                Column(mainAxisSize: MainAxisSize.min, children: centerLabel.split('\n').map((line) =>
+                  Text(line, textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: centerColor))
+                ).toList()),
+              ]),
             ),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _Legend(
-                    color: AppColors.primary,
-                    label: 'Principal  ₹${_fmt.format(_calcPrincipal.toInt())}'),
+                _Legend(color: AppColors.primary,
+                    label: 'Principal  ₹ ${_fmt.format(_calcPrincipal.toInt())}'),
                 const SizedBox(width: 20),
-                _Legend(
-                    color: AppColors.error,
-                    label: 'Interest  ₹${_fmt.format(response!.totalInterest.toInt())}'),
+                _Legend(color: AppColors.error,
+                    label: 'Interest  ₹ ${_fmt.format(response!.totalInterest.toInt())}'),
               ],
             ),
           ],
@@ -390,6 +439,16 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                   maxX: _calcTenure.toDouble(),
                   minY: 0,
                   maxY: maxBalance,
+                  lineTouchData: LineTouchData(
+                    handleBuiltInTouches: true,
+                    touchTooltipData: LineTouchTooltipData(
+                      tooltipBgColor: Colors.black87,
+                      getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
+                        'Year ${s.x.toInt()}\n₹ ${_fmt.format(s.y.toInt())}',
+                        const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                      )).toList(),
+                    ),
+                  ),
                   lineBarsData: [
                     LineChartBarData(
                       spots: spots,
@@ -400,13 +459,153 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: AppColors.primary.withOpacity(0.08),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                          colors: [AppColors.primary.withOpacity(0.20), AppColors.primary.withOpacity(0.02)],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Annual breakdown bar chart ────────────────────────────────────────────
+  Widget _barSection() {
+    final r   = _calcRate / 12 / 100;
+    final emi = response!.monthlyPayment;
+    double balance = _calcPrincipal;
+    double maxTotal = 0;
+    final groups = <BarChartGroupData>[];
+
+    for (int yr = 1; yr <= _calcTenure; yr++) {
+      double yPrin = 0, yInt = 0;
+      for (int m = 0; m < 12 && balance > 0; m++) {
+        final iAmt = balance * r;
+        final pAmt = (emi - iAmt).clamp(0.0, balance);
+        yInt  += iAmt;
+        yPrin += pAmt;
+        balance -= pAmt;
+      }
+      final total = yPrin + yInt;
+      if (total > maxTotal) maxTotal = total;
+      final bw = _calcTenure > 20 ? 7.0 : 12.0;
+      groups.add(BarChartGroupData(
+        x: yr,
+        barRods: [
+          BarChartRodData(
+            toY: total,
+            width: bw,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+            rodStackItems: [
+              BarChartRodStackItem(0,     yPrin,         AppColors.primary),
+              BarChartRodStackItem(yPrin, yPrin + yInt,  AppColors.error.withOpacity(0.75)),
+            ],
+          ),
+        ],
+      ));
+    }
+
+    final bw = _calcTenure > 20 ? 7.0 : 12.0;
+    final chartW = max(280.0, _calcTenure * (bw + 9));
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Annual EMI Breakdown',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            const SizedBox(height: 2),
+            const Text('Principal vs Interest paid each year — tap a bar for details',
+                style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+            const SizedBox(height: 12),
+            Row(children: [
+              _Legend(color: AppColors.primary,                  label: 'Principal'),
+              const SizedBox(width: 16),
+              _Legend(color: AppColors.error.withOpacity(0.75),  label: 'Interest'),
+            ]),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 180,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: chartW,
+                  child: BarChart(
+                    BarChartData(
+                      barTouchData: BarTouchData(
+                        touchTooltipData: BarTouchTooltipData(
+                          tooltipBgColor: Colors.black87,
+                          getTooltipItem: (group, _, rod, __) {
+                            // find principal portion from rodStackItems
+                            final pAmt = rod.rodStackItems.isNotEmpty
+                                ? rod.rodStackItems[0].toY
+                                : 0.0;
+                            final iAmt = rod.toY - pAmt;
+                            return BarTooltipItem(
+                              'Year ${group.x}\nPrincipal ₹ ${_fmt.format(pAmt.toInt())}\nInterest  ₹ ${_fmt.format(iAmt.toInt())}',
+                              const TextStyle(color: Colors.white, fontSize: 10),
+                            );
+                          },
+                        ),
+                      ),
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: maxTotal * 1.15,
+                      titlesData: FlTitlesData(
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 24,
+                            getTitlesWidget: (v, _) {
+                              final yr = v.toInt();
+                              if (_calcTenure <= 10 || yr % 5 == 0 || yr == 1) {
+                                return Text('$yr',
+                                    style: const TextStyle(fontSize: 9, color: AppColors.textMuted));
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 44,
+                            getTitlesWidget: (v, _) => Text(
+                              '${(v / 100000).toStringAsFixed(0)}L',
+                              style: const TextStyle(fontSize: 9, color: AppColors.textMuted),
+                            ),
+                          ),
+                        ),
+                        topTitles:   const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      ),
+                      gridData: FlGridData(
+                        drawVerticalLine: false,
+                        getDrawingHorizontalLine: (_) =>
+                            FlLine(color: AppColors.border.withOpacity(0.5), strokeWidth: 1),
+                      ),
+                      borderData: FlBorderData(
+                        show: true,
+                        border: const Border(
+                          bottom: BorderSide(color: AppColors.border),
+                          left:   BorderSide(color: AppColors.border),
+                        ),
+                      ),
+                      barGroups: groups,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
@@ -62,6 +63,22 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen>
     final downPayment = MoneyInputFormatter.parse(_downPaymentCtrl.text) ?? 0;
     final monthlyRent = MoneyInputFormatter.parse(_monthlyRentCtrl.text) ?? 0;
     final initSavings = MoneyInputFormatter.parse(_currentSavingsCtrl.text) ?? 0;
+
+    if (propPrice <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enter a valid property price')));
+      return;
+    }
+    if (downPayment >= propPrice) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Down payment must be less than property price')));
+      return;
+    }
+    if (monthlyRent <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enter a valid monthly rent')));
+      return;
+    }
 
     final loanAmount    = propPrice - downPayment;
     final n             = (_tenureYears * 12).toInt();
@@ -126,6 +143,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen>
         totalRentPaid: totalRentPaid,
         rentTotalWealth: rentTotalWealth,
         monthlySavingsDiff: monthlySavingsDiff,
+        initSavings: initSavings,
         tenureYears: _tenureYears.toInt(),
         buyIsWinner: buyIsWinner,
       );
@@ -153,6 +171,8 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen>
           if (_result != null) ...[
             const SizedBox(height: 24),
             _verdictCard(_result!),
+            const SizedBox(height: 16),
+            _wealthChartCard(_result!),
             const SizedBox(height: 16),
             _comparisonTable(_result!),
             const SizedBox(height: 16),
@@ -460,6 +480,193 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen>
     );
   }
 
+  String _shortFmt(double v) {
+    if (v >= 1e7) return '₹${(v / 1e7).toStringAsFixed(1)}Cr';
+    if (v >= 1e5) return '₹${(v / 1e5).toStringAsFixed(0)}L';
+    return '₹${_fmt.format(v.toInt())}';
+  }
+
+  Widget _wealthChartCard(_RentVsBuyResult r) {
+    final n       = r.tenureYears * 12;
+    final rMonth  = _loanRate / 100 / 12;
+    final rm      = _investReturnRate / 100 / 12;
+    final pow1rn  = math.pow(1 + rMonth, n);
+
+    final List<FlSpot> buySpots  = [];
+    final List<FlSpot> rentSpots = [];
+
+    for (int y = 0; y <= r.tenureYears; y++) {
+      // Buy equity: appreciation of property minus outstanding loan balance
+      final propValue = r.propPrice * math.pow(1 + _propAppreciation / 100, y);
+      double loanBalance = 0;
+      if (y > 0 && y < r.tenureYears) {
+        final monthsPaid = y * 12;
+        final pow1rm = math.pow(1 + rMonth, monthsPaid);
+        loanBalance = r.loanAmount * (pow1rn - pow1rm) / (pow1rn - 1);
+      }
+      buySpots.add(FlSpot(y.toDouble(), propValue - loanBalance));
+
+      // Rent wealth: invested down payment + compounding monthly-diff investments
+      final investedDP = (r.downPayment + r.initSavings) *
+          math.pow(1 + _investReturnRate / 100, y);
+      double investedDiff = 0;
+      if (r.monthlySavingsDiff > 0 && y > 0) {
+        investedDiff = r.monthlySavingsDiff *
+            (math.pow(1 + rm, y * 12) - 1) / rm;
+      }
+      rentSpots.add(FlSpot(y.toDouble(), investedDP + investedDiff));
+    }
+
+    final allVals  = [...buySpots.map((s) => s.y), ...rentSpots.map((s) => s.y)];
+    final maxVal   = allVals.reduce(math.max) * 1.15;
+    final interval = maxVal / 4;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Wealth Growth Over Time',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+        const SizedBox(height: 2),
+        Text('Year-by-year equity vs invest-and-rent wealth',
+            style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+        const SizedBox(height: 12),
+        Row(children: [
+          _wealthLegend(const Color(0xFF1565C0), 'Buy Equity'),
+          const SizedBox(width: 20),
+          _wealthLegend(const Color(0xFF2E7D32), 'Rent + Invest'),
+        ]),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 220,
+          child: LineChart(LineChartData(
+            minX: 0,
+            maxX: r.tenureYears.toDouble(),
+            minY: 0,
+            maxY: maxVal,
+            clipData: const FlClipData.all(),
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              horizontalInterval: interval,
+              getDrawingHorizontalLine: (_) => FlLine(
+                color: Colors.grey.withOpacity(0.15),
+                strokeWidth: 1,
+              ),
+            ),
+            borderData: FlBorderData(
+              show: true,
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                left: BorderSide(color: Colors.grey.withOpacity(0.3)),
+              ),
+            ),
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 24,
+                  interval: (r.tenureYears / 5).ceilToDouble(),
+                  getTitlesWidget: (v, _) => Text(
+                    'Yr ${v.toInt()}',
+                    style: const TextStyle(fontSize: 9, color: AppColors.textSecondary),
+                  ),
+                ),
+              ),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 52,
+                  interval: interval,
+                  getTitlesWidget: (v, _) => Text(
+                    _shortFmt(v),
+                    style: const TextStyle(fontSize: 9, color: AppColors.textSecondary),
+                  ),
+                ),
+              ),
+            ),
+            lineTouchData: LineTouchData(
+              handleBuiltInTouches: true,
+              touchTooltipData: LineTouchTooltipData(
+                tooltipBgColor: Colors.black87,
+                getTooltipItems: (spots) => spots.map((s) {
+                  final label = s.barIndex == 0 ? 'Buy' : 'Rent';
+                  return LineTooltipItem(
+                    '$label Yr ${s.x.toInt()}\n${_shortFmt(s.y)}',
+                    const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600),
+                  );
+                }).toList(),
+              ),
+            ),
+            lineBarsData: [
+              LineChartBarData(
+                spots: buySpots,
+                isCurved: true,
+                color: const Color(0xFF1565C0),
+                barWidth: 2.5,
+                dotData: const FlDotData(show: false),
+                belowBarData: BarAreaData(
+                  show: true,
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF1565C0).withOpacity(0.18),
+                      const Color(0xFF1565C0).withOpacity(0.0),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+              LineChartBarData(
+                spots: rentSpots,
+                isCurved: true,
+                color: const Color(0xFF2E7D32),
+                barWidth: 2.5,
+                dotData: const FlDotData(show: false),
+                belowBarData: BarAreaData(
+                  show: true,
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF2E7D32).withOpacity(0.18),
+                      const Color(0xFF2E7D32).withOpacity(0.0),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+            ],
+          )),
+        ),
+      ]),
+    );
+  }
+
+  Widget _wealthLegend(Color color, String label) {
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Container(
+        width: 20,
+        height: 3,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+      const SizedBox(width: 6),
+      Text(label,
+          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+    ]);
+  }
+
   Widget _disclaimerCard() {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -489,6 +696,7 @@ class _RentVsBuyResult {
   final double futurePropertyValue, buyNetWealth;
   final double monthlyRent, totalRentPaid, rentTotalWealth;
   final double monthlySavingsDiff;
+  final double initSavings;
   final int tenureYears;
   final bool buyIsWinner;
 
@@ -498,7 +706,7 @@ class _RentVsBuyResult {
     required this.registrationCost, required this.totalMaintenance, required this.totalBuyCost,
     required this.futurePropertyValue, required this.buyNetWealth,
     required this.monthlyRent, required this.totalRentPaid, required this.rentTotalWealth,
-    required this.monthlySavingsDiff,
+    required this.monthlySavingsDiff, required this.initSavings,
     required this.tenureYears, required this.buyIsWinner,
   });
 }
