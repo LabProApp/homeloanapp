@@ -19,6 +19,7 @@ import 'user_profile_screen.dart';
 import 'home_screen.dart';
 import 'bank_apply_loan_dialog.dart';
 import 'post_requirement_screen.dart';
+import 'loan_eligibility_screen.dart';
 
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
@@ -117,7 +118,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _setPage(const DueDiligenceScreen());
         break;
       case '_HomeAction.loanEligibility':
-        _selectTab(2);
+        _setPage(const LoanEligibilityScreen());
         break;
       case '_HomeAction.rentAgreement':
         _setPage(const RentAgreementScreen());
