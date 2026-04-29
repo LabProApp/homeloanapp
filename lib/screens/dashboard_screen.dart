@@ -100,27 +100,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _setPage(const EmiCalculatorScreen());
         break;
       case '_HomeAction.stampDuty':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const StampDutyScreen()));
+        _setPage(const StampDutyScreen());
         break;
       case '_HomeAction.rentVsBuy':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const RentVsBuyScreen()));
+        _setPage(const RentVsBuyScreen());
         break;
       case '_HomeAction.dueDiligence':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const DueDiligenceScreen()));
+        _setPage(const DueDiligenceScreen());
         break;
       case '_HomeAction.loanEligibility':
         _selectTab(2);
         break;
       case '_HomeAction.rentAgreement':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const RentAgreementScreen()));
+        _setPage(const RentAgreementScreen());
         break;
       case '_HomeAction.saleAgreement':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const SaleAgreementScreen()));
+        _setPage(const SaleAgreementScreen());
         break;
     }
   }
@@ -290,22 +285,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _drawerActionItem(
                       Icons.receipt_long_outlined,
                       'Stamp Duty Calculator',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => const StampDutyScreen(),
-                        ));
-                      },
+                      onTap: () => _setPage(const StampDutyScreen()),
                     ),
                     _drawerActionItem(
                       Icons.balance_outlined,
                       'Rent vs Buy',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => const RentVsBuyScreen(),
-                        ));
-                      },
+                      onTap: () => _setPage(const RentVsBuyScreen()),
                     ),
 
                     const SizedBox(height: 16),

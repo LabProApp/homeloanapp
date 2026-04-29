@@ -74,7 +74,7 @@ class HomeScreen extends StatelessWidget {
                     _Tile(Icons.description_outlined,  'Rent Agreement',  'Generate rental agreement',      const Color(0xFF00838F), _HomeAction.rentAgreement),
                     _Tile(Icons.handshake_outlined,    'Sale Agreement',  'Generate sale deed agreement',   const Color(0xFF4E342E), _HomeAction.saleAgreement),
                     _Tile(Icons.assignment_rounded,    'Legal Services',  'Find verified legal vendors',    const Color(0xFF6A1B9A), _HomeAction.legalServices),
-                    _Tile(Icons.checklist_outlined,    'Due Diligence',   'Property verification checklist',const Color(0xFFE65100), _HomeAction.dueDiligence),
+                    _Tile(Icons.checklist_outlined,    'Property Checklist', 'Property verification checklist', const Color(0xFFE65100), _HomeAction.dueDiligence),
                   ]),
                   const SizedBox(height: 24),
 
