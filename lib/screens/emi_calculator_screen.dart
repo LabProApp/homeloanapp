@@ -439,7 +439,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                   lineTouchData: LineTouchData(
                     handleBuiltInTouches: true,
                     touchTooltipData: LineTouchTooltipData(
-                      tooltipBgColor: Colors.black87,
+                      getTooltipColor: (_) => Colors.black87,
                       getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
                         'Year ${s.x.toInt()}\n₹ ${_fmt.format(s.y.toInt())}',
                         const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
@@ -540,7 +540,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
                     BarChartData(
                       barTouchData: BarTouchData(
                         touchTooltipData: BarTouchTooltipData(
-                          tooltipBgColor: Colors.black87,
+                          getTooltipColor: (_) => Colors.black87,
                           getTooltipItem: (group, _, rod, __) {
                             // find principal portion from rodStackItems
                             final pAmt = rod.rodStackItems.isNotEmpty

@@ -594,7 +594,7 @@ class _RentVsBuyScreenState extends State<RentVsBuyScreen>
             lineTouchData: LineTouchData(
               handleBuiltInTouches: true,
               touchTooltipData: LineTouchTooltipData(
-                tooltipBgColor: Colors.black87,
+                getTooltipColor: (_) => Colors.black87,
                 getTooltipItems: (spots) => spots.map((s) {
                   final label = s.barIndex == 0 ? 'Buy' : 'Rent';
                   return LineTooltipItem(
