@@ -119,12 +119,13 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _heroPill(Icons.home_rounded,        'Buy/Sell',       () => onNavigate(_HomeAction.buySell)),
+                _heroPill(Icons.home_rounded,      'Buy/Sell',                    () => onNavigate(_HomeAction.buySell)),
                 const SizedBox(width: 8),
-                _heroPill(Icons.apartment_rounded,   'Rent/PG',        () => onNavigate(_HomeAction.rentPg)),
+                _heroPill(Icons.apartment_rounded, 'Rent/PG',                    () => onNavigate(_HomeAction.rentPg)),
                 const SizedBox(width: 8),
-                _heroPill(Icons.post_add_outlined,   'Post Home/Office Requirement',      () => onNavigate(_HomeAction.postRequirement)),
+                _heroPill(Icons.post_add_outlined, 'Post Home/\nOffice Req.',    () => onNavigate(_HomeAction.postRequirement)),
               ],
             ),
           ],
@@ -139,8 +140,7 @@ class HomeScreen extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          height: 72,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.15),
             borderRadius: BorderRadius.circular(12),
