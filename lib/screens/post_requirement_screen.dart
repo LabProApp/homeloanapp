@@ -39,14 +39,13 @@ class _PostRequirementScreenState extends State<PostRequirementScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    if (mounted) setState(() => _loading = true);
     try {
       final data = await LeadApiService.fetchUserRequirements(widget.userId);
-      setState(() => _requirements = data);
+      if (mounted) setState(() { _requirements = data; _loading = false; });
     } catch (_) {
-      setState(() => _requirements = []);
+      if (mounted) setState(() { _requirements = []; _loading = false; });
     }
-    setState(() => _loading = false);
   }
 
   Future<void> _delete(int id) async {
