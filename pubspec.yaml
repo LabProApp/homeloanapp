@@ -55,7 +55,6 @@ flutter:
     - assets/images/house2.jpg
     - assets/images/house3.jpg
     - assets/images/splash_bg.jpg
-    - assets/images/splash_bg_blur.jpg
     - assets/images/ic_launcher.png
 
 flutter_native_splash:

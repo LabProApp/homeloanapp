@@ -92,6 +92,9 @@ class ApiClient {
   static Future<http.StreamedResponse> sendMultipart(
     http.MultipartRequest request,
   ) async {
+    if (_token != null) {
+      request.headers['Authorization'] = 'Bearer $_token';
+    }
     final fileNames = request.files.map((f) => f.filename ?? f.field).join(', ');
     dev.log(
       '→ ${request.method} ${request.url}  [multipart | files: $fileNames]',
