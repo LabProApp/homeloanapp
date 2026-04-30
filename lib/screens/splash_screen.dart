@@ -124,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 1500));
 
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('user_id');
+    final userId = prefs.getInt('userId');
     ApiClient.setToken(prefs.getString('token'));
 
     if (!mounted) return;

@@ -81,6 +81,7 @@ class _LoginScreenState extends State<LoginScreen>
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
     if (userId != null && userId != 0) {
+      ApiClient.setToken(prefs.getString('token'));
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
