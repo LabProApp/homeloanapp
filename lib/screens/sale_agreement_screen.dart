@@ -18,6 +18,9 @@ class SaleAgreementScreen extends StatefulWidget {
 }
 
 class _SaleAgreementScreenState extends State<SaleAgreementScreen> {
+  static final _numFmt  = NumberFormat('#,##,###');
+  static final _dateFmt = DateFormat('dd MMM yyyy');
+
   final _formKey = GlobalKey<FormState>();
   int _step = 0;
 
@@ -212,7 +215,7 @@ class _SaleAgreementScreenState extends State<SaleAgreementScreen> {
             () {
               final price = MoneyInputFormatter.parseInt(_priceCtrl.text) ?? 0;
               final token = MoneyInputFormatter.parseInt(_tokenCtrl.text) ?? 0;
-              return '₹ ${NumberFormat('#,##,###').format(price - token)}';
+              return '₹ ${_numFmt.format(price - token)}';
             }(),
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary),
           ),
@@ -340,7 +343,7 @@ class _SaleAgreementScreenState extends State<SaleAgreementScreen> {
           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12), isDense: true,
           suffixIcon: const Icon(Icons.calendar_today_outlined, size: 18),
         ),
-        child: Text(DateFormat('dd MMM yyyy').format(value), style: const TextStyle(fontSize: 13)),
+        child: Text(_dateFmt.format(value), style: const TextStyle(fontSize: 13)),
       ),
     );
 }

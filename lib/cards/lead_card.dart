@@ -16,6 +16,7 @@ class LeadCard extends StatelessWidget {
   });
 
   static final _dateFmt = DateFormat('dd MMM yyyy');
+  static final _fmt     = NumberFormat('#,##,###');
 
   String _fmt(String? d) {
     if (d == null || d.isEmpty) return '-';
@@ -178,13 +179,13 @@ class LeadCard extends StatelessWidget {
                     ),
                     if (lead['propertyPrice'] != null)
                       _InfoRow(Icons.currency_rupee_outlined,
-                          NumberFormat('#,##,###').format(lead['propertyPrice'])),
+                          _fmt.format(lead['propertyPrice'])),
                   ],
                 ),
                 if ((lead['budget'] ?? lead['preferredBudget']) != null) ...[
                   const SizedBox(height: 4),
                   _InfoRow(Icons.account_balance_wallet_outlined,
-                    'Budget ₹${NumberFormat('#,##,###').format(lead['budget'] ?? lead['preferredBudget'])}'),
+                    'Budget ₹${_fmt.format(lead['budget'] ?? lead['preferredBudget'])}'),
                 ],
                 if (message.isNotEmpty) ...[
                   const SizedBox(height: 4),

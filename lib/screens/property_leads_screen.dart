@@ -25,7 +25,9 @@ class _PropertyLeadsScreenState extends State<PropertyLeadsScreen> {
   List<dynamic> _leads = [];
   bool _loading = true;
 
-  static final _dateFmt = DateFormat('dd MMM yyyy');
+  static final _dateFmt     = DateFormat('dd MMM yyyy');
+  static final _followUpFmt = DateFormat('dd MMM yyyy, hh:mm a');
+  static final _numFmt      = NumberFormat('#,##,###');
 
   static const _statusColors = <String, Color>{
     'NEW':            AppColors.info,
@@ -151,7 +153,6 @@ class _PropertyLeadsScreenState extends State<PropertyLeadsScreen> {
     DateTime? selectedDate;
     final remarkCtrl = TextEditingController();
     bool saving = false;
-    final displayFmt = DateFormat('dd MMM yyyy, hh:mm a');
 
     showModalBottomSheet(
       context: context,
@@ -246,7 +247,7 @@ class _PropertyLeadsScreenState extends State<PropertyLeadsScreen> {
                       const SizedBox(width: 10),
                       Text(
                         selectedDate != null
-                            ? displayFmt.format(selectedDate!)
+                            ? _followUpFmt.format(selectedDate!)
                             : 'Tap to pick date & time',
                         style: TextStyle(
                           fontSize: 14,
@@ -464,7 +465,7 @@ class _InterestedBuyerCard extends StatelessWidget {
                     dateFmt(lead['inquiryDate'] as String?)),
                 if (budget != null)
                   _chip(Icons.account_balance_wallet_outlined,
-                      '₹${NumberFormat('#,##,###').format(budget)}'),
+                      '₹${_numFmt.format(budget)}'),
                 if (lead['leadSource'] != null)
                   _chip(Icons.source_outlined, lead['leadSource'] as String),
                 if (lead['profession'] != null)

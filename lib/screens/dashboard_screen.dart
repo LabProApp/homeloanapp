@@ -47,8 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAppVersion();
-    _loadUserInfo();
+    Future.wait([_loadAppVersion(), _loadUserInfo()]);
     _currentPage = _buildHome();
   }
 

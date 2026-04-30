@@ -2,14 +2,13 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppUtils {
+  static final _dateFmt = DateFormat('dd MMM yyyy');
 
   /// Format Post Date
   static String formatDate(String? postDate) {
     if (postDate == null || postDate.isEmpty) return "-";
-
     try {
-      final dt = DateTime.parse(postDate);
-      return DateFormat('dd MMM yyyy').format(dt);
+      return _dateFmt.format(DateTime.parse(postDate));
     } catch (e) {
       return postDate;
     }

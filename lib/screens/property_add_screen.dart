@@ -102,8 +102,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   void initState() {
     super.initState();
     _prefillFromEdit();
-    _loadStates();
-    _loadUserData();
+    Future.wait([_loadStates(), _loadUserData()]);
     if (widget.propertyToEdit == null) {
       _titleCtrl.addListener(_refreshDescIfEmpty);
       _carpetAreaCtrl.addListener(_refreshDescIfEmpty);

@@ -5,6 +5,8 @@ import '../services/leads_service.dart';
 import '../cards/lead_card.dart';
 import '../commons/common_widget.dart';
 
+final _kFollowUpFmt = DateFormat('dd MMM yyyy, hh:mm a');
+
 class BrokerLeadsScreen extends StatefulWidget {
   final int brokerId;
 
@@ -17,6 +19,7 @@ class BrokerLeadsScreen extends StatefulWidget {
 class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
   List<dynamic> _leads = [];
   List<dynamic> _filteredLeads = [];
+  Map<String, int> _statusCounts = {};
   bool _loading = true;
   String _search = '';
   String _selectedStatus = 'ALL';
@@ -101,11 +104,13 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
       return (name.contains(_search) || mobile.contains(_search))
           && (_selectedStatus == 'ALL' || status == _selectedStatus);
     }).toList();
+    _statusCounts = {};
+    for (final lead in _leads) {
+      final s = (lead['status'] ?? '').toString().toUpperCase();
+      _statusCounts[s] = (_statusCounts[s] ?? 0) + 1;
+    }
     if (mounted) setState(() {});
   }
-
-  int _count(String status) =>
-      _leads.where((l) => (l['status'] ?? '').toString().toUpperCase() == status).length;
 
   // ── Stats row ──────────────────────────────────────────────────────────────
   Widget _buildStats() {
@@ -116,13 +121,13 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
         children: [
           _StatTile(label: 'Total',      count: _leads.length,               color: AppColors.primary),
           const SizedBox(width: 8),
-          _StatTile(label: 'New',        count: _count('NEW'),               color: AppColors.info),
+          _StatTile(label: 'New',        count: _statusCounts['NEW']        ?? 0, color: AppColors.info),
           const SizedBox(width: 8),
-          _StatTile(label: 'Contacted',  count: _count('CONTACTED'),         color: AppColors.warning),
+          _StatTile(label: 'Contacted',  count: _statusCounts['CONTACTED']  ?? 0, color: AppColors.warning),
           const SizedBox(width: 8),
-          _StatTile(label: 'Visit Done', count: _count('VISIT_DONE'),        color: const Color(0xFF2E7D32)),
+          _StatTile(label: 'Visit Done', count: _statusCounts['VISIT_DONE'] ?? 0, color: const Color(0xFF2E7D32)),
           const SizedBox(width: 8),
-          _StatTile(label: 'Won',        count: _count('CLOSED_WON'),        color: AppColors.success),
+          _StatTile(label: 'Won',        count: _statusCounts['CLOSED_WON'] ?? 0, color: AppColors.success),
         ],
       ),
     );
@@ -385,7 +390,7 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
     DateTime? selectedDate;
     final remarkCtrl = TextEditingController();
     bool saving = false;
-    final dateFmt = DateFormat('dd MMM yyyy, hh:mm a');
+    const dateFmt = _kFollowUpFmt;
 
     showModalBottomSheet(
       context: context,

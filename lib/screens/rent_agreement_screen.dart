@@ -20,6 +20,8 @@ class RentAgreementScreen extends StatefulWidget {
 }
 
 class _RentAgreementScreenState extends State<RentAgreementScreen> {
+  static final _dateFmt = DateFormat('dd MMM yyyy');
+
   final _formKey = GlobalKey<FormState>();
   int _step = 0;
 
@@ -499,7 +501,7 @@ class _RentAgreementScreenState extends State<RentAgreementScreen> {
           isDense: true,
           suffixIcon: const Icon(Icons.calendar_today_outlined, size: 18),
         ),
-        child: Text(DateFormat('dd MMM yyyy').format(_startDate),
+        child: Text(_dateFmt.format(_startDate),
             style: const TextStyle(fontSize: 13)),
       ),
     );
