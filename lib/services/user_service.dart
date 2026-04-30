@@ -33,10 +33,14 @@ class UserApiService {
       throw Exception('Invalid JSON received from server');
     }
 
-    if (decoded['id'] == null) throw Exception('User ID missing in response');
+    // Response shape: { "token": "...", "user": { "id": ..., ... } }
+    final userJson = decoded['user'] as Map<String, dynamic>?;
+    if (userJson == null || userJson['id'] == null) {
+      throw Exception('User data missing in response');
+    }
 
     return LoginResponse(
-      user: UserModel.fromJson(decoded),
+      user: UserModel.fromJson(userJson),
       token: decoded['token']?.toString(),
     );
   }
