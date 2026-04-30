@@ -28,9 +28,11 @@ class _LoginScreenState extends State<LoginScreen>
   bool _passwordVisible = false;
   bool _loading = false;
   bool _checkingLogin = true;
+  String _selectedRole = 'CLIENT';
 
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
 
   late final AnimationController _entranceCtrl;
   late final Animation<double> _logoFade;
@@ -100,6 +102,7 @@ class _LoginScreenState extends State<LoginScreen>
     _entranceCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _nameCtrl.dispose();
     super.dispose();
   }
 
@@ -278,6 +281,8 @@ class _LoginScreenState extends State<LoginScreen>
             _tab = index;
             _emailCtrl.clear();
             _passwordCtrl.clear();
+            _nameCtrl.clear();
+            _selectedRole = 'CLIENT';
           });
         },
         child: AnimatedContainer(
@@ -313,30 +318,43 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel(_tab == 0 ? 'Email or Mobile' : 'Email or Mobile'),
+        if (_tab == 1) ...[
+          _fieldLabel('Full Name'),
+          const SizedBox(height: 6),
+          _glassField(
+            controller: _nameCtrl,
+            hint: 'Enter your full name',
+            icon: Icons.badge_outlined,
+            keyboardType: TextInputType.name,
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        _fieldLabel('Email or Mobile'),
         const SizedBox(height: 6),
         _glassField(
           controller: _emailCtrl,
-          hint: _tab == 0 ? 'Enter email or mobile' : 'Enter email or mobile',
+          hint: 'Enter email or mobile',
           icon: Icons.person_outline_rounded,
           keyboardType: TextInputType.emailAddress,
         ),
 
+        const SizedBox(height: 16),
+        _fieldLabel('Password'),
+        const SizedBox(height: 6),
+        _glassField(
+          controller: _passwordCtrl,
+          hint: _tab == 0 ? 'Enter password' : 'Create a password',
+          icon: _passwordVisible
+              ? Icons.visibility_rounded
+              : Icons.visibility_off_rounded,
+          obscure: !_passwordVisible,
+          keyboardType: TextInputType.visiblePassword,
+          onIconTap: () =>
+              setState(() => _passwordVisible = !_passwordVisible),
+        ),
+
         if (_tab == 0) ...[
-          const SizedBox(height: 16),
-          _fieldLabel('Password'),
-          const SizedBox(height: 6),
-          _glassField(
-            controller: _passwordCtrl,
-            hint: 'Enter password',
-            icon: _passwordVisible
-                ? Icons.visibility_rounded
-                : Icons.visibility_off_rounded,
-            obscure: !_passwordVisible,
-            keyboardType: TextInputType.visiblePassword,
-            onIconTap: () =>
-                setState(() => _passwordVisible = !_passwordVisible),
-          ),
           const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerRight,
@@ -357,33 +375,59 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
         ] else ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white24),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 16, color: Colors.white60),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "We'll send a verification code to confirm your identity.",
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white70,
-                        height: 1.4),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 16),
+          _fieldLabel('I am a'),
+          const SizedBox(height: 8),
+          _roleSelector(),
         ],
       ],
+    );
+  }
+
+  Widget _roleSelector() {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white.withOpacity(0.15),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Row(children: [
+        _roleBtn('CLIENT', 'Client'),
+        _roleBtn('AGENT', 'Agent'),
+      ]),
+    );
+  }
+
+  Widget _roleBtn(String role, String label) {
+    final selected = _selectedRole == role;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedRole = role),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          alignment: Alignment.center,
+          margin: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+            boxShadow: selected
+                ? [BoxShadow(
+                    color: AppColors.primary.withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2))]
+                : [],
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : Colors.white70,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -536,22 +580,37 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _signup() async {
+    if (_nameCtrl.text.trim().isEmpty) {
+      _showError('Please enter your full name');
+      return;
+    }
     final identifierError = _validateIdentifier(_emailCtrl.text);
     if (identifierError != null) {
       _showError(identifierError);
+      return;
+    }
+    if (_passwordCtrl.text.trim().length < 6) {
+      _showError('Password must be at least 6 characters');
       return;
     }
 
     setState(() => _loading = true);
 
     try {
-      await UserApiService.resendOtp(_emailCtrl.text.trim());
+      await UserApiService.signup(
+        name: _nameCtrl.text.trim(),
+        identifier: _emailCtrl.text.trim(),
+        password: _passwordCtrl.text.trim(),
+        role: _selectedRole,
+      );
       if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) =>
-              OtpVerificationScreen(value: _emailCtrl.text.trim()),
+          builder: (_) => OtpVerificationScreen(
+            value: _emailCtrl.text.trim(),
+            isSignup: true,
+          ),
         ),
       );
     } on SocketException {
@@ -560,7 +619,7 @@ class _LoginScreenState extends State<LoginScreen>
       _showError('Connection timed out. Please try again.');
     } catch (e) {
       final msg = e.toString().replaceFirst('Exception: ', '');
-      _showError(msg.isNotEmpty ? msg : 'Failed to send OTP. Please try again.');
+      _showError(msg.isNotEmpty ? msg : 'Failed to create account. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

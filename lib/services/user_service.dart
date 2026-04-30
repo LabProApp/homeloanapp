@@ -111,6 +111,28 @@ class UserApiService {
     if (res.statusCode != 200) throw Exception(_extractError(res.body));
   }
 
+  static Future<void> signup({
+    required String name,
+    required String identifier,
+    required String password,
+    required String role,
+  }) async {
+    final body = <String, dynamic>{
+      'name': name,
+      identifier.contains('@') ? 'email' : 'mobile': identifier,
+      'password': password,
+      'userRole': role,
+    };
+    final res = await ApiClient.post(
+      Uri.parse(ApiUrls.userSignup),
+      body: jsonEncode(body),
+      authenticated: false,
+    );
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw Exception(_extractError(res.body));
+    }
+  }
+
   static Future<void> resendOtp(String identifier) async {
     final uri = Uri.parse(ApiUrls.resendOtp)
         .replace(queryParameters: {'identifier': identifier});

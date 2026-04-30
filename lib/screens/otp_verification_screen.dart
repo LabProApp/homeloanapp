@@ -10,8 +10,13 @@ import '../theme/app_colors.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String value;
+  final bool isSignup;
 
-  const OtpVerificationScreen({super.key, required this.value});
+  const OtpVerificationScreen({
+    super.key,
+    required this.value,
+    this.isSignup = false,
+  });
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -74,12 +79,25 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
     try {
       await UserApiService.verifyOtp(value: widget.value, otp: _otpCode);
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ResetPasswordScreen(value: widget.value),
-        ),
-      );
+      if (widget.isSignup) {
+        // Account activated — go back to login and show success
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Account created! Please log in.'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ResetPasswordScreen(value: widget.value),
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       final msg = e.toString().replaceFirst('Exception: ', '');
