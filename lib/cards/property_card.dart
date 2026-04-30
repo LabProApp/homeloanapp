@@ -80,14 +80,36 @@ class _PropertyCardState extends State<PropertyCard> {
 
     return Container(
       color: bg,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 64, color: iconColor),
-          const SizedBox(height: 8),
-          Text(label,
-              style: TextStyle(color: iconColor.withOpacity(0.7), fontSize: 13)),
-        ],
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 36, color: iconColor),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                color: iconColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'No photos available',
+              style: TextStyle(color: iconColor.withOpacity(0.55), fontSize: 11),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -104,181 +126,166 @@ class _PropertyCardState extends State<PropertyCard> {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          /// IMAGE
+          /// IMAGE SECTION
           SizedBox(
-            height: 430,
+            height: 220,
             width: double.infinity,
-            child: _images.isEmpty
-                ? _typePlaceholder()
-                : PageView.builder(
-                    itemCount: _images.length,
-                    onPageChanged: (i) => setState(() => currentIndex = i),
-                    itemBuilder: (_, i) => CachedNetworkImage(
-                      imageUrl: _images[i],
-                      fit: BoxFit.cover,
-                      fadeInDuration: const Duration(milliseconds: 250),
-                      placeholder: (_, __) => _loadingPlaceholder(),
-                      errorWidget: (_, __, ___) => _typePlaceholder(),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _images.isEmpty
+                    ? _typePlaceholder()
+                    : PageView.builder(
+                        itemCount: _images.length,
+                        onPageChanged: (i) => setState(() => currentIndex = i),
+                        itemBuilder: (_, i) => CachedNetworkImage(
+                          imageUrl: _images[i],
+                          fit: BoxFit.cover,
+                          fadeInDuration: const Duration(milliseconds: 250),
+                          placeholder: (_, __) => _loadingPlaceholder(),
+                          errorWidget: (_, __, ___) => _typePlaceholder(),
+                        ),
+                      ),
+
+                /// IMAGE COUNT
+                if (_images.length > 1)
+                  Positioned(
+                    bottom: 8,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.imageOverlay,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "${currentIndex + 1}/${_images.length}",
+                        style: const TextStyle(color: Colors.white, fontSize: 10),
+                      ),
                     ),
                   ),
-          ),
 
-          /// IMAGE COUNT
-          if (_images.length > 1)
-            Positioned(
-              bottom: 155,
-              right: 12,
-              child: Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.imageOverlay,
-                  borderRadius: BorderRadius.circular(20),
+                /// STATUS
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: _pill(status),
                 ),
-                child: Text(
-                  "${currentIndex + 1}/${_images.length}",
-                  style: const TextStyle(
-                      color: Colors.white, fontSize: 10),
+
+                /// TOP ICONS (INCLUDING INTEREST)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Column(
+                    children: [
+                      _iconCircle(
+                        _isFavourite ? Icons.favorite : Icons.favorite_border,
+                        _toggleFavorite,
+                      ),
+                      const SizedBox(height: 6),
+                      _iconCircle(Icons.share, _shareProperty),
+                      const SizedBox(height: 6),
+                      _iconCircle(Icons.call, _callOwner),
+                      const SizedBox(height: 6),
+                      _iconCircle(Icons.star, _sendingLead ? null : _createLead),
+                      if (widget.showWhatsAppIcon) ...[
+                        const SizedBox(height: 6),
+                        _iconCircle(Icons.chat, _openWhatsApp),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-            ),
-
-          /// STATUS
-          Positioned(
-            top: 12,
-            left: 12,
-            child: _pill(status),
-          ),
-
-          /// TOP ICONS (INCLUDING INTEREST)
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Column(
-              children: [
-                _iconCircle(
-                  _isFavourite ? Icons.favorite : Icons.favorite_border,
-                  _toggleFavorite,
-                ),
-                const SizedBox(height: 6),
-
-                _iconCircle(Icons.share, _shareProperty),
-                const SizedBox(height: 6),
-
-                _iconCircle(Icons.call, _callOwner),
-                const SizedBox(height: 6),
-
-                /// 🔥 NEW INTEREST ICON
-                _iconCircle(Icons.star, _sendingLead ? null : _createLead),
-
-                if (widget.showWhatsAppIcon) ...[
-                  const SizedBox(height: 6),
-                  _iconCircle(Icons.chat, _openWhatsApp),
-                ],
               ],
             ),
           ),
 
-          /// BOTTOM DETAILS — gradient overlay (no BackdropFilter, GPU-free)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              decoration: const BoxDecoration(
-                borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(16)),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Color(0xE8000000)],
-                  stops: [0.0, 1.0],
+          /// DETAILS SECTION
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                /// TITLE
+                Text(
+                  property.title ?? "-",
+                  style: const TextStyle(
+                      fontSize: 17,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600),
                 ),
-              ),
-              padding: const EdgeInsets.fromLTRB(12, 32, 12, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
 
-                  /// TITLE
-                  Text(
-                    property.title ?? "-",
-                    style: const TextStyle(
-                        fontSize: 17,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600),
-                  ),
+                const SizedBox(height: 2),
 
-                  const SizedBox(height: 2),
+                /// LOCATION
+                Text(
+                  property.location ?? "-",
+                  style: const TextStyle(
+                      color: AppColors.textSecondary, fontSize: 12),
+                ),
 
-                  /// LOCATION
-                  Text(
-                    property.location ?? "-",
-                    style: const TextStyle(
-                        color: AppColors.imageCaptionText, fontSize: 12),
-                  ),
+                const SizedBox(height: 2),
 
-                  const SizedBox(height: 2),
-
-                  /// CITY + PRICE
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          "${property.city ?? "-"} | ${property.state ?? "-"}",
-                          style: const TextStyle(
-                              color: AppColors.imageCaptionText, fontSize: 11),
-                        ),
-                      ),
-                      Text(
-                        property.price != null
-                            ? "₹ ${_fmt.format(property.price)}"
-                            : "-",
+                /// CITY + PRICE
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "${property.city ?? "-"} | ${property.state ?? "-"}",
                         style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold),
-                      )
-                    ],
-                  ),
-
-                  const SizedBox(height: 2),
-
-                  /// DATE
-                  Text(
-                    "Posted: ${AppUtils.formatDate(property.postDate)}",
-                    style: const TextStyle(
-                        fontSize: 10, color: AppColors.imageCaptionText),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  /// FEATURES
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _feature(Icons.bed,
-                          "${property.bedrooms ?? '-'} Beds"),
-                      _feature(Icons.bathtub,
-                          "${property.bathrooms ?? '-'} Bath"),
-                      _feature(Icons.square_foot,
-                          "${property.superArea ?? '-'} sqft"),
-                    ],
-                  ),
-
-                  if (widget.showAmenitiesExpandable &&
-                      widget.property.amenitiesAsList != null &&
-                      widget.property.amenitiesAsList!.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    _amenitiesRow(),
+                            color: AppColors.textMuted, fontSize: 11),
+                      ),
+                    ),
+                    Text(
+                      property.price != null
+                          ? "₹ ${_fmt.format(property.price)}"
+                          : "-",
+                      style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
+                    )
                   ],
+                ),
+
+                const SizedBox(height: 2),
+
+                /// DATE
+                Text(
+                  "Posted: ${AppUtils.formatDate(property.postDate)}",
+                  style: const TextStyle(
+                      fontSize: 10, color: AppColors.textMuted),
+                ),
+
+                const SizedBox(height: 6),
+
+                /// FEATURES
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _feature(Icons.bed,
+                        "${property.bedrooms ?? '-'} Beds"),
+                    _feature(Icons.bathtub,
+                        "${property.bathrooms ?? '-'} Bath"),
+                    _feature(Icons.square_foot,
+                        "${property.superArea ?? '-'} sqft"),
+                  ],
+                ),
+
+                if (widget.showAmenitiesExpandable &&
+                    widget.property.amenitiesAsList != null &&
+                    widget.property.amenitiesAsList!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  _amenitiesRow(),
                 ],
-              ),
+              ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -297,18 +304,18 @@ class _PropertyCardState extends State<PropertyCard> {
             padding: const EdgeInsets.only(right: 6),
             child: Row(
               children: [
-                Icon(a.icon, size: 12, color: AppColors.imageCaptionText),
+                Icon(a.icon, size: 12, color: AppColors.textMuted),
                 const SizedBox(width: 3),
                 Text(a.label,
                     style:
-                    const TextStyle(fontSize: 10, color: AppColors.imageCaptionText)),
+                    const TextStyle(fontSize: 10, color: AppColors.textMuted)),
               ],
             ),
           );
         }),
         if (amenities.length > 4)
           Text("+${amenities.length - 4} more",
-              style: const TextStyle(fontSize: 10, color: AppColors.imageCaptionText)),
+              style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
       ],
     );
   }
@@ -316,13 +323,13 @@ class _PropertyCardState extends State<PropertyCard> {
   Widget _feature(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 12, color: AppColors.imageCaptionText),
+        Icon(icon, size: 12, color: AppColors.textMuted),
         const SizedBox(width: 4),
         Text(
           text,
           style: const TextStyle(
               fontSize: 10,
-              color: Colors.white,
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w500),
         ),
       ],
@@ -348,8 +355,23 @@ class _PropertyCardState extends State<PropertyCard> {
   Widget _loadingPlaceholder() {
     return Container(
       color: AppColors.surfaceSubtle,
-      child: const Center(
-        child: Icon(Icons.image_outlined, size: 40, color: AppColors.border),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: AppColors.border,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.image_outlined, size: 28, color: AppColors.textMuted),
+            ),
+            const SizedBox(height: 8),
+            const Text('Loading...', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+          ],
+        ),
       ),
     );
   }
