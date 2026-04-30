@@ -58,7 +58,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Native splash is on top during _init(); this is just a matching background.
-    return const Scaffold(backgroundColor: Color(0xFF0D0D0D));
+    // Native splash is on top during _init(); this matches the background
+    // so there is no flash if removal and navigation overlap.
+    return const Scaffold(
+      backgroundColor: Colors.black,
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/splash_bg_blur.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SizedBox.expand(),
+      ),
+    );
   }
 }
