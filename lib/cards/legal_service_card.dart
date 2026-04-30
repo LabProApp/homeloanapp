@@ -128,7 +128,7 @@ class LegalServiceCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _whatsApp(service.phone1),
+                      onPressed: () => _whatsApp(service.phone1, context),
                       icon: const Icon(Icons.chat_rounded, size: 16),
                       label: const Text('WhatsApp',
                           style: TextStyle(
@@ -280,7 +280,7 @@ class LegalServiceDetailPage extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _whatsApp(service.phone1),
+                  onPressed: () => _whatsApp(service.phone1, context),
                   icon: const Icon(Icons.chat_rounded, size: 18),
                   label: const Text('WhatsApp',
                       style: TextStyle(
@@ -619,15 +619,18 @@ Future<void> _call(String phone) async {
   await launchUrl(Uri.parse('tel:$clean'));
 }
 
-Future<void> _whatsApp(String phone) async {
+Future<void> _whatsApp(String phone, BuildContext context) async {
   final clean = phone.replaceAll(RegExp(r'[^0-9]'), '');
   if (clean.isEmpty) return;
   final num = clean.startsWith('91') ? clean : '91$clean';
   const msg = 'I would like to inquire about legal services';
-  await launchUrl(
-    Uri.parse('https://wa.me/$num?text=${Uri.encodeComponent(msg)}'),
-    mode: LaunchMode.externalApplication,
-  );
+  final uri = Uri.parse('https://wa.me/$num?text=${Uri.encodeComponent(msg)}');
+  final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+  if (!launched && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('WhatsApp is not installed on this device')),
+    );
+  }
 }
 
 Widget _serviceChip(String s) {
