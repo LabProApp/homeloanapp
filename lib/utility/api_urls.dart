@@ -40,6 +40,7 @@ class ApiUrls {
   //Property services URLs
 
   static const String propertySearch = "$baseUrl/property/advancedsearch";
+  static String propertyById(int id) => "$baseUrl/property/$id";
   static const String post_property = "$baseUrl/property/add";
   static const String update_property = "$baseUrl/property/update";
   static const String delete_property = "$baseUrl/property/delete";

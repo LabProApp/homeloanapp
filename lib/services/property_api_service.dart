@@ -158,4 +158,19 @@ class PropertyApiService {
     if (response.statusCode == 200 || response.statusCode == 204) return true;
     throw Exception('Toggle favourite failed: ${response.body}');
   }
+
+  static Future<PropertyModel?> fetchById(int id) async {
+    final uri = Uri.parse(ApiUrls.propertyById(id));
+    developer.log('Fetch property by id: $uri');
+    try {
+      final response = await ApiClient.get(uri);
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) {
+          return PropertyModel.fromJson(decoded);
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
 }

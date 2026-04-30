@@ -5,10 +5,10 @@ import '../models/client_lead_model.dart';
 import '../services/leads_service.dart';
 import '../theme/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import '../services/property_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../commons/property_share_sheet.dart';
 import '../utility/amenity_icon.dart';
 
 class RentPropertyCard extends StatefulWidget {
@@ -414,8 +414,13 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
   }
 
   void _shareProperty() {
-    Share.share(
-        "Check this rental property: ${widget.property.title}\n$rent");
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => PropertyShareSheet(property: widget.property),
+    );
   }
 
   Future<void> _callOwner() async {

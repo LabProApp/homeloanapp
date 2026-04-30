@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/property_model.dart';
@@ -10,6 +9,7 @@ import '../services/leads_service.dart';
 import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_util.dart';
+import '../commons/property_share_sheet.dart';
 import '../utility/amenity_icon.dart';
 
 class PropertyCard extends StatefulWidget {
@@ -432,8 +432,13 @@ class _PropertyCardState extends State<PropertyCard> {
   }
 
   void _shareProperty() {
-    Share.share(
-        "Check this property: ${widget.property.title}\n₹${widget.property.price}");
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => PropertyShareSheet(property: widget.property),
+    );
   }
 
   Future<void> _callOwner() async {

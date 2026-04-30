@@ -1,9 +1,20 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'screens/property_detail_screen.dart';
+import 'screens/rent_property_detail_screen.dart';
 import 'screens/splash_screen.dart';
 import 'network/service_locator.dart';
+import 'services/property_api_service.dart';
 import 'theme/app_colors.dart';
+
+/// Global navigator key so the deep-link handler can push routes from outside
+/// the widget tree (e.g. from a background stream callback).
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -12,12 +23,78 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  void _initDeepLinks() {
+    _appLinks = AppLinks();
+
+    // Handle links when the app is already running (foreground / background).
+    _linkSub = _appLinks.uriLinkStream.listen(
+      _handleDeepLink,
+      onError: (_) {}, // silently ignore stream errors
+    );
+
+    // Handle the initial link that cold-started the app.
+    _appLinks.getInitialLink().then((uri) {
+      if (uri != null) _handleDeepLink(uri);
+    });
+  }
+
+  Future<void> _handleDeepLink(Uri uri) async {
+    if (uri.scheme != 'keybricks') return;
+
+    final idStr = uri.queryParameters['id'];
+    final id = idStr != null ? int.tryParse(idStr) : null;
+    if (id == null) return;
+
+    try {
+      final property = await PropertyApiService.fetchById(id);
+      if (property == null) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('userId') ?? 0;
+
+      final nav = navigatorKey.currentState;
+      if (nav == null) return;
+
+      final isRent = property.rentOrSale?.toUpperCase() == 'RENT';
+      nav.push(
+        MaterialPageRoute(
+          builder: (_) => isRent
+              ? RentalPropertyDetailScreen(property: property, userId: userId)
+              : PropertyDetailScreen(property: property, userId: userId),
+        ),
+      );
+    } catch (_) {
+      // Silently fail — property may not exist or network may be unavailable.
+    }
+  }
+
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'KeyBricks',
       theme: _buildTheme(),
@@ -41,29 +118,19 @@ class MyApp extends StatelessWidget {
       ),
 
       // ── Typography ─────────────────────────────────────────────────────────
-      // Scale: display 28-32, title 20-24, body 14-16, label 11-13
       textTheme: const TextTheme(
-        // Headlines / display
         displayLarge:  TextStyle(fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, color: AppColors.textPrimary),
         displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: -0.25, color: AppColors.textPrimary),
         displaySmall:  TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-
-        // Section headings
         headlineLarge:  TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
         headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
         headlineSmall:  TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-
-        // Card / list titles
         titleLarge:  TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
         titleMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
         titleSmall:  TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
-
-        // Body copy
         bodyLarge:  TextStyle(fontSize: 15, fontWeight: FontWeight.w400, height: 1.5, color: AppColors.textPrimary),
         bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.5, color: AppColors.textSecondary),
         bodySmall:  TextStyle(fontSize: 13, fontWeight: FontWeight.w400, height: 1.4, color: AppColors.textMuted),
-
-        // Captions / chips / badges
         labelLarge:  TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.1),
         labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0.1, color: AppColors.textMuted),
         labelSmall:  TextStyle(fontSize: 11, fontWeight: FontWeight.w400, letterSpacing: 0.4, color: AppColors.textMuted),
@@ -71,7 +138,7 @@ class MyApp extends StatelessWidget {
 
       // ── AppBar ─────────────────────────────────────────────────────────────
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.primary,  // fallback; GradientAppBar overrides with transparent
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
@@ -85,8 +152,7 @@ class MyApp extends StatelessWidget {
         iconTheme: IconThemeData(color: Colors.white, size: 24),
       ),
 
-      // ── ElevatedButton — primary CTA ───────────────────────────────────────
-      // Height: 52 px | font: 15 px bold | radius: 12 px | H-padding: 24 px
+      // ── ElevatedButton ─────────────────────────────────────────────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
@@ -96,50 +162,31 @@ class MyApp extends StatelessWidget {
           elevation: 0,
           minimumSize: const Size.fromHeight(52),
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: font,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: const TextStyle(fontFamily: font, fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.2),
         ),
       ),
 
-      // ── OutlinedButton — secondary CTA ─────────────────────────────────────
+      // ── OutlinedButton ─────────────────────────────────────────────────────
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           side: const BorderSide(color: AppColors.primary, width: 1.5),
           minimumSize: const Size.fromHeight(52),
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: font,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: const TextStyle(fontFamily: font, fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.2),
         ),
       ),
 
-      // ── TextButton — tertiary / inline links ───────────────────────────────
+      // ── TextButton ─────────────────────────────────────────────────────────
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           minimumSize: const Size(64, 40),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(
-            fontFamily: font,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
-          ),
+          textStyle: const TextStyle(fontFamily: font, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.1),
         ),
       ),
 
@@ -148,37 +195,13 @@ class MyApp extends StatelessWidget {
         filled: true,
         fillColor: AppColors.textBoxbackground,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        hintStyle: const TextStyle(
-          fontFamily: font,
-          fontSize: 14,
-          color: AppColors.textMuted,
-        ),
-        labelStyle: const TextStyle(
-          fontFamily: font,
-          fontSize: 14,
-          color: AppColors.textSecondary,
-        ),
-        errorStyle: const TextStyle(
-          fontFamily: font,
-          fontSize: 12,
-          color: AppColors.error,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.error)),
+        hintStyle: const TextStyle(fontFamily: font, fontSize: 14, color: AppColors.textMuted),
+        labelStyle: const TextStyle(fontFamily: font, fontSize: 14, color: AppColors.textSecondary),
+        errorStyle: const TextStyle(fontFamily: font, fontSize: 12, color: AppColors.error),
       ),
 
       // ── Cards ──────────────────────────────────────────────────────────────
@@ -195,20 +218,8 @@ class MyApp extends StatelessWidget {
         backgroundColor: AppColors.white,
         selectedColor: AppColors.primary,
         disabledColor: AppColors.disabled.withOpacity(0.5),
-        // unselected label
-        labelStyle: const TextStyle(
-          fontFamily: font,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
-        ),
-        // selected label — white text on primary background
-        secondaryLabelStyle: const TextStyle(
-          fontFamily: font,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: Colors.white,
-        ),
+        labelStyle: const TextStyle(fontFamily: font, fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+        secondaryLabelStyle: const TextStyle(fontFamily: font, fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white),
         side: const BorderSide(color: AppColors.border),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -227,11 +238,7 @@ class MyApp extends StatelessWidget {
       ),
 
       // ── Divider ────────────────────────────────────────────────────────────
-      dividerTheme: const DividerThemeData(
-        color: AppColors.border,
-        thickness: 1,
-        space: 1,
-      ),
+      dividerTheme: const DividerThemeData(color: AppColors.border, thickness: 1, space: 1),
 
       // ── SnackBar ───────────────────────────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
