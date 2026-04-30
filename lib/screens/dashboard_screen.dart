@@ -21,6 +21,7 @@ import 'bank_apply_loan_dialog.dart';
 import 'post_requirement_screen.dart';
 import 'loan_eligibility_screen.dart';
 
+import '../network/api_client.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
 
@@ -553,6 +554,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _logout() async {
+    ApiClient.setToken(null);
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     if (!mounted) return;

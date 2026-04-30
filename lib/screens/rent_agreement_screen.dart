@@ -373,6 +373,8 @@ class _RentAgreementScreenState extends State<RentAgreementScreen> {
                 onPressed: () => setState(() => _step--),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textPrimary,
+                  minimumSize: const Size(0, 52),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),

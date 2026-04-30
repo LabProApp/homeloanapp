@@ -13,8 +13,16 @@ const _kBodyPreviewLimit = 600;
 ///
 /// Retry is triggered by: [SocketException], [TimeoutException], and
 /// HTTP 503. Permanent client errors (4xx, etc.) are never retried.
+///
+/// Call [setToken] after login / on app start to attach the JWT to every request.
+/// Call [setToken] with null on logout to clear it.
 class ApiClient {
   const ApiClient._();
+
+  static String? _token;
+
+  /// Store or clear the JWT. Call after login, after auto-login from prefs, and on logout.
+  static void setToken(String? token) => _token = token;
 
   // ── GET ────────────────────────────────────────────────────────────────────
 
@@ -181,6 +189,7 @@ class ApiClient {
 
   static Map<String, String> _defaultHeaders(Map<String, String>? extra) => {
         'Content-Type': 'application/json',
+        if (_token != null) 'Authorization': 'Bearer $_token',
         ...?extra,
       };
 

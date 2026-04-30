@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../commons/common_widget.dart';
+import '../network/api_client.dart';
 import '../services/user_service.dart';
 import '../theme/app_colors.dart';
 import 'dashboard_screen.dart';
@@ -491,6 +492,7 @@ class _LoginScreenState extends State<LoginScreen>
       await prefs.setBool('isVerified', user.isVerified ?? false);
       if (response.token != null) {
         await prefs.setString('token', response.token!);
+        ApiClient.setToken(response.token);
       }
 
       if (!mounted) return;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../network/api_client.dart';
 import '../screens/dashboard_screen.dart';
 import '../theme/app_colors.dart';
 import 'user_login_screen.dart';
@@ -124,6 +125,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('user_id');
+    ApiClient.setToken(prefs.getString('token'));
 
     if (!mounted) return;
 
