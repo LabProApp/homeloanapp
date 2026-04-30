@@ -29,8 +29,9 @@ class ApiClient {
   static Future<http.Response> get(
     Uri uri, {
     Map<String, String>? headers,
+    bool authenticated = true,
   }) =>
-      _send('GET', uri, () => http.get(uri, headers: _defaultHeaders(headers)));
+      _send('GET', uri, () => http.get(uri, headers: _headers(headers, authenticated)));
 
   // ── POST ───────────────────────────────────────────────────────────────────
 
@@ -38,11 +39,12 @@ class ApiClient {
     Uri uri, {
     Map<String, String>? headers,
     Object? body,
+    bool authenticated = true,
   }) =>
       _send(
         'POST',
         uri,
-        () => http.post(uri, headers: _defaultHeaders(headers), body: body),
+        () => http.post(uri, headers: _headers(headers, authenticated), body: body),
         requestBody: body,
       );
 
@@ -52,11 +54,12 @@ class ApiClient {
     Uri uri, {
     Map<String, String>? headers,
     Object? body,
+    bool authenticated = true,
   }) =>
       _send(
         'PUT',
         uri,
-        () => http.put(uri, headers: _defaultHeaders(headers), body: body),
+        () => http.put(uri, headers: _headers(headers, authenticated), body: body),
         requestBody: body,
       );
 
@@ -65,8 +68,9 @@ class ApiClient {
   static Future<http.Response> delete(
     Uri uri, {
     Map<String, String>? headers,
+    bool authenticated = true,
   }) =>
-      _send('DELETE', uri, () => http.delete(uri, headers: _defaultHeaders(headers)));
+      _send('DELETE', uri, () => http.delete(uri, headers: _headers(headers, authenticated)));
 
   // ── PATCH ──────────────────────────────────────────────────────────────────
 
@@ -74,11 +78,12 @@ class ApiClient {
     Uri uri, {
     Map<String, String>? headers,
     Object? body,
+    bool authenticated = true,
   }) =>
       _send(
         'PATCH',
         uri,
-        () => http.patch(uri, headers: _defaultHeaders(headers), body: body),
+        () => http.patch(uri, headers: _headers(headers, authenticated), body: body),
         requestBody: body,
       );
 
@@ -187,9 +192,9 @@ class ApiClient {
   static Future<void> _backoff(int attempt) =>
       Future.delayed(Duration(milliseconds: 500 * attempt));
 
-  static Map<String, String> _defaultHeaders(Map<String, String>? extra) => {
+  static Map<String, String> _headers(Map<String, String>? extra, bool authenticated) => {
         'Content-Type': 'application/json',
-        if (_token != null) 'Authorization': 'Bearer $_token',
+        if (authenticated && _token != null) 'Authorization': 'Bearer $_token',
         ...?extra,
       };
 

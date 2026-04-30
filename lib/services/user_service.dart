@@ -20,7 +20,7 @@ class UserApiService {
 
     developer.log('Login: $uri', name: 'UserApiService');
 
-    final res = await ApiClient.post(uri, body: jsonEncode(body));
+    final res = await ApiClient.post(uri, body: jsonEncode(body), authenticated: false);
 
     developer.log('Status: ${res.statusCode}', name: 'UserApiService');
 
@@ -101,6 +101,7 @@ class UserApiService {
     final res = await ApiClient.post(
       Uri.parse(ApiUrls.resetPassword),
       body: jsonEncode(body),
+      authenticated: false,
     );
 
     if (res.statusCode != 200) throw Exception(_extractError(res.body));
@@ -110,7 +111,7 @@ class UserApiService {
     final uri = Uri.parse(ApiUrls.resendOtp)
         .replace(queryParameters: {'identifier': identifier});
 
-    final res = await ApiClient.post(uri);
+    final res = await ApiClient.post(uri, authenticated: false);
 
     if (res.statusCode != 200) throw Exception(_extractError(res.body));
   }
@@ -140,7 +141,7 @@ class UserApiService {
       queryParameters: {'identifier': value, 'otp': otp},
     );
 
-    final res = await ApiClient.post(uri);
+    final res = await ApiClient.post(uri, authenticated: false);
 
     if (res.statusCode != 200) throw Exception(_extractError(res.body));
   }
