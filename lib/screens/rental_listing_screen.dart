@@ -189,6 +189,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
       'state', 'city', 'type', 'bedrooms', 'bathrooms',
       'minPrice', 'maxPrice', 'minArea', 'maxArea',
       'furnishing', 'constructionStatus', 'preferredTenants',
+      'amenity', 'ownershipType', 'availability',
     ];
     return keys.where((k) {
       final v = _filters[k];
@@ -226,8 +227,8 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
 
       final data = await service.fetchProperties(
         postedByUserId: widget.postedbyuserId,
-        city: searchText.isEmpty ? _filters["city"] : searchText,
-        location: searchText.isEmpty ? null : searchText,
+        city: _filters["city"],
+        location: searchText.isNotEmpty ? searchText : null,
 
         // Always RENT
         rentOrSale: "RENT",
@@ -237,6 +238,13 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
 
         // Filters
         type: _filters["type"],
+        state: _filters["state"],
+        constructionStatus: _filters["constructionStatus"],
+        furnishing: _filters["furnishing"],
+        ownershipType: _filters["ownershipType"],
+        preferredTenants: _filters["preferredTenants"],
+        availability: _filters["availability"],
+        amenity: _filters["amenity"],
         minBedrooms: _toInt(_filters["bedrooms"]),
         minBathrooms: _toInt(_filters["bathrooms"]),
         minPrice: _toDouble(_filters["minPrice"]),
@@ -253,7 +261,9 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
       });
 
       _sortResults();
-      _saveCurrentSearch();
+      final hasSearch = _searchController.text.trim().isNotEmpty ||
+          _filters.values.any((v) => v != null && v.toString().isNotEmpty);
+      if (hasSearch) _saveCurrentSearch();
     } catch (e) {
       if (!mounted) return;
 
@@ -486,6 +496,14 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
       addChip('constructionStatus', '${f['constructionStatus']}');
     if (f['state'] != null && f['state'].toString().isNotEmpty)
       addChip('state', '${f['state']}');
+    if (f['ownershipType'] != null && f['ownershipType'].toString().isNotEmpty)
+      addChip('ownershipType', '${f['ownershipType']}');
+    if (f['preferredTenants'] != null && f['preferredTenants'].toString().isNotEmpty)
+      addChip('preferredTenants', 'Tenants: ${f['preferredTenants']}');
+    if (f['availability'] != null && f['availability'].toString().isNotEmpty)
+      addChip('availability', '${f['availability']}');
+    if (f['amenity'] != null && f['amenity'].toString().isNotEmpty)
+      addChip('amenity', 'Amenities: ${f['amenity']}');
 
     final hasAny = chips.isNotEmpty;
     if (!hasAny) return const SizedBox();

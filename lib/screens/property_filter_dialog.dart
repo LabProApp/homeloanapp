@@ -205,7 +205,7 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
   }
 
   void _apply() {
-    widget.onApply({
+    final raw = <String, dynamic>{
       'state': _selectedState?.value,
       'city': _selectedCity?.value,
       'location':
@@ -225,7 +225,9 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
       'preferredTenants': _preferredTenants,
       'availability': _availability,
       'amenity': _amenities.isNotEmpty ? _amenities.join(',') : null,
-    });
+    };
+    raw.removeWhere((_, v) => v == null);
+    widget.onApply(raw);
     Navigator.pop(context);
   }
 

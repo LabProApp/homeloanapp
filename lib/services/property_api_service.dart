@@ -10,11 +10,16 @@ class PropertyApiService {
     String? userId,
     String? title,
     String? address,
+    String? state,
     String? city,
     String? type,
     String? category,
     String? postedBy,
     String? constructionStatus,
+    String? furnishing,
+    String? ownershipType,
+    String? preferredTenants,
+    String? availability,
     String? currency,
     String? location,
     double? minPrice,
@@ -41,11 +46,16 @@ class PropertyApiService {
     add('userId', userId);
     add('title', title);
     add('address', address);
+    add('state', state);
     add('city', city);
     add('type', type);
     add('category', category);
     add('postedBy', postedBy);
     add('constructionStatus', constructionStatus);
+    add('furnishing', furnishing);
+    add('ownershipType', ownershipType);
+    add('preferredTenants', preferredTenants);
+    add('availability', availability);
     add('currency', currency);
     add('location', location);
     add('minPrice', minPrice);
