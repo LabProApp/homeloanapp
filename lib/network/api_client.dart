@@ -21,6 +21,10 @@ class ApiClient {
 
   static String? _token;
 
+  /// Called once when any authenticated request receives a 401 or 403.
+  /// Wire this up in main.dart to clear prefs and redirect to login.
+  static void Function()? onUnauthorized;
+
   /// Store or clear the JWT. Call after login, after auto-login from prefs, and on logout.
   static void setToken(String? token) => _token = token;
 
@@ -161,6 +165,16 @@ class ApiClient {
           );
           await _backoff(tries);
           continue;
+        }
+
+        // Token expired or revoked — only fire when a token was actually sent.
+        if ((response.statusCode == 401 || response.statusCode == 403) &&
+            _token != null) {
+          dev.log(
+            '⚠ ${response.statusCode} Unauthorized — clearing session',
+            name: _kTag,
+          );
+          onUnauthorized?.call();
         }
 
         return response;

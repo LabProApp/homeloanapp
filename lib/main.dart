@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/property_detail_screen.dart';
 import 'screens/rent_property_detail_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/user_login_screen.dart';
+import 'network/api_client.dart';
 import 'network/service_locator.dart';
 import 'services/property_api_service.dart';
 import 'theme/app_colors.dart';
@@ -38,6 +40,17 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _initDeepLinks();
+    ApiClient.onUnauthorized = _handleUnauthorized;
+  }
+
+  Future<void> _handleUnauthorized() async {
+    ApiClient.setToken(null);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   void _initDeepLinks() {
