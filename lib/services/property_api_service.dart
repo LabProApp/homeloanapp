@@ -34,6 +34,8 @@ class PropertyApiService {
     String? rentOrSale,
     String? postDate,
     int? postedByUserId,
+    int? page,
+    int? pageSize,
   }) async {
     final params = <String, String>{};
 
@@ -70,6 +72,8 @@ class PropertyApiService {
     add('rentOrSale', rentOrSale);
     add('postDate', postDate);
     add('postedByUser', postedByUserId);
+    add('page', page);
+    add('size', pageSize);
 
     final uri = Uri.parse(ApiUrls.propertySearch)
         .replace(queryParameters: params.isEmpty ? null : params);

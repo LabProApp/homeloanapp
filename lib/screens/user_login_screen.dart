@@ -590,8 +590,17 @@ class _LoginScreenState extends State<LoginScreen>
       _showError(identifierError);
       return;
     }
-    if (_passwordCtrl.text.trim().length < 6) {
-      _showError('Password must be at least 6 characters');
+    final pwd = _passwordCtrl.text.trim();
+    if (pwd.length < 8) {
+      _showError('Password must be at least 8 characters');
+      return;
+    }
+    if (!pwd.contains(RegExp(r'[A-Za-z]'))) {
+      _showError('Password must contain at least one letter');
+      return;
+    }
+    if (!pwd.contains(RegExp(r'[0-9]'))) {
+      _showError('Password must contain at least one number');
       return;
     }
 

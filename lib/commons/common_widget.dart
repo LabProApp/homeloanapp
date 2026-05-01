@@ -23,7 +23,10 @@ class AppSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Semantics(
+      label: hintText,
+      textField: true,
+      child: Container(
       height: 44,
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -51,7 +54,7 @@ class AppSearchField extends StatelessWidget {
           isDense: true,
         ),
       ),
-    );
+    ));
   }
 }
 

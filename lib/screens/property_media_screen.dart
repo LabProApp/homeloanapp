@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_compress/video_compress.dart';
@@ -10,6 +12,29 @@ import '../theme/app_colors.dart';
 import '../services/document_service.dart';
 import '../commons/common_widget.dart';
 import '../screens/dashboard_screen.dart';
+
+// Top-level function so compute() can spawn it in a separate isolate.
+// Receives raw bytes + watermark text; returns compressed+watermarked JPEG bytes.
+Uint8List _processImageInIsolate(Map<String, dynamic> args) {
+  final bytes   = args['bytes']   as Uint8List;
+  final appName = args['appName'] as String;
+
+  final original = img.decodeImage(bytes);
+  if (original == null) return bytes;
+
+  final resized = original.width > 1920
+      ? img.copyResize(original, width: 1920)
+      : original;
+
+  img.drawString(
+    resized, appName, font: img.arial24,
+    x: resized.width - (appName.length * 14),
+    y: resized.height - 40,
+    color: img.ColorUint8.rgb(255, 255, 255),
+  );
+
+  return Uint8List.fromList(img.encodeJpg(resized, quality: 90));
+}
 
 class PropertyMediaScreen extends StatefulWidget {
   final int propertyId;
@@ -112,14 +137,35 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
   }
 
   // ── Image pick + process ───────────────────────────────────────────────────
+  static const _maxImageBytes = 30 * 1024 * 1024;  // 30 MB
+  static const _maxVideoBytes = 500 * 1024 * 1024; // 500 MB
+
   Future<void> _pickImages() async {
     final files = await _picker.pickMultiImage(imageQuality: 95);
     if (files.isEmpty) return;
-    setState(() { _picking = true; _pickCurrent = 0; _pickTotal = files.length; });
-    for (int i = 0; i < files.length; i++) {
-      File f = await _compressImage(File(files[i].path));
-      f = await _addWatermark(f);
-      _mediaList.add(_MediaItem(file: f, caption: _captions.first, isVideo: false));
+
+    final valid    = <XFile>[];
+    int   skipped  = 0;
+    for (final f in files) {
+      if (await f.length() > _maxImageBytes) { skipped++; } else { valid.add(f); }
+    }
+    if (skipped > 0 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('$skipped photo${skipped > 1 ? 's' : ''} skipped (over 30 MB)'),
+      ));
+    }
+    if (valid.isEmpty) return;
+
+    setState(() { _picking = true; _pickCurrent = 0; _pickTotal = valid.length; });
+    for (int i = 0; i < valid.length; i++) {
+      final bytes     = await File(valid[i].path).readAsBytes();
+      final processed = await compute(_processImageInIsolate, {
+        'bytes':   bytes,
+        'appName': _appName,
+      });
+      final outFile = File('${valid[i].path}_processed.jpg');
+      await outFile.writeAsBytes(processed);
+      _mediaList.add(_MediaItem(file: outFile, caption: _captions.first, isVideo: false));
       setState(() => _pickCurrent = i + 1);
     }
     setState(() => _picking = false);
@@ -129,21 +175,18 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
   Future<void> _pickVideo() async {
     final file = await _picker.pickVideo(source: ImageSource.gallery);
     if (file == null) return;
+    if (await file.length() > _maxVideoBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Video is too large. Maximum allowed size is 500 MB.'),
+        ));
+      }
+      return;
+    }
     setState(() { _picking = true; _pickCurrent = 0; _pickTotal = 1; });
     final compressed = await _compressVideo(File(file.path));
     _mediaList.add(_MediaItem(file: compressed, caption: _captions.first, isVideo: true));
     setState(() => _picking = false);
-  }
-
-  Future<File> _compressImage(File file) async {
-    final bytes    = await file.readAsBytes();
-    final original = img.decodeImage(bytes);
-    if (original == null) return file;
-    final resized  = original.width > 1920
-        ? img.copyResize(original, width: 1920)
-        : original;
-    final jpg      = img.encodeJpg(resized, quality: 90);
-    return File('${file.path}_compressed.jpg')..writeAsBytesSync(jpg);
   }
 
   Future<File> _compressVideo(File file) async {
@@ -152,20 +195,6 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
     if (info == null || info.path == null) return file;
     await VideoCompress.deleteAllCache();
     return File(info.path!);
-  }
-
-  Future<File> _addWatermark(File file) async {
-    final bytes    = await file.readAsBytes();
-    final original = img.decodeImage(bytes);
-    if (original == null) return file;
-    img.drawString(
-      original, _appName, font: img.arial24,
-      x: original.width - (_appName.length * 14),
-      y: original.height - 40,
-      color: img.ColorUint8.rgb(255, 255, 255),
-    );
-    return File(file.path)
-      ..writeAsBytesSync(img.encodeJpg(original, quality: 90));
   }
 
   // ── Upload ─────────────────────────────────────────────────────────────────

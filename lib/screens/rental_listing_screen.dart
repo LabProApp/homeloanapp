@@ -42,6 +42,13 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   List<Map<String, dynamic>> _savedSearches = [];
   bool _savedSearchesExpanded = false;
 
+  // pagination
+  int _currentPage = 0;
+  static const int _pageSize = 20;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+  final ScrollController _scrollController = ScrollController();
+
   // ---------- sort label maps ----------
   static const Map<String, String> _sortLabels = {
     'latest': 'Default (Latest)',
@@ -61,8 +68,16 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _loadSavedSearches();
     _refreshFromApi();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 
   // ============================================================
@@ -215,28 +230,39 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
     return null;
   }
 
-  Future<void> _loadProperties() async {
-    try {
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
+  }
+
+  void _loadMore() => _loadProperties(reset: false);
+
+  Future<void> _loadProperties({bool reset = true}) async {
+    if (reset) {
       setState(() {
         _isLoading = true;
         _error = "";
+        _currentPage = 0;
+        _hasMore = true;
       });
+    } else {
+      if (_isLoadingMore || !_hasMore) return;
+      setState(() => _isLoadingMore = true);
+    }
 
+    try {
       final service = PropertyApiService();
       final searchText = _searchController.text.trim();
+      final page = reset ? 0 : _currentPage;
 
       final data = await service.fetchProperties(
         postedByUserId: widget.postedbyuserId,
         city: _filters["city"],
         location: searchText.isNotEmpty ? searchText : null,
-
-        // Always RENT
         rentOrSale: "RENT",
-
-        // Residential / Commercial
         category: isResidential ? "Residential" : "Commercial",
-
-        // Filters
         type: _filters["type"],
         state: _filters["state"],
         constructionStatus: _filters["constructionStatus"],
@@ -251,39 +277,47 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
         maxPrice: _toDouble(_filters["maxPrice"]),
         minArea: _toDouble(_filters["minArea"]),
         maxArea: _toDouble(_filters["maxArea"]),
+        page: page,
+        pageSize: _pageSize,
       );
 
       if (!mounted) return;
 
       setState(() {
-        _properties = data;
-        _isLoading = false;
+        if (reset) {
+          _properties = data;
+          _isLoading = false;
+        } else {
+          _properties.addAll(data);
+          _isLoadingMore = false;
+        }
+        _currentPage = page + 1;
+        _hasMore = data.length == _pageSize;
       });
 
       _sortResults();
-      final hasSearch = _searchController.text.trim().isNotEmpty ||
-          _filters.values.any((v) => v != null && v.toString().isNotEmpty);
-      if (hasSearch) _saveCurrentSearch();
+      if (reset) {
+        final hasSearch = searchText.isNotEmpty ||
+            _filters.values.any((v) => v != null && v.toString().isNotEmpty);
+        if (hasSearch) _saveCurrentSearch();
+      }
     } catch (e) {
       if (!mounted) return;
-
       setState(() {
         _error = e.toString();
         _isLoading = false;
+        _isLoadingMore = false;
       });
     }
   }
 
-  void _refreshFromApi() => _loadProperties();
+  void _refreshFromApi() => _loadProperties(reset: true);
 
   // ============================================================
   // SORT — uses monthlyRent ?? price
   // ============================================================
 
   void _sortResults() {
-    double _rentOrPrice(PropertyModel p) =>
-        p.monthlyRent ?? p.price ?? 0;
-
     switch (_sortBy) {
       case 'price_low':
         _properties.sort((a, b) {
@@ -744,14 +778,23 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
                 : _properties.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
+                        controller: _scrollController,
                         physics: const BouncingScrollPhysics(
                             parent: AlwaysScrollableScrollPhysics()),
                         cacheExtent: 800,
                         addAutomaticKeepAlives: false,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
-                        itemCount: _properties.length,
+                        itemCount: _properties.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
+                          if (index == _properties.length) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            );
+                          }
                           final property = _properties[index];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 6),

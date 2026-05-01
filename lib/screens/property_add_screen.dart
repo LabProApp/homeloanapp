@@ -500,6 +500,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     required String label,
     bool required = false,
     int maxLines = 1,
+    int? maxLength,
     TextInputType keyboard = TextInputType.text,
     String? hint,
     List<TextInputFormatter>? formatters,
@@ -510,6 +511,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
+        maxLength: maxLength,
         keyboardType: keyboard,
         inputFormatters: formatters,
         style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
@@ -774,6 +776,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                     controller: _titleCtrl,
                     label: 'Property Title',
                     required: true,
+                    maxLength: 100,
                     hint: 'e.g. 2BHK Apartment near Metro',
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return 'Title is required';
@@ -789,6 +792,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                         TextFormField(
                           controller: _descCtrl,
                           maxLines: 4,
+                          maxLength: 2000,
                           style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
                           decoration: _inputDeco('Description', hint: 'Describe key features, nearby landmarks…'),
                         ),
@@ -852,6 +856,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                     controller: _addressCtrl,
                     label: 'Full Address',
                     maxLines: 3,
+                    maxLength: 300,
                     hint: 'Street, colony, landmark…',
                   ),
 
