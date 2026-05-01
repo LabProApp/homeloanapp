@@ -183,6 +183,10 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
         files:    _mediaList.map((e) => e.file).toList(),
         captions: _mediaList.map((e) => e.caption).toList(),
       );
+      // Clean up temp compressed files after successful upload
+      for (final item in _mediaList) {
+        try { await item.file.delete(); } catch (_) {}
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           backgroundColor: AppColors.success,

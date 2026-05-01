@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../commons/common_widget.dart';
 import '../network/api_client.dart';
+import '../services/secure_token_service.dart';
 import '../services/user_service.dart';
 import '../theme/app_colors.dart';
 import 'dashboard_screen.dart';
@@ -83,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen>
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
     if (userId != null && userId != 0) {
-      ApiClient.setToken(prefs.getString('token'));
+      ApiClient.setToken(await SecureTokenService.getToken());
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -536,7 +537,7 @@ class _LoginScreenState extends State<LoginScreen>
       await prefs.setString('userRole', user.userRole ?? '');
       await prefs.setBool('isVerified', user.isVerified ?? false);
       if (response.token != null) {
-        await prefs.setString('token', response.token!);
+        await SecureTokenService.saveToken(response.token!);
         ApiClient.setToken(response.token);
       }
 

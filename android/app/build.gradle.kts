@@ -19,11 +19,29 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    signingConfigs {
+        create("release") {
+            // Set these environment variables in CI/CD or provide a local keystore.properties file.
+            // KEYSTORE_PATH  — absolute path to your .jks / .keystore file
+            // KEYSTORE_PASS  — keystore password
+            // KEY_ALIAS      — key alias inside the keystore
+            // KEY_PASS       — key password
+            val keystorePath = System.getenv("KEYSTORE_PATH") ?: ""
+            val keystorePass = System.getenv("KEYSTORE_PASS") ?: ""
+            val keyAlias     = System.getenv("KEY_ALIAS")     ?: ""
+            val keyPass      = System.getenv("KEY_PASS")      ?: ""
+
+            if (keystorePath.isNotEmpty()) {
+                storeFile     = file(keystorePath)
+                storePassword = keystorePass
+                this.keyAlias = keyAlias
+                keyPassword   = keyPass
+            }
+        }
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.keybricks"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -32,9 +50,11 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            val hasKeystore = System.getenv("KEYSTORE_PATH")?.isNotEmpty() == true
+            signingConfig = if (hasKeystore)
+                signingConfigs.getByName("release")
+            else
+                signingConfigs.getByName("debug")
         }
     }
 }

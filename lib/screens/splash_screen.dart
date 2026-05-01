@@ -3,6 +3,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/api_client.dart';
+import '../services/secure_token_service.dart';
 import 'dashboard_screen.dart';
 import 'user_login_screen.dart';
 
@@ -23,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _init() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
-    ApiClient.setToken(prefs.getString('token'));
+    ApiClient.setToken(await SecureTokenService.getToken());
 
     // Dismiss native splash now that auth state is known
     FlutterNativeSplash.remove();

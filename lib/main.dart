@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:developer' as developer;
+import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +14,7 @@ import 'screens/user_login_screen.dart';
 import 'network/api_client.dart';
 import 'network/service_locator.dart';
 import 'services/property_api_service.dart';
+import 'services/secure_token_service.dart';
 import 'theme/app_colors.dart';
 
 /// Global navigator key so the deep-link handler can push routes from outside
@@ -21,6 +24,27 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    developer.log(
+      'Flutter error: ${details.exception}',
+      name: 'GlobalError',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    developer.log(
+      'Unhandled error: $error',
+      name: 'GlobalError',
+      error: error,
+      stackTrace: stack,
+    );
+    return true;
+  };
+
   setupServiceLocator();
   runApp(const MyApp());
 }
@@ -45,6 +69,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _handleUnauthorized() async {
     ApiClient.setToken(null);
+    await SecureTokenService.clearToken();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     navigatorKey.currentState?.pushAndRemoveUntil(

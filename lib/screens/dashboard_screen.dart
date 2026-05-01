@@ -24,6 +24,7 @@ import 'my_journeys_screen.dart';
 import 'buyer_journey_screen.dart';
 
 import '../network/api_client.dart';
+import '../services/secure_token_service.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
 
@@ -562,6 +563,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _logout() async {
     ApiClient.setToken(null);
+    await SecureTokenService.clearToken();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     if (!mounted) return;
