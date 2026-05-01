@@ -18,7 +18,7 @@ class LeadCard extends StatelessWidget {
   static final _dateFmt = DateFormat('dd MMM yyyy');
   static final _fmt     = NumberFormat('#,##,###');
 
-  String _fmt(String? d) {
+  String _fmtDate(String? d) {
     if (d == null || d.isEmpty) return '-';
     try {
       return _dateFmt.format(DateTime.parse(d));
@@ -79,7 +79,7 @@ class LeadCard extends StatelessWidget {
     final status   = (lead['status']   ?? '') as String;
     final leadType = lead['leadType']  as String?;
     final phone    = lead['mobile']    as String?;
-    final followUp = _fmt(lead['nextFollowUpDate'] as String?);
+    final followUp = _fmtDate(lead['nextFollowUpDate'] as String?);
     final hasFollowUp = followUp != '-';
     final message = (lead['message'] ?? '') as String;
     final remark  = (lead['remark']  ?? '') as String;
@@ -205,7 +205,7 @@ class LeadCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _InfoRow(Icons.calendar_today_outlined,
-                      'Inquiry: ${_fmt(lead['inquiryDate'] as String?)}'),
+                      'Inquiry: ${_fmtDate(lead['inquiryDate'] as String?)}'),
                 ),
                 if (hasFollowUp)
                   _FollowUpBadge(followUp),

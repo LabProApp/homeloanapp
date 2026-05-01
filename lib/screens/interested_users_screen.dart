@@ -390,7 +390,7 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
     DateTime? selectedDate;
     final remarkCtrl = TextEditingController();
     bool saving = false;
-    const dateFmt = _kFollowUpFmt;
+    final dateFmt = _kFollowUpFmt;
 
     showModalBottomSheet(
       context: context,
