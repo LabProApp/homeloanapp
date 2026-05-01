@@ -22,6 +22,7 @@ enum _HomeAction {
   loanEligibility,
   banks,
   postRequirement,
+  startJourney,
 }
 
 class HomeScreen extends StatelessWidget {
@@ -49,6 +50,10 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── Journey banner ──────────────────────────────────────
+                  _journeyBanner(),
+                  const SizedBox(height: 20),
+
                   // ── Properties ──────────────────────────────────────────
                   _section(context, 'Properties', Icons.home_rounded,
                       AppColors.primary, [
@@ -95,6 +100,75 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Journey banner ─────────────────────────────────────────────────────────
+  Widget _journeyBanner() {
+    return GestureDetector(
+      onTap: () => onNavigate(_HomeAction.startJourney),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF8F00), Color(0xFFE65100)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFE65100).withOpacity(0.28),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.home_work_rounded,
+                  color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Start Your Home Buying Journey',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white),
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    '7 guided steps · Search, Loan, Legal & more',
+                    style: TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.18),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.arrow_forward_rounded,
+                  color: Colors.white, size: 18),
+            ),
+          ],
+        ),
       ),
     );
   }
