@@ -20,6 +20,7 @@ import 'home_screen.dart';
 import 'bank_apply_loan_dialog.dart';
 import 'post_requirement_screen.dart';
 import 'loan_eligibility_screen.dart';
+import 'my_journeys_screen.dart';
 
 import '../network/api_client.dart';
 import '../theme/app_colors.dart';
@@ -94,6 +95,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         break;
       case '_HomeAction.myFavourites':
         _setPage(FavouritePropertyListingScreen(userId: widget.userId));
+        break;
+      case '_HomeAction.myJourneys':
+        _setPage(MyJourneysScreen(userId: widget.userId));
         break;
       case '_HomeAction.myPostings':
         setState(() {

@@ -18,6 +18,9 @@ import '../screens/bank_apply_loan_dialog.dart';
 import '../screens/stamp_duty_screen.dart';
 import '../screens/rent_vs_buy_screen.dart';
 import '../screens/due_diligence_screen.dart';
+import '../models/property_journey_model.dart';
+import '../services/journey_service.dart';
+import 'property_journey_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
@@ -41,6 +44,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   bool _isFavourite = false;
   bool _sendingLead = false;
   bool _deleting = false;
+  PropertyJourneyModel? _journey;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadJourney();
+  }
 
   bool get isOwner =>
       widget.property.postedByUser != null &&
@@ -135,6 +145,95 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     return widget.property.price != null
         ? '₹ ${_fmt.format(widget.property.price)}'
         : '-';
+  }
+
+  // ── Journey ──────────────────────────────────────────────────────────────────
+
+  Future<void> _loadJourney() async {
+    if (widget.property.id == null) return;
+    final j = await JourneyService.findByPropertyId(widget.userId, widget.property.id!);
+    if (!mounted) return;
+    setState(() => _journey = j);
+  }
+
+  Future<void> _openJourney() async {
+    if (widget.property.id == null) return;
+    PropertyJourneyModel journey;
+    if (_journey == null) {
+      final now = DateTime.now();
+      journey = PropertyJourneyModel.create(
+        userId: widget.userId,
+        propertyId: widget.property.id!,
+        propertyTitle: widget.property.title ?? 'Property',
+        propertyCity: widget.property.city,
+        propertyType: widget.property.type,
+        propertyPrice: widget.property.price?.toDouble(),
+      );
+      // Auto-complete step 0 (Confirm Property) since user is on the detail screen
+      journey.steps[0] = JourneyStepState(
+        status: JourneyStepStatus.completed,
+        completedAt: now,
+      );
+      journey.updatedAt = now;
+      await JourneyService.save(journey);
+    } else {
+      journey = _journey!;
+    }
+    if (!mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PropertyJourneyScreen(journey: journey, userId: widget.userId),
+      ),
+    );
+    _loadJourney();
+  }
+
+  Widget _journeyButton() {
+    final j = _journey;
+    final label = j == null
+        ? 'Start Purchase Journey'
+        : j.isComplete
+            ? 'View Journey  ✓'
+            : 'Continue Journey  •  ${j.completedCount}/6 done';
+
+    return GestureDetector(
+      onTap: _openJourney,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF8F00), Color(0xFFE65100)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFE65100).withOpacity(0.30),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.route_rounded, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // ── Actions ─────────────────────────────────────────────────────────────────
@@ -934,6 +1033,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               ),
             ],
           ),
+          // ── Journey button (sale only) ────────────────────────────────
+          if (!_isRent) ...[
+            const SizedBox(height: 8),
+            _journeyButton(),
+          ],
           // ── Secondary: Quick tool chips (sale only) ────────────────────
           if (!_isRent) ...[
             const SizedBox(height: 8),

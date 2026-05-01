@@ -10,6 +10,7 @@ enum _HomeAction {
   myFavourites,
   myPostings,
   myInquiries,
+  myJourneys,
   homeLoan,
   emiCalculator,
   stampDuty,
@@ -85,8 +86,9 @@ class HomeScreen extends StatelessWidget {
                   // ── My Activity ─────────────────────────────────────────
                   _section(context, 'My Activity', Icons.person_rounded,
                       const Color(0xFF4527A0), [
-                    _Tile(Icons.business_center_outlined, 'My Postings',     'Properties you have listed',   const Color(0xFF4527A0), _HomeAction.myPostings),
-                    _Tile(Icons.groups_outlined,          'Client Inquiries', 'Leads, follow-ups & status',  AppColors.primary,      _HomeAction.myInquiries),
+                    _Tile(Icons.route,                    'My Journeys',      'Track your purchase journeys', const Color(0xFF0277BD), _HomeAction.myJourneys),
+                    _Tile(Icons.business_center_outlined, 'My Postings',      'Properties you have listed',   const Color(0xFF4527A0), _HomeAction.myPostings),
+                    _Tile(Icons.groups_outlined,          'Client Inquiries',  'Leads, follow-ups & status',  AppColors.primary,      _HomeAction.myInquiries),
                   ]),
                 ],
               ),
