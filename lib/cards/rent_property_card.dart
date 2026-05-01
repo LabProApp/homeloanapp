@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../models/property_model.dart';
+import '../services/cache_manager.dart';
 import '../models/client_lead_model.dart';
 import '../services/leads_service.dart';
 import '../theme/app_colors.dart';
@@ -148,6 +149,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                         itemCount: _images.length,
                         onPageChanged: (i) => setState(() => currentIndex = i),
                         itemBuilder: (_, i) => CachedNetworkImage(
+                          cacheManager: AppCacheManager.instance,
                           imageUrl: _images[i],
                           fit: BoxFit.cover,
                           fadeInDuration: const Duration(milliseconds: 250),

@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../services/cache_manager.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -221,6 +222,7 @@ class _RentalPropertyDetailScreenState
                           itemCount: _images.length,
                           onPageChanged: (i) => setState(() => _currentIndex = i),
                           itemBuilder: (_, i) => CachedNetworkImage(
+                            cacheManager: AppCacheManager.instance,
                             imageUrl: _images[i],
                             fit: BoxFit.cover,
                             fadeInDuration: const Duration(milliseconds: 250),

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/cache_manager.dart';
+
 import '../models/property_model.dart';
 import '../models/client_lead_model.dart';
 import '../services/leads_service.dart';
@@ -143,6 +145,7 @@ class _PropertyCardState extends State<PropertyCard> {
                         itemCount: _images.length,
                         onPageChanged: (i) => setState(() => currentIndex = i),
                         itemBuilder: (_, i) => CachedNetworkImage(
+                          cacheManager: AppCacheManager.instance,
                           imageUrl: _images[i],
                           fit: BoxFit.cover,
                           fadeInDuration: const Duration(milliseconds: 250),

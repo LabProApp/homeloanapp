@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../models/property_model.dart';
+import '../services/cache_manager.dart';
 import '../models/client_lead_model.dart';
 import '../services/leads_service.dart';
 import '../services/property_api_service.dart';
@@ -396,6 +397,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     onPageChanged: (i) =>
                         setState(() => _currentIndex = i),
                     itemBuilder: (_, i) => CachedNetworkImage(
+                              cacheManager: AppCacheManager.instance,
                               imageUrl: _images[i],
                               fit: BoxFit.cover,
                               fadeInDuration:
