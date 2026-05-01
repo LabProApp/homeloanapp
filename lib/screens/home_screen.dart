@@ -109,35 +109,35 @@ class HomeScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () => onNavigate(_HomeAction.startJourney),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFFFF8F00), Color(0xFFE65100)],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFE65100).withOpacity(0.28),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              width: 46,
-              height: 46,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.home_work_rounded,
-                  color: Colors.white, size: 24),
+                  color: Colors.white, size: 20),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,27 +145,27 @@ class HomeScreen extends StatelessWidget {
                   Text(
                     'Start Your Home Buying Journey',
                     style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: Colors.white),
                   ),
-                  SizedBox(height: 3),
+                  SizedBox(height: 2),
                   Text(
-                    '7 guided steps · Search, Loan, Legal & more',
-                    style: TextStyle(fontSize: 12, color: Colors.white70),
+                    'Find. Finance. Finalize',
+                    style: TextStyle(fontSize: 11, color: Colors.white70),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.18),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.arrow_forward_rounded,
-                  color: Colors.white, size: 18),
+                  color: Colors.white, size: 16),
             ),
           ],
         ),
@@ -193,7 +193,7 @@ class HomeScreen extends StatelessWidget {
               'What are you looking for today?',
               style: TextStyle(fontSize: 14, color: Colors.white70),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -216,25 +216,29 @@ class HomeScreen extends StatelessWidget {
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.25)),
+            color: Colors.white.withOpacity(0.22),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+                color: Colors.white.withOpacity(0.55), width: 1.5),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: 20),
-              const SizedBox(height: 4),
+              Icon(icon, color: Colors.white, size: 26),
+              const SizedBox(height: 6),
               Text(label,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                      color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2)),
             ],
           ),
         ),
