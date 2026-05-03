@@ -88,11 +88,16 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString("saved_searches");
     if (data != null) {
-      final decoded = jsonDecode(data) as List;
-      _savedSearches =
-          decoded.map((e) => Map<String, dynamic>.from(e)).toList();
-      _sortSavedSearches();
-      if (mounted) setState(() {});
+      try {
+        final decoded = jsonDecode(data);
+        if (decoded is List) {
+          _savedSearches = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+          _sortSavedSearches();
+          if (mounted) setState(() {});
+        }
+      } catch (_) {
+        await prefs.remove("saved_searches");
+      }
     }
   }
 

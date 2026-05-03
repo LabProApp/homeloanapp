@@ -141,7 +141,17 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
   static const _maxVideoBytes = 500 * 1024 * 1024; // 500 MB
 
   Future<void> _pickImages() async {
-    final files = await _picker.pickMultiImage(imageQuality: 95);
+    final List<XFile> files;
+    try {
+      files = await _picker.pickMultiImage(imageQuality: 95);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Photo library access denied. Please allow permission in Settings.'),
+        ));
+      }
+      return;
+    }
     if (files.isEmpty) return;
 
     final valid    = <XFile>[];
@@ -173,7 +183,17 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
 
   // ── Video pick + process ───────────────────────────────────────────────────
   Future<void> _pickVideo() async {
-    final file = await _picker.pickVideo(source: ImageSource.gallery);
+    final XFile? file;
+    try {
+      file = await _picker.pickVideo(source: ImageSource.gallery);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Photo library access denied. Please allow permission in Settings.'),
+        ));
+      }
+      return;
+    }
     if (file == null) return;
     if (await file.length() > _maxVideoBytes) {
       if (mounted) {

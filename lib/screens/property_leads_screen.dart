@@ -24,6 +24,7 @@ class PropertyLeadsScreen extends StatefulWidget {
 class _PropertyLeadsScreenState extends State<PropertyLeadsScreen> {
   List<dynamic> _leads = [];
   bool _loading = true;
+  String? _error;
 
   static final _dateFmt     = DateFormat('dd MMM yyyy');
   static final _followUpFmt = DateFormat('dd MMM yyyy, hh:mm a');
@@ -45,14 +46,13 @@ class _PropertyLeadsScreenState extends State<PropertyLeadsScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() { _loading = true; _error = null; });
     try {
       final data = await LeadApiService.fetchPropertyLeads(widget.propertyId);
-      setState(() => _leads = data);
+      if (mounted) setState(() { _leads = data; _loading = false; });
     } catch (e) {
-      debugPrint('PropertyLeadsScreen error: $e');
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
-    setState(() => _loading = false);
   }
 
   String _fmt(String? d) {
@@ -100,7 +100,9 @@ class _PropertyLeadsScreenState extends State<PropertyLeadsScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _leads.isEmpty
+          : _error != null
+              ? _errorState()
+              : _leads.isEmpty
               ? _emptyState()
               : RefreshIndicator(
                   onRefresh: _load,
@@ -326,6 +328,31 @@ class _PropertyLeadsScreenState extends State<PropertyLeadsScreen> {
       ),
     );
   }
+
+  Widget _errorState() => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off_rounded, size: 48, color: AppColors.textMuted),
+              const SizedBox(height: 16),
+              const Text('Could not load leads',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              const Text('Check your connection and try again.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: const Text('Retry'),
+                onPressed: _load,
+              ),
+            ],
+          ),
+        ),
+      );
 
   Widget _emptyState() => Center(
         child: Padding(

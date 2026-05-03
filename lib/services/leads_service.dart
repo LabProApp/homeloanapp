@@ -22,7 +22,11 @@ class LeadApiService {
     final uri = Uri.parse(ApiUrls.searchLeads).replace(queryParameters: query);
     final response = await ApiClient.get(uri);
 
-    if (response.statusCode == 200) return json.decode(response.body);
+    if (response.statusCode == 200) {
+      final decoded = json.decode(response.body);
+      if (decoded is List) return decoded;
+      return [];
+    }
     throw Exception('Failed to load leads (${response.statusCode})');
   }
 
@@ -30,7 +34,11 @@ class LeadApiService {
     final uri = Uri.parse(ApiUrls.propertyLeadsSummary(propertyId));
     final response = await ApiClient.get(uri);
 
-    if (response.statusCode == 200) return json.decode(response.body);
+    if (response.statusCode == 200) {
+      final decoded = json.decode(response.body);
+      if (decoded is List) return decoded;
+      return [];
+    }
     throw Exception('Failed to load property leads (${response.statusCode})');
   }
 
@@ -79,7 +87,11 @@ class LeadApiService {
       'leadType': 'PROPERTY_INQUIRY',
     });
     final response = await ApiClient.get(uri);
-    if (response.statusCode == 200) return json.decode(response.body);
+    if (response.statusCode == 200) {
+      final decoded = json.decode(response.body);
+      if (decoded is List) return decoded;
+      return [];
+    }
     throw Exception('Failed to load requirements (${response.statusCode})');
   }
 

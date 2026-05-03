@@ -88,11 +88,16 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString("rental_saved_searches");
     if (data != null) {
-      final decoded = jsonDecode(data) as List;
-      _savedSearches =
-          decoded.map((e) => Map<String, dynamic>.from(e)).toList();
-      _sortSavedSearches();
-      if (mounted) setState(() {});
+      try {
+        final decoded = jsonDecode(data);
+        if (decoded is List) {
+          _savedSearches = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+          _sortSavedSearches();
+          if (mounted) setState(() {});
+        }
+      } catch (_) {
+        await prefs.remove("rental_saved_searches");
+      }
     }
   }
 

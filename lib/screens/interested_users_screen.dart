@@ -88,7 +88,6 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
       if (!mounted) return;
       _leads = data.isEmpty ? List.from(_dummyLeads) : data;
     } catch (e) {
-      debugPrint('Error loading leads: $e');
       if (!mounted) return;
       _leads = List.from(_dummyLeads);
     }
