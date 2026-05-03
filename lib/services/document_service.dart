@@ -25,9 +25,11 @@ class DocumentApiService {
       request.files.add(await http.MultipartFile.fromPath('files', file.path));
     }
 
+    // Send captions as repeated multipart parts so the server receives a list.
+    // request.fields is Map<String,String> and would overwrite on each iteration.
     if (captions != null) {
       for (final cap in captions) {
-        request.fields['captions'] = cap;
+        request.files.add(http.MultipartFile.fromString('captions', cap));
       }
     }
 
@@ -36,7 +38,7 @@ class DocumentApiService {
       final response = await http.Response.fromStream(streamed);
 
       developer.log('Upload status: ${response.statusCode}', name: 'DocumentApiService');
-      return response.statusCode == 200;
+      return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       developer.log('Upload error: $e', name: 'DocumentApiService');
       return false;
