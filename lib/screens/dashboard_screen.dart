@@ -24,6 +24,7 @@ import 'my_journeys_screen.dart';
 import 'buyer_journey_screen.dart';
 
 import '../network/api_client.dart';
+import '../services/cache_manager.dart';
 import '../services/secure_token_service.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
@@ -50,7 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    Future.wait([_loadAppVersion(), _loadUserInfo()]);
+    Future.wait([_loadAppVersion(), _loadUserInfo()]).ignore();
     _currentPage = _buildHome();
   }
 
@@ -566,6 +567,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await SecureTokenService.clearToken();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+    AppCacheManager.instance.emptyCache();
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
