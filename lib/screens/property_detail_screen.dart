@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../models/property_model.dart';
@@ -53,11 +55,36 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   UserModel? _owner;
   bool _loadingOwner = false;
 
+  final PageController _imageCtrl = PageController();
+  Timer? _slideTimer;
+
   @override
   void initState() {
     super.initState();
     _loadJourney();
     _loadOwner();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startSlideshow());
+  }
+
+  void _startSlideshow() {
+    _slideTimer?.cancel();
+    if (_images.length < 2) return;
+    _slideTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+      if (!mounted || !_imageCtrl.hasClients) return;
+      final next = (_currentIndex + 1) % _images.length;
+      _imageCtrl.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _slideTimer?.cancel();
+    _imageCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _loadOwner() async {
@@ -446,6 +473,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   _images.isEmpty
                       ? _typePlaceholder()
                       : PageView.builder(
+                    controller: _imageCtrl,
                     itemCount: _images.length,
                     onPageChanged: (i) =>
                         setState(() => _currentIndex = i),
