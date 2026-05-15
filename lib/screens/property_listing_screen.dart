@@ -363,6 +363,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'propertyListingPostFab',
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         onPressed: () async {

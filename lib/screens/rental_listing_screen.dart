@@ -368,6 +368,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'rentalListingPostFab',
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         onPressed: () async {

@@ -341,6 +341,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       // ── Center raised Home FAB ────────────────────────────────────────────
       floatingActionButton: FloatingActionButton(
+        heroTag: 'dashboardHomeFab',
         onPressed: _goHome,
         backgroundColor: _selectedIndex == -1
             ? AppColors.primary

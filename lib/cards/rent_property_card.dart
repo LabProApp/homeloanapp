@@ -104,7 +104,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
             ),
             const SizedBox(height: 3),
             Text(
-              'No photos available',
+              'Pictures will be available soon',
               style: TextStyle(color: iconColor.withOpacity(0.55), fontSize: 11),
             ),
           ],
@@ -129,7 +129,10 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
         widget.property.constructionStatus ?? widget.property.propertyStatus ?? "-";
     return Card(
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.border, width: 1),
+      ),
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       clipBehavior: Clip.antiAlias,
       child: Column(

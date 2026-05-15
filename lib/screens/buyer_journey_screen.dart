@@ -425,23 +425,23 @@ class _BuyerJourneyScreenState extends State<BuyerJourneyScreen> {
     switch (index) {
       case 0: // Search & Shortlist
         return [
-          _ActionItem(Icons.sell_outlined, 'Sale Properties',
+          _ActionItem(Icons.sell_outlined, 'Search Properties',
               () => Navigator.push(context, MaterialPageRoute(builder: (_) => PropertyListingScreen(userId: widget.userId)))),
-          _ActionItem(Icons.apartment_outlined, 'Rental Properties',
+          _ActionItem(Icons.apartment_outlined, 'Search Rental Properties',
               () => Navigator.push(context, MaterialPageRoute(builder: (_) => RentalListingScreen(userId: widget.userId)))),
-          _ActionItem(Icons.favorite_outlined, 'My Favourites',
+          _ActionItem(Icons.favorite_outlined, 'Add to My Favourites',
               () => Navigator.push(context, MaterialPageRoute(builder: (_) => FavouritePropertyListingScreen(userId: widget.userId)))),
         ];
       case 1: // Loan Eligibility
         return [
-          _ActionItem(Icons.verified_outlined, 'Check Eligibility',
+          _ActionItem(Icons.verified_outlined, 'Check Loan Eligibility',
               () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoanEligibilityScreen()))),
         ];
       case 2: // EMI & Budget
         return [
           _ActionItem(Icons.calculate_outlined, 'EMI Calculator',
               () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmiCalculatorScreen()))),
-          _ActionItem(Icons.balance_outlined, 'Rent vs Buy',
+          _ActionItem(Icons.balance_outlined, 'Rent vs Buy Calculator',
               () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RentVsBuyScreen()))),
         ];
       case 3: // Due Diligence
@@ -462,13 +462,14 @@ class _BuyerJourneyScreenState extends State<BuyerJourneyScreen> {
         ];
       case 5: // Legal Docs
         return [
+         _ActionItem(Icons.assignment_rounded, 'Contact Legal Services Vendors',
+              () => Navigator.push(context, MaterialPageRoute(builder: (_) => LegalServicePage(userId: widget.userId)))),
+
           _ActionItem(Icons.handshake_outlined, 'Sale Agreement',
               () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SaleAgreementScreen()))),
           _ActionItem(Icons.receipt_long_outlined, 'Stamp Duty',
               () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StampDutyScreen()))),
-          _ActionItem(Icons.assignment_rounded, 'Legal Services',
-              () => Navigator.push(context, MaterialPageRoute(builder: (_) => LegalServicePage(userId: widget.userId)))),
-        ];
+                 ];
       default: // Complete (step 6 — no actions)
         return [];
     }
@@ -508,7 +509,7 @@ class _BuyerJourneyScreenState extends State<BuyerJourneyScreen> {
                         color: AppColors.success)),
                 SizedBox(height: 3),
                 Text(
-                  'Congratulations on completing all 7 steps of your home buying journey.',
+                  'Congratulations on completing all the steps of your home buying journey.',
                   style: TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
