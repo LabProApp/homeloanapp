@@ -20,7 +20,9 @@ import '../screens/stamp_duty_screen.dart';
 import '../screens/rent_vs_buy_screen.dart';
 import '../screens/due_diligence_screen.dart';
 import '../models/property_journey_model.dart';
+import '../models/user_model.dart';
 import '../services/journey_service.dart';
+import '../services/user_service.dart';
 import 'property_journey_screen.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
@@ -47,10 +49,29 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   bool _deleting = false;
   PropertyJourneyModel? _journey;
 
+  UserModel? _owner;
+  bool _loadingOwner = false;
+
   @override
   void initState() {
     super.initState();
     _loadJourney();
+    _loadOwner();
+  }
+
+  Future<void> _loadOwner() async {
+    final ownerId = widget.property.postedByUser;
+    if (ownerId == null || ownerId == 0) return;
+    setState(() => _loadingOwner = true);
+    try {
+      final user = await UserApiService.getProfile(ownerId);
+      if (!mounted) return;
+      setState(() => _owner = user);
+    } catch (_) {
+      // Silently fall back to property fields.
+    } finally {
+      if (mounted) setState(() => _loadingOwner = false);
+    }
   }
 
   bool get isOwner =>
@@ -747,25 +768,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
                   // Owner Details
                   _sectionTitle('Owner Details'),
-                  _card([
-                    if (widget.property.postedBy != null &&
-                        widget.property.postedBy!.isNotEmpty)
-                      _DetailRow(
-                          'Posted By', widget.property.postedBy!),
-                    if (widget.property.contactNumber.isNotEmpty)
-                      _DetailRow(
-                          'Contact', widget.property.contactNumber),
-                    if (widget.property.verified != null)
-                      _DetailRow(
-                          'Verified',
-                          widget.property.verified! ? 'Yes' : 'No'),
-                    if (widget.property.postDate != null)
-                      _DetailRow(
-                        'Posted On',
-                        AppUtils.formatDate(widget.property.postDate) ??
-                            widget.property.postDate!,
-                      ),
-                  ]),
+                  _ownerCard(),
 
                   const SizedBox(height: 100),
                 ],
@@ -877,6 +880,54 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               ),
         ),
       ],
+    );
+  }
+
+  Widget _ownerCard() {
+    final ownerName = (_owner?.name.isNotEmpty ?? false)
+        ? _owner!.name
+        : (widget.property.postedBy ?? '');
+    final ownerEmail = _owner?.email ?? '';
+    final ownerMobile = (_owner?.mobile.isNotEmpty ?? false)
+        ? _owner!.mobile
+        : widget.property.contactNumber;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(color: Color(0x0A000000), blurRadius: 4),
+        ],
+      ),
+      child: Column(
+        children: [
+          if (_loadingOwner && _owner == null)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          if (ownerName.isNotEmpty) _DetailRow('Name', ownerName),
+          if (ownerEmail.isNotEmpty) _DetailRow('Email', ownerEmail),
+          if (ownerMobile.isNotEmpty) _DetailRow('Phone', ownerMobile),
+          if (widget.property.verified != null)
+            _DetailRow(
+                'Verified', widget.property.verified! ? 'Yes' : 'No'),
+          if (widget.property.postDate != null)
+            _DetailRow(
+              'Posted On',
+              AppUtils.formatDate(widget.property.postDate) ??
+                  widget.property.postDate!,
+            ),
+        ],
+      ),
     );
   }
 
