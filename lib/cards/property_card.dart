@@ -7,8 +7,10 @@ import '../services/cache_manager.dart';
 
 import '../models/property_model.dart';
 import '../models/client_lead_model.dart';
+import '../models/user_model.dart';
 import '../services/leads_service.dart';
 import '../services/property_api_service.dart';
+import '../services/user_service.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_util.dart';
 import '../commons/property_share_sheet.dart';
@@ -38,6 +40,20 @@ class _PropertyCardState extends State<PropertyCard> {
   int currentIndex = 0;
   bool _isFavourite = false;
   bool _sendingLead = false;
+  UserModel? _owner;
+
+  Future<String> _resolveOwnerPhone() async {
+    if (_owner != null && _owner!.mobile.isNotEmpty) return _owner!.mobile;
+    final id = widget.property.postedByUser;
+    if (id == null || id == 0) return widget.property.contactNumber;
+    try {
+      final u = await UserApiService.getProfile(id);
+      if (mounted) setState(() => _owner = u);
+      return u.mobile.isNotEmpty ? u.mobile : widget.property.contactNumber;
+    } catch (_) {
+      return widget.property.contactNumber;
+    }
+  }
 
   List<String> get _images {
     final docs = widget.property.documentList;
@@ -191,7 +207,7 @@ class _PropertyCardState extends State<PropertyCard> {
                   child: _pill(status),
                 ),
 
-                /// TOP ICONS (INCLUDING INTEREST)
+                /// TOP ICONS (favorite + share only)
                 Positioned(
                   top: 8,
                   right: 8,
@@ -203,14 +219,6 @@ class _PropertyCardState extends State<PropertyCard> {
                       ),
                       const SizedBox(height: 6),
                       _iconCircle(Icons.share, _shareProperty),
-                      const SizedBox(height: 6),
-                      _iconCircle(Icons.call, _callOwner),
-                      const SizedBox(height: 6),
-                      _iconCircle(Icons.star, _sendingLead ? null : _createLead),
-                      if (widget.showWhatsAppIcon) ...[
-                        const SizedBox(height: 6),
-                        _iconCircle(Icons.chat, _openWhatsApp),
-                      ],
                     ],
                   ),
                 ),
@@ -298,10 +306,76 @@ class _PropertyCardState extends State<PropertyCard> {
                   const SizedBox(height: 6),
                   _amenitiesRow(),
                 ],
+
+                const SizedBox(height: 10),
+                const Divider(height: 1, color: AppColors.border),
+                const SizedBox(height: 8),
+                _actionRow(),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// BOTTOM ACTION ROW: Call, WhatsApp, Interested
+  Widget _actionRow() {
+    return Row(
+      children: [
+        _smallIconBtn(Icons.call, AppColors.primary, _callOwner),
+        if (widget.showWhatsAppIcon) ...[
+          const SizedBox(width: 8),
+          _smallIconBtn(Icons.chat, AppColors.whatsAppGreen, _openWhatsApp),
+        ],
+        const Spacer(),
+        _interestedBtn(),
+      ],
+    );
+  }
+
+  Widget _smallIconBtn(IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.25)),
+        ),
+        child: Icon(icon, size: 18, color: color),
+      ),
+    );
+  }
+
+  Widget _interestedBtn() {
+    return InkWell(
+      onTap: _sendingLead ? null : _createLead,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: _sendingLead
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+            : const Text(
+                'Interested',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
   }
@@ -457,17 +531,23 @@ class _PropertyCardState extends State<PropertyCard> {
   }
 
   Future<void> _callOwner() async {
-    final phone = widget.property.contactNumber;
-    if (phone == null || phone.isEmpty) return;
+    final phone = await _resolveOwnerPhone();
+    if (phone.isEmpty) return;
     AppUtils.call(phone);
   }
 
   Future<void> _openWhatsApp() async {
-    final phone = widget.property.contactNumber;
-    if (phone == null || phone.isEmpty) return;
-
-    AppUtils.whatsapp(
-        phone, "Hi, I am interested in your property ${widget.property.title}");
+    final phone = await _resolveOwnerPhone();
+    if (phone.isEmpty) return;
+    try {
+      await AppUtils.whatsapp(
+          phone, "Hi, I am interested in your property ${widget.property.title}");
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
   }
 
   Widget _iconCircle(IconData icon, VoidCallback? onTap) {

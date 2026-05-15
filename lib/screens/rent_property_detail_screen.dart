@@ -322,16 +322,6 @@ class _RentalPropertyDetailScreenState
                         ),
                         const SizedBox(height: 6),
                         _iconCircle(Icons.share, _shareProperty),
-                        const SizedBox(height: 6),
-                        _iconCircle(Icons.call,
-                            () => AppUtils.call(widget.property.contactNumber)),
-                        if (!_isOwner) ...[
-                          const SizedBox(height: 6),
-                          _iconCircle(
-                            Icons.star_border_rounded,
-                            _sendingLead ? null : _createLead,
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -703,9 +693,33 @@ class _RentalPropertyDetailScreenState
 
   // ── Bottom bar ────────────────────────────────────────────────────────────────
 
+  String get _ownerPhone {
+    final m = _owner?.mobile ?? '';
+    return m.isNotEmpty ? m : widget.property.contactNumber;
+  }
+
+  void _callOwner() {
+    final phone = _ownerPhone;
+    if (phone.isEmpty) return;
+    AppUtils.call(phone);
+  }
+
+  Future<void> _openWhatsApp() async {
+    final phone = _ownerPhone;
+    if (phone.isEmpty) return;
+    try {
+      await AppUtils.whatsapp(
+          phone, "Hi, I'm interested in your rental: ${widget.property.title}");
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   Widget _bottomBar() {
-    final phone = widget.property.contactNumber.trim();
-    final hasPhone = phone.isNotEmpty;
+    final hasPhone = _ownerPhone.trim().isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
@@ -723,35 +737,64 @@ class _RentalPropertyDetailScreenState
         top: false,
         child: Row(
           children: [
-            Expanded(
-              child: AppButton(
-                text: 'Call Owner',
-                onTap: hasPhone ? () => AppUtils.call(phone) : null,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.chat_rounded, size: 18),
-                label: const Text('WhatsApp',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.whatsAppGreen,
-                  foregroundColor: AppColors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                onPressed: hasPhone
-                    ? () => AppUtils.whatsapp(phone,
-                        "Hi, I'm interested in your rental: ${widget.property.title}")
-                    : null,
-              ),
-            ),
+            _smallIconBtn(
+                Icons.call, AppColors.primary, hasPhone ? _callOwner : null),
+            const SizedBox(width: 8),
+            _smallIconBtn(Icons.chat_rounded, AppColors.whatsAppGreen,
+                hasPhone ? _openWhatsApp : null),
+            const Spacer(),
+            _interestedBtn(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _smallIconBtn(IconData icon, Color color, VoidCallback? onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: color.withOpacity(onTap == null ? 0.04 : 0.10),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+              color: color.withOpacity(onTap == null ? 0.10 : 0.25)),
+        ),
+        child: Icon(icon,
+            size: 22,
+            color: onTap == null ? color.withOpacity(0.4) : color),
+      ),
+    );
+  }
+
+  Widget _interestedBtn() {
+    return InkWell(
+      onTap: (_isOwner || _sendingLead) ? null : _createLead,
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        decoration: BoxDecoration(
+          color: _isOwner ? AppColors.disabled : AppColors.primary,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: _sendingLead
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+            : const Text(
+                'Interested',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
       ),
     );
   }
