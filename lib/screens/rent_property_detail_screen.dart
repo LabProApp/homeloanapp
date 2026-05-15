@@ -194,19 +194,24 @@ class _RentalPropertyDetailScreenState
       remark: 'User interested in rental: ${widget.property.title ?? ""}',
     );
     try {
-      await LeadApiService.createLead(lead);
+      final res = await LeadApiService.createLead(lead);
       if (!mounted) return;
-      _showSnack('Owner will contact you soon', backgroundColor: AppColors.success);
+      final alreadySent = res['inquiryAlreadySent'] == true;
+      final serverMsg = (res['responseMessage'] as String?)?.trim();
+      _showSnack(
+        alreadySent
+            ? (serverMsg?.isNotEmpty == true
+                ? serverMsg!
+                : 'Inquiry already sent')
+            : (serverMsg?.isNotEmpty == true
+                ? serverMsg!
+                : 'Owner will contact you soon'),
+        backgroundColor: alreadySent ? null : AppColors.success,
+      );
     } catch (e) {
       if (!mounted) return;
-      final msg = e.toString().toLowerCase();
-      final duplicate = msg.contains('409') || msg.contains('already');
-      _showSnack(
-        duplicate
-            ? 'You already contacted for this property'
-            : 'Could not send interest. Please try again.',
-        backgroundColor: duplicate ? null : AppColors.error,
-      );
+      _showSnack('Could not send interest. Please try again.',
+          backgroundColor: AppColors.error);
     } finally {
       if (mounted) setState(() => _sendingLead = false);
     }

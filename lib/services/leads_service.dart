@@ -42,13 +42,20 @@ class LeadApiService {
     throw Exception('Failed to load property leads (${response.statusCode})');
   }
 
-  static Future<bool> createLead(ClientLeadModel lead) async {
+  /// Creates a lead and returns the parsed response body so callers can
+  /// inspect server-side flags such as `inquiryAlreadySent` and
+  /// `responseMessage`.
+  static Future<Map<String, dynamic>> createLead(ClientLeadModel lead) async {
     final response = await ApiClient.post(
       Uri.parse(ApiUrls.postBrokerLeads),
       body: jsonEncode(lead.toJson()),
     );
 
-    if (response.statusCode == 200 || response.statusCode == 201) return true;
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.body.isEmpty) return const {};
+      final decoded = json.decode(response.body);
+      return decoded is Map<String, dynamic> ? decoded : const {};
+    }
     throw Exception('Failed to create lead (${response.statusCode}): ${response.body}');
   }
 

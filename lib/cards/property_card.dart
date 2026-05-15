@@ -503,19 +503,22 @@ class _PropertyCardState extends State<PropertyCard> {
     );
 
     try {
-      await LeadApiService.createLead(lead);
+      final res = await LeadApiService.createLead(lead);
       if (!mounted) return;
-      _showSnack('Interest sent successfully');
+      final alreadySent = res['inquiryAlreadySent'] == true;
+      final serverMsg = (res['responseMessage'] as String?)?.trim();
+      _showSnack(
+        alreadySent
+            ? (serverMsg?.isNotEmpty == true
+                ? serverMsg!
+                : 'Inquiry already sent')
+            : (serverMsg?.isNotEmpty == true
+                ? serverMsg!
+                : 'Interest sent successfully'),
+      );
     } catch (e) {
       if (!mounted) return;
-      final msg = e.toString().toLowerCase();
-      final duplicate = msg.contains('409') || msg.contains('already');
-      _showSnack(
-        duplicate
-            ? 'You already showed interest in this property'
-            : 'Could not send interest. Please try again.',
-        isError: !duplicate,
-      );
+      _showSnack('Could not send interest. Please try again.', isError: true);
     } finally {
       if (mounted) setState(() => _sendingLead = false);
     }
