@@ -338,6 +338,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       brokerId: widget.property.postedByUser,
       userId: widget.userId,
       propertyId: widget.property.id!,
+      leadType: 'PROPERTY_INQUIRY',
       clientName: prefs.getString('userName'),
       email: prefs.getString('userEmail'),
       mobile: prefs.getString('userMobile'),
