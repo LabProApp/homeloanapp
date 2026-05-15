@@ -422,42 +422,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
               builder: (_) => ProfileScreen(userId: widget.userId)),
         );
       },
-      child: Container(
+      child: SizedBox(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
-        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: Colors.white.withOpacity(0.25),
-              child: Text(
-                _userName.isNotEmpty ? _userName[0].toUpperCase() : 'U',
-                style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/house2.jpg',
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
               ),
             ),
-            const SizedBox(height: 10),
-            Text(_userName,
-                style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white)),
-            if (_userEmail.isNotEmpty)
-              Text(_userEmail,
-                  style: const TextStyle(fontSize: 12, color: Colors.white70),
-                  overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 6),
-            const Row(
-              children: [
-                Icon(Icons.open_in_new, size: 11, color: Colors.white54),
-                SizedBox(width: 4),
-                Text('View Profile',
-                    style: TextStyle(fontSize: 11, color: Colors.white54)),
-              ],
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.navy.withOpacity(0.88),
+                      AppColors.slate.withOpacity(0.78),
+                      AppColors.primaryDark.withOpacity(0.55),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Colors.white.withOpacity(0.20),
+                    child: Text(
+                      _userName.isNotEmpty
+                          ? _userName[0].toUpperCase()
+                          : 'U',
+                      style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(_userName,
+                      style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white)),
+                  if (_userEmail.isNotEmpty)
+                    Text(_userEmail,
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.white70),
+                        overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 6),
+                  const Row(
+                    children: [
+                      Icon(Icons.open_in_new,
+                          size: 11, color: Colors.white54),
+                      SizedBox(width: 4),
+                      Text('View Profile',
+                          style:
+                              TextStyle(fontSize: 11, color: Colors.white54)),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),

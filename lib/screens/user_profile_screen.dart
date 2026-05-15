@@ -229,9 +229,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   shadows: [Shadow(offset: Offset(0, 1), blurRadius: 3)],
                 ),
               ),
-              background: const DecoratedBox(
-                decoration:
-                    BoxDecoration(gradient: AppColors.primaryGradient),
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset('assets/images/house3.jpg', fit: BoxFit.cover),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.navy.withOpacity(0.85),
+                          AppColors.slate.withOpacity(0.70),
+                          AppColors.primaryDark.withOpacity(0.55),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
