@@ -265,7 +265,9 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
       final data = await service.fetchProperties(
         postedByUserId: widget.postedbyuserId,
         city: _filters["city"],
-        location: searchText.isNotEmpty ? searchText : null,
+        location: searchText.isNotEmpty
+            ? searchText
+            : (_filters["location"] as String?),
         rentOrSale: "RENT",
         category: isResidential ? "Residential" : "Commercial",
         type: _filters["type"],
@@ -914,9 +916,19 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) => PropertyFilterDialog(
-        initialFilters: _filters,
+        initialFilters: {..._filters, 'category': isResidential ? 'Residential' : 'Commercial'},
         onApply: (filters) {
-          setState(() => _filters = filters);
+          setState(() {
+            // Keep the top-level Residential/Commercial toggle in sync with
+            // whatever category the user picked in the dialog.
+            final cat = filters['category']?.toString();
+            if (cat == 'Commercial') {
+              isResidential = false;
+            } else if (cat == 'Residential') {
+              isResidential = true;
+            }
+            _filters = filters;
+          });
           _refreshFromApi();
         },
       ),

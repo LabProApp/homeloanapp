@@ -259,9 +259,21 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
             ),
           ),
 
-          /// DETAILS SECTION
+          /// DETAILS SECTION — glass-dark with white text
           Container(
-            color: Colors.white,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.navy.withOpacity(0.92),
+                  AppColors.slate.withOpacity(0.92),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: const Border(
+                top: BorderSide(color: Color(0x33FFFFFF), width: 0.5),
+              ),
+            ),
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +285,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                   style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary),
+                      color: Colors.white),
                 ),
 
                 const SizedBox(height: 2),
@@ -282,7 +294,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                 Text(
                   "${widget.property.location ?? ""}, ${widget.property.city ?? ""}",
                   style: const TextStyle(
-                      fontSize: 12, color: AppColors.textSecondary),
+                      fontSize: 12, color: AppColors.white70),
                 ),
 
                 const SizedBox(height: 4),
@@ -315,7 +327,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                   style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary),
+                      color: AppColors.goldAccent),
                 ),
 
                 if (widget.showAmenitiesExpandable &&
@@ -326,7 +338,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                 ],
 
                 const SizedBox(height: 10),
-                const Divider(height: 1, color: AppColors.border),
+                const Divider(height: 1, color: Color(0x33FFFFFF)),
                 const SizedBox(height: 8),
                 _actionRow(),
               ],
@@ -355,16 +367,16 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
   Widget _smallIconBtn(IconData icon, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.10),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.25)),
+          color: color.withOpacity(0.22),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.55)),
         ),
-        child: Icon(icon, size: 18, color: color),
+        child: Icon(icon, size: 18, color: Colors.white),
       ),
     );
   }
@@ -372,12 +384,16 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
   Widget _interestedBtn() {
     return InkWell(
       onTap: _sendingLead ? null : _createLead,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            colors: [AppColors.primary, AppColors.primaryDark],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: _sendingLead
             ? const SizedBox(
@@ -391,7 +407,8 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
                 ),
               ),
       ),
@@ -411,18 +428,19 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
             padding: const EdgeInsets.only(right: 6),
             child: Row(
               children: [
-                Icon(a.icon, size: 12, color: AppColors.textMuted),
+                Icon(a.icon, size: 12, color: AppColors.white70),
                 const SizedBox(width: 3),
                 Text(a.label,
-                    style:
-                    const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                    style: const TextStyle(
+                        fontSize: 10, color: AppColors.white70)),
               ],
             ),
           );
         }),
         if (amenities.length > 4)
           Text("+${amenities.length - 4} more",
-              style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+              style: const TextStyle(
+                  fontSize: 10, color: AppColors.white70)),
       ],
     );
   }
@@ -432,10 +450,11 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
       padding: const EdgeInsets.only(right: 8),
       child: Row(
         children: [
-          Icon(icon, size: 12, color: AppColors.textMuted),
+          Icon(icon, size: 12, color: AppColors.white70),
           const SizedBox(width: 3),
           Text(text,
-              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+              style:
+                  const TextStyle(fontSize: 11, color: Colors.white)),
         ],
       ),
     );

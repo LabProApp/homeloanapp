@@ -14,12 +14,13 @@ class AppColors {
   static const Color goldAccent = Color(0xFFEAB308); // premium gold highlight
 
   // ===== Backgrounds =====
-  // listingbackground/background were a heavy warm cream — softened to a cool
-  // neutral so cards/photos pop and the app reads more "professional".
-  static const Color listingbackground = Color(0xFFF8FAFC);
+  // Listings get a mild orange tint to keep the warm brand feel without
+  // the heavy cream of the original palette. Scaffold/background stay cool
+  // for screens that aren't photo-heavy (forms, calculators, profile).
+  static const Color listingbackground = Color(0xFFFFF4E6); // mild peach
   static const Color scaffoldBg = Color(0xFFF1F5F9);
   static const Color cardBg = Colors.white;
-  static const Color background = Color(0xFFF8FAFC);
+  static const Color background = Color(0xFFFFF4E6);
   static const Color white = Colors.white;
   static const Color surfaceSubtle = Color(0xFFF8FAFC);
   static const Color surfaceElevated = Color(0xFFFFFFFF);

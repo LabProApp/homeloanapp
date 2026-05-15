@@ -253,15 +253,12 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
       final searchText = _searchController.text.trim();
       final page = reset ? 0 : _currentPage;
 
-      String? city;
-      String? location;
-      if (searchText.isNotEmpty) {
-        location = searchText;
-        city = _filters["city"];
-      } else {
-        city = _filters["city"];
-        location = null;
-      }
+      // Search bar wins for location; otherwise use the dialog's location
+      // field (was being silently dropped before).
+      final city = _filters["city"];
+      final location = searchText.isNotEmpty
+          ? searchText
+          : (_filters["location"] as String?);
 
       final data = await service.fetchProperties(
         postedByUserId: widget.postedbyuserId,
@@ -887,9 +884,20 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) => PropertyFilterDialog(
-        initialFilters: _filters,
+        initialFilters: {..._filters, 'category': isResidential ? 'Residential' : 'Commercial'},
         onApply: (filters) {
-          setState(() => _filters = filters);
+          setState(() {
+            // Keep the top-level Residential/Commercial toggle in sync with
+            // whatever category the user picked in the dialog — otherwise the
+            // dialog's category was silently overridden by the toggle.
+            final cat = filters['category']?.toString();
+            if (cat == 'Commercial') {
+              isResidential = false;
+            } else if (cat == 'Residential') {
+              isResidential = true;
+            }
+            _filters = filters;
+          });
           _refreshFromApi();
         },
       ),
