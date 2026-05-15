@@ -78,7 +78,16 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
     }
 
     return Container(
-      color: bg,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            bg,
+            Color.alphaBlend(iconColor.withOpacity(0.18), bg),
+          ],
+        ),
+      ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
