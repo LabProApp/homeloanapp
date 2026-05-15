@@ -12,6 +12,7 @@ import '../services/property_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../commons/common_util.dart';
 import '../commons/property_share_sheet.dart';
+import '../services/property_share_service.dart';
 import '../utility/amenity_icon.dart';
 
 class RentPropertyCard extends StatefulWidget {
@@ -485,20 +486,32 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
     try {
       await LeadApiService.createLead(lead);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Owner will contact you soon")),
-      );
+      _showSnack('Owner will contact you soon');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("You already contacted for this property"),
-          backgroundColor: AppColors.error,
-        ),
+      final msg = e.toString().toLowerCase();
+      final duplicate = msg.contains('409') || msg.contains('already');
+      _showSnack(
+        duplicate
+            ? 'You already contacted for this property'
+            : 'Could not send interest. Please try again.',
+        isError: !duplicate,
       );
     } finally {
       if (mounted) setState(() => _sendingLead = false);
     }
+  }
+
+  void _showSnack(String text, {bool isError = false}) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(text),
+        duration: const Duration(seconds: 2),
+        backgroundColor: isError ? AppColors.error : null,
+      ),
+    );
   }
 
   void _shareProperty() {
@@ -520,14 +533,18 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
   Future<void> _openWhatsApp() async {
     final phone = await _resolveOwnerPhone();
     if (phone.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final msg = PropertyShareService.inquiryWhatsAppText(
+      widget.property,
+      buyerName: prefs.getString('userName'),
+      buyerPhone: prefs.getString('userMobile'),
+      buyerEmail: prefs.getString('userEmail'),
+    );
     try {
-      await AppUtils.whatsapp(
-          phone, "Hi, I am interested in your property ${widget.property.title ?? ''}");
+      await AppUtils.whatsapp(phone, msg);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      _showSnack(e.toString(), isError: true);
     }
   }
 

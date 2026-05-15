@@ -62,6 +62,65 @@ class PropertyShareService {
     return buf.toString();
   }
 
+  /// Formal inquiry message a buyer sends to the property owner over WhatsApp.
+  /// Includes property summary, deep-link, and the buyer's name / phone so
+  /// the owner has a contact to call back on.
+  static String inquiryWhatsAppText(
+    PropertyModel p, {
+    String? buyerName,
+    String? buyerPhone,
+    String? buyerEmail,
+  }) {
+    final isRent = p.rentOrSale?.toUpperCase() == 'RENT';
+    final buf = StringBuffer();
+
+    buf.writeln('Hello,');
+    buf.writeln();
+    buf.writeln(
+        "I would like to inquire about the following ${isRent ? 'rental' : ''} property listed on KeyBricks:");
+    buf.writeln();
+    buf.writeln('🏠 *${p.title ?? 'Property'}*');
+
+    final loc = [p.location, p.city, p.state]
+        .where((s) => s != null && s.isNotEmpty)
+        .join(', ');
+    if (loc.isNotEmpty) buf.writeln('📍 $loc');
+    buf.writeln('💰 ${_price(p)}');
+
+    final specs = <String>[];
+    if (p.bedrooms != null) specs.add('🛏 ${p.bedrooms} Beds');
+    if (p.bathrooms != null) specs.add('🛁 ${p.bathrooms} Bath');
+    if (p.superArea != null) specs.add('📐 ${p.superArea!.toInt()} sqft');
+    if (specs.isNotEmpty) buf.writeln(specs.join(' | '));
+
+    if (p.type != null && p.type!.isNotEmpty) {
+      buf.writeln('🏷 ${p.type}');
+    }
+
+    buf.writeln();
+    buf.writeln(
+        'Could you please share more details or arrange a site visit at a convenient time?');
+
+    final hasContact = (buyerName != null && buyerName.isNotEmpty) ||
+        (buyerPhone != null && buyerPhone.isNotEmpty) ||
+        (buyerEmail != null && buyerEmail.isNotEmpty);
+    if (hasContact) {
+      buf.writeln();
+      buf.writeln('Regards,');
+      if (buyerName != null && buyerName.isNotEmpty) buf.writeln(buyerName);
+      if (buyerPhone != null && buyerPhone.isNotEmpty) {
+        buf.writeln('📞 $buyerPhone');
+      }
+      if (buyerEmail != null && buyerEmail.isNotEmpty) {
+        buf.writeln('✉ $buyerEmail');
+      }
+    }
+
+    buf.writeln();
+    buf.writeln('Property link: ${deepLink(p)}');
+    return buf.toString();
+  }
+
   static String emailSubject(PropertyModel p) =>
       '${p.title ?? 'Property Listing'} — ${_price(p)}';
 

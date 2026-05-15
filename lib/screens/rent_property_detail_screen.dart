@@ -13,6 +13,7 @@ import '../models/property_model.dart';
 import '../models/user_model.dart';
 import '../services/leads_service.dart';
 import '../services/property_api_service.dart';
+import '../services/property_share_service.dart';
 import '../services/user_service.dart';
 import '../theme/app_colors.dart';
 import '../utility/amenity_icon.dart';
@@ -194,27 +195,32 @@ class _RentalPropertyDetailScreenState
     try {
       await LeadApiService.createLead(lead);
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-          content: const Text('Owner will contact you soon'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ));
-    } catch (_) {
+      _showSnack('Owner will contact you soon', backgroundColor: AppColors.success);
+    } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-          content: const Text('You already contacted for this property'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ));
+      final msg = e.toString().toLowerCase();
+      final duplicate = msg.contains('409') || msg.contains('already');
+      _showSnack(
+        duplicate
+            ? 'You already contacted for this property'
+            : 'Could not send interest. Please try again.',
+        backgroundColor: duplicate ? null : AppColors.error,
+      );
     } finally {
       if (mounted) setState(() => _sendingLead = false);
     }
+  }
+
+  void _showSnack(String text, {Color? backgroundColor}) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(text),
+        backgroundColor: backgroundColor,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
   }
 
   void _shareProperty() {
@@ -707,14 +713,18 @@ class _RentalPropertyDetailScreenState
   Future<void> _openWhatsApp() async {
     final phone = _ownerPhone;
     if (phone.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final msg = PropertyShareService.inquiryWhatsAppText(
+      widget.property,
+      buyerName: prefs.getString('userName'),
+      buyerPhone: prefs.getString('userMobile'),
+      buyerEmail: prefs.getString('userEmail'),
+    );
     try {
-      await AppUtils.whatsapp(
-          phone, "Hi, I'm interested in your rental: ${widget.property.title}");
+      await AppUtils.whatsapp(phone, msg);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      _showSnack(e.toString(), backgroundColor: AppColors.error);
     }
   }
 
