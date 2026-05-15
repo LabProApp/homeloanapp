@@ -175,38 +175,90 @@ class HomeScreen extends StatelessWidget {
 
   // ── Hero / greeting ────────────────────────────────────────────────────────
   Widget _buildHero(BuildContext context) {
+    final topPad = (MediaQuery.maybeOf(context)?.padding.top ?? 0) + 16;
     return SliverToBoxAdapter(
-      child: Container(
-        padding: EdgeInsets.fromLTRB(
-            20, (MediaQuery.maybeOf(context)?.padding.top ?? 0) + 16, 20, 24),
-        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hello, ${userName.isNotEmpty ? userName.split(' ').first : 'there'} 👋',
-              style: const TextStyle(
-                  fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'What are you looking for today?',
-              style: TextStyle(fontSize: 14, color: Colors.white70),
-            ),
-            const SizedBox(height: 18),
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(20, topPad, 20, 36),
+          decoration: const BoxDecoration(color: AppColors.navy),
+          child: Stack(
+            children: [
+              // Backdrop photo
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/house1.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.bottomCenter,
+                ),
+              ),
+              // Brand-tinted dark scrim for legibility
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.navy.withOpacity(0.88),
+                        AppColors.slate.withOpacity(0.72),
+                        AppColors.primaryDark.withOpacity(0.55),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                ),
+              ),
+              // Content
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _heroPill(Icons.home_rounded,      'Buy/Sell',               () => onNavigate(_HomeAction.buySell)),
-                  const SizedBox(width: 8),
-                  _heroPill(Icons.apartment_rounded, 'Rent/PG',                () => onNavigate(_HomeAction.rentPg)),
-                  const SizedBox(width: 8),
-                  _heroPill(Icons.post_add_outlined, 'Post Home/\nOffice Req.', () => onNavigate(_HomeAction.postRequirement)),
+                  Text(
+                    'Hello, ${userName.isNotEmpty ? userName.split(' ').first : 'there'} 👋',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Find. Finance. Finalize.',
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.goldAccent,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.4),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'What are you looking for today?',
+                    style: TextStyle(fontSize: 14, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 20),
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _heroPill(Icons.home_rounded, 'Buy/Sell',
+                            () => onNavigate(_HomeAction.buySell)),
+                        const SizedBox(width: 8),
+                        _heroPill(Icons.apartment_rounded, 'Rent/PG',
+                            () => onNavigate(_HomeAction.rentPg)),
+                        const SizedBox(width: 8),
+                        _heroPill(Icons.post_add_outlined,
+                            'Post Home/\nOffice Req.',
+                            () => onNavigate(_HomeAction.postRequirement)),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -220,10 +272,9 @@ class HomeScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.22),
+            color: AppColors.glass,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-                color: Colors.white.withOpacity(0.55), width: 1.5),
+            border: Border.all(color: AppColors.glassBorder, width: 1),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

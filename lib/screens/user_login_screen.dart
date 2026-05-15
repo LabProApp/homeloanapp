@@ -118,8 +118,20 @@ class _LoginScreenState extends State<LoginScreen>
           children: [
             Image.asset('assets/images/splash_bg.jpg', fit: BoxFit.cover),
             BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: Container(color: Colors.black.withOpacity(0.40)),
+              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+              child: const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xCC0F172A),
+                      Color(0xB31E293B),
+                      Color(0xCCB45309),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -132,8 +144,20 @@ class _LoginScreenState extends State<LoginScreen>
         children: [
           Image.asset('assets/images/splash_bg.jpg', fit: BoxFit.cover),
           BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-            child: Container(color: Colors.black.withOpacity(0.40)),
+            filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xCC0F172A), // navy at top
+                    Color(0xA31E293B), // slate middle
+                    Color(0xCCB45309), // brand-amber tint at bottom
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
           ),
           SafeArea(
             child: SingleChildScrollView(
