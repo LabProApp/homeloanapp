@@ -24,7 +24,19 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _init() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
-    ApiClient.setToken(await SecureTokenService.getToken());
+    final token = await SecureTokenService.getToken();
+
+    final hasValidSession =
+        userId != null && userId != 0 && token != null && token.isNotEmpty;
+
+    if (hasValidSession) {
+      ApiClient.setToken(token);
+    } else {
+      // Clear any partial/stale state so the user lands on a clean login.
+      ApiClient.setToken(null);
+      await SecureTokenService.clearToken();
+      await prefs.clear();
+    }
 
     // Dismiss native splash now that auth state is known
     FlutterNativeSplash.remove();
@@ -35,8 +47,9 @@ class _SplashScreenState extends State<SplashScreen> {
       context,
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 500),
-        pageBuilder: (_, __, ___) =>
-            userId == null ? const LoginScreen() : DashboardScreen(userId: userId),
+        pageBuilder: (_, __, ___) => hasValidSession
+            ? DashboardScreen(userId: userId)
+            : const LoginScreen(),
         transitionsBuilder: (_, animation, __, child) {
           final curved = CurvedAnimation(
             parent: animation,

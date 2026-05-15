@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(git mv *)",
-      "Bash(grep -v \"shade\\\\|withOpacity\\\\|//\")"
+      "Bash(grep -v \"shade\\\\|withOpacity\\\\|//\")",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git -C homeloanapp status --short)",
+      "Bash(git -C homeloanapp add lib/cards/property_card.dart lib/cards/rent_property_card.dart lib/screens/property_listing_screen.dart lib/screens/rental_listing_screen.dart lib/screens/user_login_screen.dart)",
+      "Bash(git -C homeloanapp commit -m ' *)",
+      "Bash(git -C homeloanapp pull --rebase origin feature/property-detail)",
+      "Bash(git -C homeloanapp push origin feature/property-detail)",
+      "Bash(git add *)",
+      "Bash(xargs grep *)",
+      "Bash(flutter analyze *)",
+      "Bash(grep -E \"\\\\.dart$\")"
     ]
   }
 }
