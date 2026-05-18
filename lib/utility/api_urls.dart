@@ -15,6 +15,11 @@ class ApiUrls {
   static const String userlogout = "$baseUrl/user/logout";
   static const String resetPassword = "$baseUrl/user/reset-password";
 
+  // Plan change requests
+  static const String planRequests = "$baseUrl/plan-requests";
+  static const String myPlanRequests = "$baseUrl/plan-requests/me";
+  static String cancelPlanRequest(int id) => "$baseUrl/plan-requests/$id/cancel";
+
   static String userProfileById(String userId) =>
       "$baseUrl/user/profile/$userId";
 

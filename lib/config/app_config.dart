@@ -6,4 +6,18 @@ class AppConfig {
     'API_BASE_URL',
     defaultValue: 'http://13.51.109.150:8080/api',
   );
+
+  /// Sales / support WhatsApp number used by the "Contact Support" CTA on the
+  /// Subscription screen. Include the country code, digits only (wa.me format).
+  /// Override at build time: --dart-define=SUPPORT_WHATSAPP=911234567890
+  static const String supportWhatsApp = String.fromEnvironment(
+    'SUPPORT_WHATSAPP',
+    defaultValue: '911234567890',
+  );
+
+  /// Sales / support email — used as a fallback when WhatsApp isn't available.
+  static const String supportEmail = String.fromEnvironment(
+    'SUPPORT_EMAIL',
+    defaultValue: 'support@keybricks.com',
+  );
 }

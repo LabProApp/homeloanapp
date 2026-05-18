@@ -15,6 +15,7 @@ import 'rent_agreement_screen.dart';
 import 'sale_agreement_screen.dart';
 import 'favourite_property_listing_screen.dart';
 import 'interested_users_screen.dart';
+import 'subscription_screen.dart';
 import 'user_profile_screen.dart';
 import 'home_screen.dart';
 import 'bank_apply_loan_dialog.dart';
@@ -309,6 +310,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           MaterialPageRoute(
                               builder: (_) =>
                                   ProfileScreen(userId: widget.userId)),
+                        );
+                      },
+                    ),
+                    _drawerActionItem(
+                      Icons.workspace_premium_outlined,
+                      'Subscription & Plans',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const SubscriptionScreen()),
                         );
                       },
                     ),
