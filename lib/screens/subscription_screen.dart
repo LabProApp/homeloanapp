@@ -28,6 +28,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   String _currentPlan = 'BASIC';
   double _planPrice = 0;
+  DateTime? _subscriptionEndAt;
   List<PlanChangeRequestModel> _requests = const [];
   bool _loading = true;
   bool _submitting = false;
@@ -49,20 +50,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     setState(() => _loading = true);
     final plan = await FeatureFlags.planName();
     final price = await FeatureFlags.planPriceYearly();
+    final endAt = await FeatureFlags.subscriptionEndAt();
     try {
       final reqs = await PlanRequestApiService.getMyRequests();
       if (!mounted) return;
       setState(() {
         _currentPlan = plan.isNotEmpty ? plan : 'BASIC';
         _planPrice = price;
+        _subscriptionEndAt = endAt;
         _requests = reqs;
         _loading = false;
       });
     } catch (_) {
+      // Network hiccup loading the request list — still show the plan info.
       if (!mounted) return;
       setState(() {
         _currentPlan = plan.isNotEmpty ? plan : 'BASIC';
         _planPrice = price;
+        _subscriptionEndAt = endAt;
         _loading = false;
       });
     }
@@ -76,17 +81,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           isError: true);
       return;
     }
-    final confirmed = await _confirmDialog(
-      title: 'Request upgrade to $plan?',
-      message:
-          'We\'ll notify our sales team. Once payment is confirmed they will activate your $plan plan.',
-      confirmLabel: 'Submit Request',
-    );
-    if (confirmed != true) return;
+    final result = await _showUpgradeDialog(plan);
+    if (result == null) return;
 
     setState(() => _submitting = true);
     try {
-      final req = await PlanRequestApiService.submit(plan: plan);
+      final req = await PlanRequestApiService.submit(plan: plan, notes: result);
       if (!mounted) return;
       setState(() {
         _requests = [req, ..._requests];
@@ -97,6 +97,57 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  /// Returns the user's notes (possibly empty), or null if they cancelled.
+  Future<String?> _showUpgradeDialog(String plan) async {
+    final notesCtrl = TextEditingController();
+    final submitted = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Request upgrade to $plan?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "We'll notify our sales team. Once payment is confirmed "
+              "they'll activate your plan.",
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: notesCtrl,
+              maxLength: 500,
+              maxLines: 3,
+              minLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'Notes (optional)',
+                hintText: 'e.g. Paid via UPI ref. ABC123',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Not now'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Submit Request'),
+          ),
+        ],
+      ),
+    );
+    final notes = notesCtrl.text.trim();
+    notesCtrl.dispose();
+    return submitted == true ? notes : null;
   }
 
   Future<void> _cancelPending() async {
@@ -226,6 +277,29 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   // ── Sub-widgets ─────────────────────────────────────────────────────────────
 
   Widget _currentPlanCard() {
+    final end = _subscriptionEndAt;
+    final now = DateTime.now();
+    final hasExpiry = end != null && _currentPlan != 'BASIC';
+    final isExpired = hasExpiry && end!.isBefore(now);
+    final daysLeft = hasExpiry ? end!.difference(now).inDays : 0;
+    final renewsSoon = hasExpiry && !isExpired && daysLeft <= 30;
+
+    String? expiryLine;
+    Color expiryColor = AppColors.white70;
+    if (isExpired) {
+      expiryLine =
+          'Expired on ${DateFormat('d MMM yyyy').format(end.toLocal())}';
+      expiryColor = AppColors.error;
+    } else if (renewsSoon) {
+      final daysWord = daysLeft == 1 ? 'day' : 'days';
+      expiryLine =
+          'Renews in $daysLeft $daysWord · ${DateFormat('d MMM yyyy').format(end!.toLocal())}';
+      expiryColor = AppColors.goldAccent;
+    } else if (hasExpiry) {
+      expiryLine =
+          'Valid till ${DateFormat('d MMM yyyy').format(end!.toLocal())}';
+    }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
@@ -257,6 +331,33 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             _planPrice <= 0 ? 'Free tier' : '₹ ${_fmt.format(_planPrice)} / year',
             style: const TextStyle(color: AppColors.white70, fontSize: 13),
           ),
+          if (expiryLine != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  isExpired
+                      ? Icons.error_outline_rounded
+                      : (renewsSoon
+                          ? Icons.warning_amber_rounded
+                          : Icons.event_available_outlined),
+                  size: 14,
+                  color: expiryColor,
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    expiryLine,
+                    style: TextStyle(
+                      color: expiryColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

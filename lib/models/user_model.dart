@@ -19,6 +19,13 @@ class UserModel {
   /// current plan. 0 for BASIC. Server enforces this independently.
   final int planPropertyLimit;
 
+  /// When the paid subscription started; null for BASIC users. ISO from server.
+  final DateTime? subscriptionStartAt;
+
+  /// When the paid subscription expires; null for indefinite / BASIC users.
+  /// After this passes, the server lazily reads the user as BASIC.
+  final DateTime? subscriptionEndAt;
+
   /// Feature-flag map keyed by the canonical feature key (e.g. `buy_sell`,
   /// `bank_loans`). Use [hasFeature] to query.
   final Map<String, bool> featureFlags;
@@ -36,6 +43,8 @@ class UserModel {
     required this.imageUrl,
     this.planPriceYearly = 0.0,
     this.planPropertyLimit = 0,
+    this.subscriptionStartAt,
+    this.subscriptionEndAt,
     this.featureFlags = const {},
   });
 
@@ -55,6 +64,8 @@ class UserModel {
     final double price = priceRaw is num ? priceRaw.toDouble() : 0.0;
     final limitRaw = json['planPropertyLimit'];
     final int propertyLimit = limitRaw is num ? limitRaw.toInt() : 0;
+    DateTime? parseDate(dynamic v) =>
+        v is String && v.isNotEmpty ? DateTime.tryParse(v) : null;
 
     return UserModel(
       id: json['id'] ?? 0,
@@ -71,6 +82,8 @@ class UserModel {
       imageUrl: json['imageUrl'] ?? '',
       planPriceYearly: price,
       planPropertyLimit: propertyLimit,
+      subscriptionStartAt: parseDate(json['subscriptionStartAt']),
+      subscriptionEndAt: parseDate(json['subscriptionEndAt']),
       featureFlags: flags,
     );
   }

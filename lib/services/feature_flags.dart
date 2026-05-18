@@ -15,6 +15,8 @@ class FeatureFlags {
   static const String _planKey = 'planName';
   static const String _planPriceKey = 'planPriceYearly';
   static const String _planPropertyLimitKey = 'planPropertyLimit';
+  static const String _subscriptionEndKey = 'subscriptionEndAt';
+  static const String _subscriptionStartKey = 'subscriptionStartAt';
 
   // Canonical keys — must match com.api.plan.PlanFeatureKeys on the server.
   static const String buySell = 'buy_sell';
@@ -38,6 +40,8 @@ class FeatureFlags {
       await prefs.remove(_planKey);
       await prefs.remove(_planPriceKey);
       await prefs.remove(_planPropertyLimitKey);
+      await prefs.remove(_subscriptionEndKey);
+      await prefs.remove(_subscriptionStartKey);
       return;
     }
     _cache = Map<String, bool>.from(user.featureFlags);
@@ -45,6 +49,18 @@ class FeatureFlags {
     await prefs.setString(_planKey, user.userPackage);
     await prefs.setDouble(_planPriceKey, user.planPriceYearly);
     await prefs.setInt(_planPropertyLimitKey, user.planPropertyLimit);
+    if (user.subscriptionEndAt != null) {
+      await prefs.setString(
+          _subscriptionEndKey, user.subscriptionEndAt!.toIso8601String());
+    } else {
+      await prefs.remove(_subscriptionEndKey);
+    }
+    if (user.subscriptionStartAt != null) {
+      await prefs.setString(
+          _subscriptionStartKey, user.subscriptionStartAt!.toIso8601String());
+    } else {
+      await prefs.remove(_subscriptionStartKey);
+    }
   }
 
   /// Hydrate the in-memory cache from prefs (call on app start so the
@@ -94,5 +110,19 @@ class FeatureFlags {
   static Future<int> planPropertyLimit() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_planPropertyLimitKey) ?? 0;
+  }
+
+  /// When the active paid subscription expires. {@code null} for BASIC or
+  /// admin-granted indefinite subscriptions.
+  static Future<DateTime?> subscriptionEndAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = prefs.getString(_subscriptionEndKey);
+    return (s == null || s.isEmpty) ? null : DateTime.tryParse(s);
+  }
+
+  static Future<DateTime?> subscriptionStartAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = prefs.getString(_subscriptionStartKey);
+    return (s == null || s.isEmpty) ? null : DateTime.tryParse(s);
   }
 }
