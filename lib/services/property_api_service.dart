@@ -102,6 +102,19 @@ class PropertyApiService {
       body: jsonEncode(property.toJson()),
     );
 
+    if (response.statusCode == 402) {
+      // Plan-limit hit. Body shape:
+      // { error, planName, limit, currentCount, code: PROPERTY_LIMIT_EXCEEDED }
+      String message =
+          "You have reached your plan's posting limit. Upgrade to post more.";
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['error'] is String) {
+          message = decoded['error'] as String;
+        }
+      } catch (_) {}
+      throw Exception(message);
+    }
     if (response.statusCode == 200 || response.statusCode == 201) {
       final decoded = jsonDecode(response.body);
       if (decoded is Map<String, dynamic>) {

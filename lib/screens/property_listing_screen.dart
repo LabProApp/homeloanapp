@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/property_model.dart';
+import '../services/feature_flags.dart';
 import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
 import '../cards/property_card.dart';
@@ -316,6 +317,34 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
 
   void _refreshFromApi() => _loadProperties(reset: true);
 
+  /// Pre-check the plan's posting allowance before opening the post form.
+  /// Server enforces the hard limit; this is just a cheap UX shortcut so
+  /// BASIC users (limit 0) don't even see the form.
+  Future<void> _openPostProperty() async {
+    final limit = await FeatureFlags.planPropertyLimit();
+    if (limit <= 0) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: const Text(
+              'Posting properties is not included in your plan. '
+              'Upgrade to Delux or Premium to list a property.'),
+          duration: const Duration(seconds: 3),
+          backgroundColor: AppColors.slate,
+        ));
+      return;
+    }
+    if (!mounted) return;
+    final added = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PostPropertyScreen(userId: widget.userId),
+      ),
+    );
+    if (added == true) _refreshFromApi();
+  }
+
   // ============================================================
   // SORT
   // ============================================================
@@ -363,15 +392,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
         heroTag: 'propertyListingPostFab',
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        onPressed: () async {
-          final added = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PostPropertyScreen(userId: widget.userId),
-            ),
-          );
-          if (added == true) _refreshFromApi();
-        },
+        onPressed: _openPostProperty,
         child: const Icon(Icons.add),
       ),
     );

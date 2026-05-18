@@ -14,6 +14,7 @@ class FeatureFlags {
   static const String _prefsKey = 'featureFlags';
   static const String _planKey = 'planName';
   static const String _planPriceKey = 'planPriceYearly';
+  static const String _planPropertyLimitKey = 'planPropertyLimit';
 
   // Canonical keys — must match com.api.plan.PlanFeatureKeys on the server.
   static const String buySell = 'buy_sell';
@@ -36,12 +37,14 @@ class FeatureFlags {
       await prefs.remove(_prefsKey);
       await prefs.remove(_planKey);
       await prefs.remove(_planPriceKey);
+      await prefs.remove(_planPropertyLimitKey);
       return;
     }
     _cache = Map<String, bool>.from(user.featureFlags);
     await prefs.setString(_prefsKey, jsonEncode(user.featureFlags));
     await prefs.setString(_planKey, user.userPackage);
     await prefs.setDouble(_planPriceKey, user.planPriceYearly);
+    await prefs.setInt(_planPropertyLimitKey, user.planPropertyLimit);
   }
 
   /// Hydrate the in-memory cache from prefs (call on app start so the
@@ -83,5 +86,13 @@ class FeatureFlags {
   static Future<double> planPriceYearly() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getDouble(_planPriceKey) ?? 0.0;
+  }
+
+  /// Max number of property listings the current plan permits. 0 means
+  /// posting is blocked for this plan (BASIC). Read straight from prefs
+  /// each call so callers always see the latest server-pushed value.
+  static Future<int> planPropertyLimit() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_planPropertyLimitKey) ?? 0;
   }
 }

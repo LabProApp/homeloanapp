@@ -15,6 +15,10 @@ class UserModel {
   /// the server.
   final double planPriceYearly;
 
+  /// Max number of property listings the user is allowed to post on their
+  /// current plan. 0 for BASIC. Server enforces this independently.
+  final int planPropertyLimit;
+
   /// Feature-flag map keyed by the canonical feature key (e.g. `buy_sell`,
   /// `bank_loans`). Use [hasFeature] to query.
   final Map<String, bool> featureFlags;
@@ -31,6 +35,7 @@ class UserModel {
     required this.userPackage,
     required this.imageUrl,
     this.planPriceYearly = 0.0,
+    this.planPropertyLimit = 0,
     this.featureFlags = const {},
   });
 
@@ -48,6 +53,8 @@ class UserModel {
     }
     final priceRaw = json['planPriceYearly'];
     final double price = priceRaw is num ? priceRaw.toDouble() : 0.0;
+    final limitRaw = json['planPropertyLimit'];
+    final int propertyLimit = limitRaw is num ? limitRaw.toInt() : 0;
 
     return UserModel(
       id: json['id'] ?? 0,
@@ -63,6 +70,7 @@ class UserModel {
 
       imageUrl: json['imageUrl'] ?? '',
       planPriceYearly: price,
+      planPropertyLimit: propertyLimit,
       featureFlags: flags,
     );
   }
