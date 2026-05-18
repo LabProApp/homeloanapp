@@ -60,7 +60,7 @@ class HomeScreen extends StatelessWidget {
                     _Tile(Icons.sell_outlined,      'Buy / Sell',         'Find & list sale properties',       const Color(0xFF1565C0), _HomeAction.buySell),
                     _Tile(Icons.apartment_outlined, 'Rent / PG',          'PG & Rental properties',            const Color(0xFF00838F), _HomeAction.rentPg),
                     _Tile(Icons.favorite_outlined,  'My Favourites',      'Your favourite properties',         AppColors.error,        _HomeAction.myFavourites),
-                    _Tile(Icons.post_add_outlined,  'Post Requirement',   'Share what you\'re looking for',    const Color(0xFF4527A0), _HomeAction.postRequirement),
+                    _Tile(Icons.post_add_outlined,  'Post Requirement',   'Free — share what you\'re looking for', AppColors.primary, _HomeAction.postRequirement, highlighted: true),
                   ]),
                   const SizedBox(height: 24),
 
@@ -345,7 +345,11 @@ class _Tile {
   final String subtitle;
   final Color color;
   final _HomeAction action;
-  const _Tile(this.icon, this.title, this.subtitle, this.color, this.action);
+  /// Visually elevate this tile — used to highlight the free Post
+  /// Requirement entry. Renders with a primary gradient and a "FREE" badge.
+  final bool highlighted;
+  const _Tile(this.icon, this.title, this.subtitle, this.color, this.action,
+      {this.highlighted = false});
 }
 
 // ── Tile card widget ───────────────────────────────────────────────────────────
@@ -358,20 +362,36 @@ class _TileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hi = tile.highlighted;
+    final titleColor = hi ? Colors.white : AppColors.textPrimary;
+    final subtitleColor = hi ? AppColors.white70 : AppColors.textMuted;
+    final iconBg = hi ? Colors.white.withOpacity(0.22) : tile.color.withOpacity(0.10);
+    final iconColor = hi ? Colors.white : tile.color;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: hi ? null : AppColors.white,
+          gradient: hi
+              ? const LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: tile.color.withOpacity(0.18)),
-          boxShadow: const [
+          border: Border.all(
+              color: hi ? Colors.transparent : tile.color.withOpacity(0.18)),
+          boxShadow: [
             BoxShadow(
-                color: AppColors.shadowLight,
-                blurRadius: 6,
-                offset: Offset(0, 2)),
+                color: hi
+                    ? AppColors.primary.withOpacity(0.30)
+                    : AppColors.shadowLight,
+                blurRadius: hi ? 10 : 6,
+                offset: const Offset(0, 2)),
           ],
         ),
         child: Row(
@@ -380,10 +400,10 @@ class _TileCard extends StatelessWidget {
             Container(
               width: 38, height: 38,
               decoration: BoxDecoration(
-                color: tile.color.withOpacity(0.10),
+                color: iconBg,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(tile.icon, color: tile.color, size: 19),
+              child: Icon(tile.icon, color: iconColor, size: 19),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -391,21 +411,47 @@ class _TileCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    tile.title,
-                    style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          tile.title,
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: titleColor),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (hi) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'FREE',
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primaryDark,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 3),
                   Text(
                     tile.subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 10,
-                        color: AppColors.textMuted,
+                        color: subtitleColor,
                         height: 1.3),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

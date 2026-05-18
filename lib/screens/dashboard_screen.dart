@@ -126,10 +126,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _selectTab(2);
         break;
       case '_HomeAction.postRequirement':
-        if (!FeatureFlags.isEnabled(FeatureFlags.postRequirement)) {
-          _showUpgradeSnack('Post Requirement');
-          return;
-        }
+        // Post Requirement is now free for every plan — used as a
+        // lead-collection hook. No flag gate.
         _setPage(PostRequirementScreen(userId: widget.userId));
         break;
       case '_HomeAction.legalServices':
