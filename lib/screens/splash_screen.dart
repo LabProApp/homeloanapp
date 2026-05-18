@@ -3,6 +3,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/api_client.dart';
+import '../services/feature_flags.dart';
 import '../services/secure_token_service.dart';
 import 'dashboard_screen.dart';
 import 'user_login_screen.dart';
@@ -22,6 +23,9 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _init() async {
+    // Hydrate the feature-flag cache so dashboard reads on first frame
+    // don't have to await disk.
+    await FeatureFlags.load();
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
     final token = await SecureTokenService.getToken();
@@ -36,6 +40,7 @@ class _SplashScreenState extends State<SplashScreen> {
       ApiClient.setToken(null);
       await SecureTokenService.clearToken();
       await prefs.clear();
+      await FeatureFlags.save(null);
     }
 
     // Dismiss native splash now that auth state is known

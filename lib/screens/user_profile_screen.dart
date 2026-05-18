@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../services/feature_flags.dart';
 import '../services/user_service.dart';
 import '../models/user_model.dart';
 import '../theme/app_colors.dart';
@@ -46,6 +47,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<UserModel> _loadUser() async {
     final user = await UserApiService.getProfile(widget.userId);
+    // Profile fetch is the freshest source of plan/feature data — keep the
+    // local cache in sync so flag-driven UI reflects upgrades immediately.
+    await FeatureFlags.save(user);
     _nameCtrl.text = user.name;
     _addressCtrl.text = user.address;
     return user;

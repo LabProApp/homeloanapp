@@ -25,6 +25,7 @@ import 'buyer_journey_screen.dart';
 
 import '../network/api_client.dart';
 import '../services/cache_manager.dart';
+import '../services/feature_flags.dart';
 import '../services/secure_token_service.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
@@ -76,6 +77,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onNavigate: _handleHomeAction,
       );
 
+  // ── Feature flag helpers ──────────────────────────────────────────────────
+
+  /// Maps a tab index to the canonical feature key the user's plan must
+  /// enable to use that tab. Returns null for tabs with no gating.
+  String? _tabFeature(int index) {
+    switch (index) {
+      case 0:
+        return FeatureFlags.buySell;
+      case 1:
+        return FeatureFlags.rentPg;
+      case 2:
+        return FeatureFlags.bankLoans;
+      case 3:
+        return FeatureFlags.documentation;
+    }
+    return null;
+  }
+
+  /// Shows a polite "upgrade your plan" snack when a gated feature is tapped.
+  void _showUpgradeSnack(String featureLabel) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text('$featureLabel is not available on your current plan. '
+            'Upgrade to Delux or Premium to unlock.'),
+        duration: const Duration(seconds: 3),
+        backgroundColor: AppColors.slate,
+      ));
+  }
+
   void _handleHomeAction(dynamic action) {
     switch (action.toString()) {
       case '_HomeAction.buySell':
@@ -85,12 +116,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _selectTab(1);
         break;
       case '_HomeAction.homeLoan':
+        if (!FeatureFlags.isEnabled(FeatureFlags.bankLoans)) {
+          _showUpgradeSnack('Bank Loans');
+          return;
+        }
         LoanApplySheet.show(context);
         break;
       case '_HomeAction.banks':
         _selectTab(2);
         break;
       case '_HomeAction.postRequirement':
+        if (!FeatureFlags.isEnabled(FeatureFlags.postRequirement)) {
+          _showUpgradeSnack('Post Requirement');
+          return;
+        }
         _setPage(PostRequirementScreen(userId: widget.userId));
         break;
       case '_HomeAction.legalServices':
@@ -165,6 +204,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _selectTab(int index) {
+    final feat = _tabFeature(index);
+    if (feat != null && !FeatureFlags.isEnabled(feat)) {
+      const labels = ['Buy/Sell', 'Rent/PG', 'Bank Loans', 'Documentation'];
+      _showUpgradeSnack(labels[index]);
+      return;
+    }
     setState(() {
       _postedByUserId = null;
       _selectedIndex = index;
@@ -383,6 +428,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _navItem(IconData icon, IconData activeIcon, String label, int index) {
     final active = _selectedIndex == index;
+    final feat = _tabFeature(index);
+    final enabled = feat == null || FeatureFlags.isEnabled(feat);
+    final color = !enabled
+        ? AppColors.textMuted.withOpacity(0.45)
+        : (active ? AppColors.primary : AppColors.textMuted);
     return Expanded(
       child: InkWell(
         onTap: () => _selectTab(index),
@@ -390,17 +440,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              active ? activeIcon : icon,
-              color: active ? AppColors.primary : AppColors.textMuted,
-              size: 22,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(active ? activeIcon : icon, color: color, size: 22),
+                if (!enabled)
+                  const Positioned(
+                    right: -6,
+                    top: -2,
+                    child: Icon(Icons.lock_outline,
+                        size: 11, color: AppColors.textMuted),
+                  ),
+              ],
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
-                color: active ? AppColors.primary : AppColors.textMuted,
+                color: color,
                 fontWeight: active ? FontWeight.w700 : FontWeight.w400,
               ),
             ),
@@ -600,6 +658,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await SecureTokenService.clearToken();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+    await FeatureFlags.save(null);
     AppCacheManager.instance.emptyCache();
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(

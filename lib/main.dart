@@ -13,6 +13,7 @@ import 'screens/splash_screen.dart';
 import 'screens/user_login_screen.dart';
 import 'network/api_client.dart';
 import 'network/service_locator.dart';
+import 'services/feature_flags.dart';
 import 'services/property_api_service.dart';
 import 'services/secure_token_service.dart';
 import 'theme/app_colors.dart';
@@ -89,6 +90,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     await SecureTokenService.clearToken();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+    await FeatureFlags.save(null);
     navigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,

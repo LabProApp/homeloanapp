@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../commons/common_widget.dart';
 import '../network/api_client.dart';
+import '../services/feature_flags.dart';
 import '../services/secure_token_service.dart';
 import '../services/user_service.dart';
 import '../theme/app_colors.dart';
@@ -560,6 +561,7 @@ class _LoginScreenState extends State<LoginScreen>
       await prefs.setString('userMobile', user.mobile ?? '');
       await prefs.setString('userRole', user.userRole ?? '');
       await prefs.setBool('isVerified', user.isVerified ?? false);
+      await FeatureFlags.save(user);
       if (response.token != null) {
         await SecureTokenService.saveToken(response.token!);
         ApiClient.setToken(response.token);
