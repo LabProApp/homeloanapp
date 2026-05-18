@@ -170,9 +170,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _setPage(const LoanEligibilityScreen());
         break;
       case '_HomeAction.rentAgreement':
+        if (!FeatureFlags.isEnabled(FeatureFlags.documentation)) {
+          _showUpgradeSnack('Rent Agreement');
+          return;
+        }
         _setPage(const RentAgreementScreen());
         break;
       case '_HomeAction.saleAgreement':
+        if (!FeatureFlags.isEnabled(FeatureFlags.documentation)) {
+          _showUpgradeSnack('Sale Agreement');
+          return;
+        }
         _setPage(const SaleAgreementScreen());
         break;
     }

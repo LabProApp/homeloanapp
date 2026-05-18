@@ -16,6 +16,7 @@ import 'network/service_locator.dart';
 import 'services/feature_flags.dart';
 import 'services/property_api_service.dart';
 import 'services/secure_token_service.dart';
+import 'services/user_service.dart';
 import 'theme/app_colors.dart';
 
 /// Global navigator key so the deep-link handler can push routes from outside
@@ -81,7 +82,24 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       _backgroundedAt = null;
       if (bg != null && DateTime.now().difference(bg) >= _sessionTimeout) {
         _handleUnauthorized();
+      } else {
+        _refreshFeatureFlagsIfLoggedIn();
       }
+    }
+  }
+
+  /// Re-fetches the user profile on resume so a plan change done outside
+  /// the app (admin upgrade, subscription expiry) reflects within seconds
+  /// instead of waiting for the next login.
+  Future<void> _refreshFeatureFlagsIfLoggedIn() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('userId');
+      if (userId == null || userId == 0) return;
+      final user = await UserApiService.getProfile(userId);
+      await FeatureFlags.save(user);
+    } catch (_) {
+      // Network hiccups shouldn't break the resume path — keep the cached flags.
     }
   }
 
