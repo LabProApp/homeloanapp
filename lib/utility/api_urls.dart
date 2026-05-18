@@ -19,6 +19,13 @@ class ApiUrls {
   static const String planRequests = "$baseUrl/plan-requests";
   static const String myPlanRequests = "$baseUrl/plan-requests/me";
   static String cancelPlanRequest(int id) => "$baseUrl/plan-requests/$id/cancel";
+  static String approvePlanRequest(int id) => "$baseUrl/plan-requests/$id/approve";
+  static String rejectPlanRequest(int id) => "$baseUrl/plan-requests/$id/reject";
+
+  // Admin
+  static const String adminStats = "$baseUrl/admin/stats";
+  static const String adminUsers = "$baseUrl/admin/users";
+  static String adminChangeUserPlan(int userId) => "$baseUrl/user/$userId/plan";
 
   static String userProfileById(String userId) =>
       "$baseUrl/user/profile/$userId";

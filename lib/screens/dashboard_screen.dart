@@ -15,6 +15,7 @@ import 'rent_agreement_screen.dart';
 import 'sale_agreement_screen.dart';
 import 'favourite_property_listing_screen.dart';
 import 'interested_users_screen.dart';
+import 'admin_dashboard_screen.dart';
 import 'subscription_screen.dart';
 import 'user_profile_screen.dart';
 import 'home_screen.dart';
@@ -47,6 +48,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _appVersion = '';
   String _userName = 'User';
   String _userEmail = '';
+  bool _isAdmin = false;
   int? _postedByUserId;
   Widget? _currentPage;
 
@@ -69,6 +71,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _userName = prefs.getString('userName') ?? 'User';
       _userEmail = prefs.getString('userEmail') ?? '';
+      _isAdmin = (prefs.getString('userRole') ?? '').toUpperCase() == 'ADMIN';
     });
   }
 
@@ -293,6 +296,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     _sectionLabel('MAIN'),
                     _drawerActionItem(Icons.home_rounded, 'Home', onTap: _goHome),
+                    if (_isAdmin)
+                      _drawerActionItem(
+                        Icons.admin_panel_settings_rounded,
+                        'Admin Dashboard',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const AdminDashboardScreen()),
+                        ),
+                        color: AppColors.primary,
+                      ),
                     _drawerNavItem(Icons.sell_outlined, 'Buy / Sell', 0),
                     _drawerNavItem(Icons.apartment_rounded, 'Rent / PG', 1),
                     _drawerNavItem(Icons.account_balance_wallet_rounded, 'Bank Loans', 2),
