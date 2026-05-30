@@ -177,51 +177,151 @@ class _PropertyCardState extends State<PropertyCard> {
   @override
   Widget build(BuildContext context) {
     final property = widget.property;
-
-    final status =
-        property.constructionStatus ?? property.propertyStatus ?? "-";
+    final status = property.constructionStatus ?? property.propertyStatus ?? "-";
 
     return Card(
-      elevation: 3,
+      elevation: 5,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.border, width: 1),
+        borderRadius: BorderRadius.circular(20),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: SizedBox(
+        height: 370,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
 
-          /// IMAGE SECTION
-          SizedBox(
-            height: 220,
-            width: double.infinity,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _images.isEmpty
-                    ? _typePlaceholder()
-                    : PageView.builder(
-                        controller: _imageCtrl,
-                        itemCount: _images.length,
-                        onPageChanged: (i) => setState(() => currentIndex = i),
-                        itemBuilder: (_, i) => CachedNetworkImage(
-                          cacheManager: AppCacheManager.instance,
-                          imageUrl: _images[i],
-                          fit: BoxFit.cover,
-                          fadeInDuration: const Duration(milliseconds: 250),
-                          placeholder: (_, __) => _loadingPlaceholder(),
-                          errorWidget: (_, __, ___) => _typePlaceholder(),
-                        ),
+            // ── Full-height image / placeholder ───────────────────────
+            _images.isEmpty
+                ? _typePlaceholder()
+                : PageView.builder(
+                    controller: _imageCtrl,
+                    itemCount: _images.length,
+                    onPageChanged: (i) => setState(() => currentIndex = i),
+                    itemBuilder: (_, i) => CachedNetworkImage(
+                      cacheManager: AppCacheManager.instance,
+                      imageUrl: _images[i],
+                      fit: BoxFit.cover,
+                      fadeInDuration: const Duration(milliseconds: 250),
+                      placeholder: (_, __) => _loadingPlaceholder(),
+                      errorWidget: (_, __, ___) => _typePlaceholder(),
+                    ),
+                  ),
+
+            // ── Translucent gradient details overlay at the bottom ─────
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.18),
+                      Colors.black.withOpacity(0.62),
+                      Colors.black.withOpacity(0.88),
+                    ],
+                    stops: const [0.0, 0.18, 0.55, 1.0],
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(14, 30, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+
+                    /// TITLE
+                    Text(
+                      property.title ?? "-",
+                      style: const TextStyle(
+                        fontSize: 19,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                        shadows: [
+                          Shadow(offset: Offset(0, 1), blurRadius: 6, color: Colors.black54),
+                        ],
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
 
-                /// IMAGE COUNT
-                if (_images.length > 1)
-                  Positioned(
-                    bottom: 8,
-                    right: 12,
-                    child: Container(
+                    const SizedBox(height: 4),
+
+                    /// LOCATION
+                    Text(
+                      property.location ?? "-",
+                      style: const TextStyle(color: AppColors.white70, fontSize: 12),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    /// CITY + PRICE
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "${property.city ?? "-"} | ${property.state ?? "-"}",
+                            style: const TextStyle(color: AppColors.white60, fontSize: 11),
+                          ),
+                        ),
+                        Text(
+                          property.price != null
+                              ? "₹ ${_fmt.format(property.price)}"
+                              : "-",
+                          style: const TextStyle(
+                            color: AppColors.goldAccent,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            shadows: [Shadow(offset: Offset(0, 1), blurRadius: 4, color: Colors.black45)],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 7),
+
+                    /// FEATURES
+                    Row(
+                      children: [
+                        _feature(Icons.bed, "${property.bedrooms ?? '-'} Beds"),
+                        const SizedBox(width: 16),
+                        _feature(Icons.bathtub, "${property.bathrooms ?? '-'} Bath"),
+                        const SizedBox(width: 16),
+                        _feature(Icons.square_foot, "${property.superArea ?? '-'} sqft"),
+                      ],
+                    ),
+
+                    if (widget.showAmenitiesExpandable &&
+                        widget.property.amenitiesAsList != null &&
+                        widget.property.amenitiesAsList!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      _amenitiesRow(),
+                    ],
+
+                    const SizedBox(height: 10),
+                    Container(height: 0.5, color: const Color(0x55FFFFFF)),
+                    const SizedBox(height: 9),
+                    _actionRow(),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Status pill + image counter (top-left) ────────────────
+            Positioned(
+              top: 12,
+              left: 12,
+              child: Row(
+                children: [
+                  _pill(status),
+                  if (_images.length > 1) ...[
+                    const SizedBox(width: 6),
+                    Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: AppColors.imageOverlay,
@@ -232,135 +332,29 @@ class _PropertyCardState extends State<PropertyCard> {
                         style: const TextStyle(color: Colors.white, fontSize: 10),
                       ),
                     ),
-                  ),
-
-                /// STATUS
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: _pill(status),
-                ),
-
-                /// TOP ICONS (favorite + share only)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Column(
-                    children: [
-                      _iconCircle(
-                        _isFavourite ? Icons.favorite : Icons.favorite_border,
-                        _toggleFavorite,
-                      ),
-                      const SizedBox(height: 6),
-                      _iconCircle(Icons.share, _shareProperty),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          /// DETAILS SECTION — glass-dark with white text
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.navy.withOpacity(0.92),
-                  AppColors.slate.withOpacity(0.92),
+                  ],
                 ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: const Border(
-                top: BorderSide(color: Color(0x33FFFFFF), width: 0.5),
               ),
             ),
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
 
-                /// TITLE
-                Text(
-                  property.title ?? "-",
-                  style: const TextStyle(
-                      fontSize: 17,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600),
-                ),
-
-                const SizedBox(height: 2),
-
-                /// LOCATION
-                Text(
-                  property.location ?? "-",
-                  style: const TextStyle(
-                      color: AppColors.white70, fontSize: 12),
-                ),
-
-                const SizedBox(height: 2),
-
-                /// CITY + PRICE
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        "${property.city ?? "-"} | ${property.state ?? "-"}",
-                        style: const TextStyle(
-                            color: AppColors.white60, fontSize: 11),
-                      ),
-                    ),
-                    Text(
-                      property.price != null
-                          ? "₹ ${_fmt.format(property.price)}"
-                          : "-",
-                      style: const TextStyle(
-                          color: AppColors.goldAccent,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                    )
-                  ],
-                ),
-
-                const SizedBox(height: 2),
-
-                /// DATE
-                Text(
-                  "Posted: ${AppUtils.formatDate(property.postDate)}",
-                  style: const TextStyle(
-                      fontSize: 10, color: AppColors.white54),
-                ),
-
-                const SizedBox(height: 6),
-
-                /// FEATURES
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _feature(Icons.bed,
-                        "${property.bedrooms ?? '-'} Beds"),
-                    _feature(Icons.bathtub,
-                        "${property.bathrooms ?? '-'} Bath"),
-                    _feature(Icons.square_foot,
-                        "${property.superArea ?? '-'} sqft"),
-                  ],
-                ),
-
-                if (widget.showAmenitiesExpandable &&
-                    widget.property.amenitiesAsList != null &&
-                    widget.property.amenitiesAsList!.isNotEmpty) ...[
+            // ── Fav + Share icons (top-right) ─────────────────────────
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Column(
+                children: [
+                  _iconCircle(
+                    _isFavourite ? Icons.favorite : Icons.favorite_border,
+                    _toggleFavorite,
+                  ),
                   const SizedBox(height: 6),
-                  _amenitiesRow(),
+                  _iconCircle(Icons.share, _shareProperty),
                 ],
-
-                const SizedBox(height: 10),
-                const Divider(height: 1, color: Color(0x33FFFFFF)),
-                const SizedBox(height: 8),
-                _actionRow(),
-              ],
+              ),
             ),
-          ),
-        ],
+
+          ],
+        ),
       ),
     );
   }

@@ -48,15 +48,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _appVersion = '';
   String _userName = 'User';
   String _userEmail = '';
+  String _planName = '';
   bool _isAdmin = false;
   int? _postedByUserId;
   Widget? _currentPage;
 
+  // Maps each home action to the feature flag that gates it.
+  // Actions not in this map are free for all plans.
+  static const _actionFeatureMap = {
+    HomeAction.buySell:      FeatureFlags.buySell,
+    HomeAction.rentPg:       FeatureFlags.rentPg,
+    HomeAction.banks:        FeatureFlags.bankLoans,
+    HomeAction.homeLoan:     FeatureFlags.bankLoans,
+    HomeAction.legalServices: FeatureFlags.documentation,
+    HomeAction.rentAgreement: FeatureFlags.documentation,
+    HomeAction.saleAgreement: FeatureFlags.documentation,
+    HomeAction.myPostings:   FeatureFlags.postProperty,
+    HomeAction.myJourneys:   FeatureFlags.journey,
+  };
+
+  bool _isActionLocked(HomeAction action) {
+    final flag = _actionFeatureMap[action];
+    return flag != null && !FeatureFlags.isEnabled(flag);
+  }
+
   @override
   void initState() {
     super.initState();
-    Future.wait([_loadAppVersion(), _loadUserInfo()]).ignore();
     _currentPage = _buildHome();
+    Future.wait([_loadAppVersion(), _loadUserInfo()]).then((_) {
+      if (mounted && _selectedIndex == -1) {
+        setState(() => _currentPage = _buildHome());
+      }
+    });
   }
 
   Future<void> _loadAppVersion() async {
@@ -67,18 +91,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
+    final plan = await FeatureFlags.planName();
     if (!mounted) return;
     setState(() {
       _userName = prefs.getString('userName') ?? 'User';
       _userEmail = prefs.getString('userEmail') ?? '';
       _isAdmin = (prefs.getString('userRole') ?? '').toUpperCase() == 'ADMIN';
+      _planName = plan;
     });
   }
 
   Widget _buildHome() => HomeScreen(
         userId: widget.userId,
         userName: _userName,
+        planName: _planName,
         onNavigate: _handleHomeAction,
+        isLocked: _isActionLocked,
+        onViewPlans: _openSubscriptionScreen,
       );
 
   // ── Feature flag helpers ──────────────────────────────────────────────────
@@ -99,92 +128,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return null;
   }
 
-  /// Shows a polite "upgrade your plan" snack when a gated feature is tapped.
+  void _openSubscriptionScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+    );
+  }
+
+  /// Shows a polite "upgrade your plan" snack with a direct link to the
+  /// subscription screen when a gated feature is tapped.
   void _showUpgradeSnack(String featureLabel) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        content: Text('$featureLabel is not available on your current plan. '
-            'Upgrade to Delux or Premium to unlock.'),
-        duration: const Duration(seconds: 3),
+        content: Text('$featureLabel requires a higher plan to unlock.'),
+        duration: const Duration(seconds: 4),
         backgroundColor: AppColors.slate,
+        action: SnackBarAction(
+          label: 'View Plans',
+          textColor: AppColors.goldAccent,
+          onPressed: _openSubscriptionScreen,
+        ),
       ));
   }
 
-  void _handleHomeAction(dynamic action) {
-    switch (action.toString()) {
-      case '_HomeAction.buySell':
+  void _handleHomeAction(HomeAction action) {
+    // Check action-level lock before navigating.
+    if (_isActionLocked(action)) {
+      const labels = {
+        HomeAction.buySell:       'Buy / Sell',
+        HomeAction.rentPg:        'Rent / PG',
+        HomeAction.banks:         'Banks & Rates',
+        HomeAction.homeLoan:      'Home Loan',
+        HomeAction.legalServices: 'Legal Services',
+        HomeAction.rentAgreement: 'Rent Agreement',
+        HomeAction.saleAgreement: 'Sale Agreement',
+        HomeAction.myPostings:    'My Postings',
+        HomeAction.myJourneys:    'My Journeys',
+      };
+      _showUpgradeSnack(labels[action] ?? 'This feature');
+      return;
+    }
+
+    switch (action) {
+      case HomeAction.buySell:
         _selectTab(0);
-        break;
-      case '_HomeAction.rentPg':
+      case HomeAction.rentPg:
         _selectTab(1);
-        break;
-      case '_HomeAction.homeLoan':
-        if (!FeatureFlags.isEnabled(FeatureFlags.bankLoans)) {
-          _showUpgradeSnack('Bank Loans');
-          return;
-        }
+      case HomeAction.homeLoan:
         LoanApplySheet.show(context);
-        break;
-      case '_HomeAction.banks':
+      case HomeAction.banks:
         _selectTab(2);
-        break;
-      case '_HomeAction.postRequirement':
-        // Post Requirement is now free for every plan — used as a
-        // lead-collection hook. No flag gate.
+      case HomeAction.postRequirement:
         _setPage(PostRequirementScreen(userId: widget.userId));
-        break;
-      case '_HomeAction.legalServices':
+      case HomeAction.legalServices:
         _selectTab(3);
-        break;
-      case '_HomeAction.myFavourites':
+      case HomeAction.myFavourites:
         _setPage(FavouritePropertyListingScreen(userId: widget.userId));
-        break;
-      case '_HomeAction.myJourneys':
+      case HomeAction.myJourneys:
         _setPage(MyJourneysScreen(userId: widget.userId));
-        break;
-      case '_HomeAction.startJourney':
+      case HomeAction.startJourney:
         _setPage(BuyerJourneyScreen(userId: widget.userId));
-        break;
-      case '_HomeAction.myPostings':
+      case HomeAction.myPostings:
         setState(() {
           _postedByUserId = widget.userId;
           _selectedIndex = 0;
           _currentPage = _buildTabPage(0);
         });
-        break;
-      case '_HomeAction.myInquiries':
+      case HomeAction.myInquiries:
         _setPage(BrokerLeadsScreen(brokerId: widget.userId));
-        break;
-      case '_HomeAction.emiCalculator':
+      case HomeAction.emiCalculator:
         _setPage(const EmiCalculatorScreen());
-        break;
-      case '_HomeAction.stampDuty':
+      case HomeAction.stampDuty:
         _setPage(const StampDutyScreen());
-        break;
-      case '_HomeAction.rentVsBuy':
+      case HomeAction.rentVsBuy:
         _setPage(const RentVsBuyScreen());
-        break;
-      case '_HomeAction.dueDiligence':
+      case HomeAction.dueDiligence:
         _setPage(const DueDiligenceScreen());
-        break;
-      case '_HomeAction.loanEligibility':
+      case HomeAction.loanEligibility:
         _setPage(const LoanEligibilityScreen());
-        break;
-      case '_HomeAction.rentAgreement':
-        if (!FeatureFlags.isEnabled(FeatureFlags.documentation)) {
-          _showUpgradeSnack('Rent Agreement');
-          return;
-        }
+      case HomeAction.rentAgreement:
         _setPage(const RentAgreementScreen());
-        break;
-      case '_HomeAction.saleAgreement':
-        if (!FeatureFlags.isEnabled(FeatureFlags.documentation)) {
-          _showUpgradeSnack('Sale Agreement');
-          return;
-        }
+      case HomeAction.saleAgreement:
         _setPage(const SaleAgreementScreen());
-        break;
     }
   }
 
@@ -332,11 +358,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       'Subscription & Plans',
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const SubscriptionScreen()),
-                        );
+                        _openSubscriptionScreen();
                       },
                     ),
                     _drawerActionItem(

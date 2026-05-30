@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 /// Callback used by HomeScreen tiles to request navigation to a named section.
-typedef HomeNavigate = void Function(_HomeAction action);
+typedef HomeNavigate = void Function(HomeAction action);
 
-enum _HomeAction {
+enum HomeAction {
   buySell,
   rentPg,
   myFavourites,
@@ -28,14 +28,24 @@ enum _HomeAction {
 class HomeScreen extends StatelessWidget {
   final int userId;
   final String userName;
+  final String planName;
   final HomeNavigate onNavigate;
+  /// Returns true if the given action is locked for the current plan.
+  /// Null means all actions are unlocked (safe default).
+  final bool Function(HomeAction)? isLocked;
+  final VoidCallback? onViewPlans;
 
   const HomeScreen({
     super.key,
     required this.userId,
     required this.userName,
+    this.planName = '',
     required this.onNavigate,
+    this.isLocked,
+    this.onViewPlans,
   });
+
+  bool _locked(HomeAction action) => isLocked?.call(action) ?? false;
 
   @override
   Widget build(BuildContext context) {
@@ -57,43 +67,41 @@ class HomeScreen extends StatelessWidget {
                   // ── Properties ──────────────────────────────────────────
                   _section(context, 'Properties', Icons.home_rounded,
                       AppColors.primary, [
-                    _Tile(Icons.sell_outlined,      'Buy / Sell',         'Find & list sale properties',       const Color(0xFF1565C0), _HomeAction.buySell),
-                    _Tile(Icons.apartment_outlined, 'Rent / PG',          'PG & Rental properties',            const Color(0xFF00838F), _HomeAction.rentPg),
-                    _Tile(Icons.favorite_outlined,  'My Favourites',      'Your favourite properties',         AppColors.error,        _HomeAction.myFavourites),
-                    _Tile(Icons.post_add_outlined,  'Post Requirement',   'Free — share what you\'re looking for', AppColors.primary, _HomeAction.postRequirement, highlighted: true),
+                    _Tile(Icons.sell_outlined,      'Buy / Sell',       'Find & list sale properties',              const Color(0xFF1565C0), HomeAction.buySell),
+                    _Tile(Icons.apartment_outlined, 'Rent / PG',        'PG & Rental properties',                   const Color(0xFF00838F), HomeAction.rentPg),
+                    _Tile(Icons.favorite_outlined,  'My Favourites',    'Your favourite properties',                AppColors.error,        HomeAction.myFavourites),
+                    _Tile(Icons.post_add_outlined,  'Post Requirement', 'Free — share what you\'re looking for',    AppColors.primary,      HomeAction.postRequirement, highlighted: true),
                   ]),
                   const SizedBox(height: 24),
 
                   // ── Finance & Loans ─────────────────────────────────────
                   _section(context, 'Finance & Loans', Icons.account_balance_rounded,
                       const Color(0xFF1B5E20), [
-                    _Tile(Icons.corporate_fare_outlined,  'Banks & Rates',   'Compare bank interest rates',  const Color(0xFF4527A0), _HomeAction.banks),
-                    _Tile(Icons.account_balance_outlined, 'Inquire Home Loan', 'Explore bank loan offers',     const Color(0xFF1565C0), _HomeAction.homeLoan),
-                    _Tile(Icons.calculate_outlined,       'EMI Calculator',  'Estimate monthly installment',  const Color(0xFF2E7D32), _HomeAction.emiCalculator),
-                    _Tile(Icons.verified_outlined,        'Home Loan Eligibility', 'Check your Home loan eligibility', const Color(0xFF00796B), _HomeAction.loanEligibility),
-                    _Tile(Icons.balance_outlined,         'Rent vs Buy Calculator', 'Compare renting vs buying', const Color(0xFF00838F), _HomeAction.rentVsBuy),
+                    _Tile(Icons.corporate_fare_outlined,  'Banks & Rates',          'Compare bank interest rates',        const Color(0xFF4527A0), HomeAction.banks),
+                    _Tile(Icons.account_balance_outlined, 'Inquire Home Loan',      'Explore bank loan offers',           const Color(0xFF1565C0), HomeAction.homeLoan),
+                    _Tile(Icons.calculate_outlined,       'EMI Calculator',         'Estimate monthly installment',       const Color(0xFF2E7D32), HomeAction.emiCalculator),
+                    _Tile(Icons.verified_outlined,        'Home Loan Eligibility',  'Check your Home loan eligibility',   const Color(0xFF00796B), HomeAction.loanEligibility),
+                    _Tile(Icons.balance_outlined,         'Rent vs Buy Calculator', 'Compare renting vs buying',          const Color(0xFF00838F), HomeAction.rentVsBuy),
                   ]),
                   const SizedBox(height: 24),
 
                   // ── Legal & Documentation ───────────────────────────────
                   _section(context, 'Legal & Documentation', Icons.gavel_rounded,
                       const Color(0xFF6A1B9A), [
-                   
-                    _Tile(Icons.assignment_rounded,    'Legal Services',  'Reach out to Verified legal vendors',    const Color(0xFF6A1B9A), _HomeAction.legalServices),
-                    _Tile(Icons.description_outlined,  'Rent Agreement',  'Generate rental agreement',      const Color(0xFF00838F), _HomeAction.rentAgreement),
-                    _Tile(Icons.handshake_outlined,    'Sale Agreement',  'Generate sale deed agreement',   const Color(0xFF4E342E), _HomeAction.saleAgreement),
-                    _Tile(Icons.checklist_outlined,    'Property Checklist', 'Property verification checklist', const Color(0xFFE65100), _HomeAction.dueDiligence),
-                    _Tile(Icons.receipt_long_outlined, 'Stamp Duty Charges', 'Calculate stamp duty charges', const Color(0xFF1565C0), _HomeAction.stampDuty),
-                 
+                    _Tile(Icons.assignment_rounded,    'Legal Services',     'Reach out to Verified legal vendors',  const Color(0xFF6A1B9A), HomeAction.legalServices),
+                    _Tile(Icons.description_outlined,  'Rent Agreement',     'Generate rental agreement',            const Color(0xFF00838F), HomeAction.rentAgreement),
+                    _Tile(Icons.handshake_outlined,    'Sale Agreement',     'Generate sale deed agreement',         const Color(0xFF4E342E), HomeAction.saleAgreement),
+                    _Tile(Icons.checklist_outlined,    'Property Checklist', 'Property verification checklist',      const Color(0xFFE65100), HomeAction.dueDiligence),
+                    _Tile(Icons.receipt_long_outlined, 'Stamp Duty Charges', 'Calculate stamp duty charges',         const Color(0xFF1565C0), HomeAction.stampDuty),
                   ]),
                   const SizedBox(height: 24),
 
                   // ── My Activity ─────────────────────────────────────────
                   _section(context, 'My Activity', Icons.person_rounded,
                       const Color(0xFF4527A0), [
-                    _Tile(Icons.route,                    'My Journeys',      'Track your purchase journeys', const Color(0xFF0277BD), _HomeAction.myJourneys),
-                    _Tile(Icons.business_center_outlined, 'My Postings',      'Properties you have listed',   const Color(0xFF4527A0), _HomeAction.myPostings),
-                    _Tile(Icons.groups_outlined,          'Client Inquiries',  'Leads, follow-ups & status',  AppColors.primary,      _HomeAction.myInquiries),
+                    _Tile(Icons.route,                    'My Journeys',     'Track your purchase journeys', const Color(0xFF0277BD), HomeAction.myJourneys),
+                    _Tile(Icons.business_center_outlined, 'My Postings',     'Properties you have listed',   const Color(0xFF4527A0), HomeAction.myPostings),
+                    _Tile(Icons.groups_outlined,          'Client Inquiries', 'Leads, follow-ups & status',  AppColors.primary,      HomeAction.myInquiries),
                   ]),
                 ],
               ),
@@ -107,7 +115,7 @@ class HomeScreen extends StatelessWidget {
   // ── Journey banner ─────────────────────────────────────────────────────────
   Widget _journeyBanner() {
     return GestureDetector(
-      onTap: () => onNavigate(_HomeAction.startJourney),
+      onTap: () => onNavigate(HomeAction.startJourney),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
@@ -187,7 +195,6 @@ class HomeScreen extends StatelessWidget {
           decoration: const BoxDecoration(color: AppColors.navy),
           child: Stack(
             children: [
-              // Backdrop photo
               Positioned.fill(
                 child: Image.asset(
                   'assets/images/house1.jpg',
@@ -195,7 +202,6 @@ class HomeScreen extends StatelessWidget {
                   alignment: Alignment.bottomCenter,
                 ),
               ),
-              // Brand-tinted dark scrim for legibility
               Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -211,18 +217,26 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Content
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Hello, ${userName.isNotEmpty ? userName.split(' ').first : 'there'} 👋',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: 0.2,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Hello, ${userName.isNotEmpty ? userName.split(' ').first : 'there'} 👋',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                      if (planName.isNotEmpty)
+                        _planBadge(planName),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   const Text(
@@ -244,14 +258,16 @@ class HomeScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _heroPill(Icons.home_rounded, 'Buy/Sell',
-                            () => onNavigate(_HomeAction.buySell)),
+                            () => onNavigate(HomeAction.buySell),
+                            locked: _locked(HomeAction.buySell)),
                         const SizedBox(width: 8),
                         _heroPill(Icons.apartment_rounded, 'Rent/PG',
-                            () => onNavigate(_HomeAction.rentPg)),
+                            () => onNavigate(HomeAction.rentPg),
+                            locked: _locked(HomeAction.rentPg)),
                         const SizedBox(width: 8),
                         _heroPill(Icons.post_add_outlined,
                             'Post Home/\nOffice Req.',
-                            () => onNavigate(_HomeAction.postRequirement)),
+                            () => onNavigate(HomeAction.postRequirement)),
                       ],
                     ),
                   ),
@@ -264,7 +280,44 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _heroPill(IconData icon, String label, VoidCallback onTap, {bool highlight = false}) {
+  Widget _planBadge(String plan) {
+    final color = switch (plan.toUpperCase()) {
+      'PREMIUM' => AppColors.goldAccent,
+      'DELUX'   => const Color(0xFF64B5F6),
+      _         => Colors.white60,
+    };
+    return GestureDetector(
+      onTap: onViewPlans,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withOpacity(0.55)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.workspace_premium_rounded, size: 12, color: color),
+            const SizedBox(width: 4),
+            Text(plan,
+                style: TextStyle(
+                    fontSize: 11,
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4)),
+            if (onViewPlans != null) ...[
+              const SizedBox(width: 5),
+              Icon(Icons.arrow_forward_ios_rounded, size: 9, color: color.withOpacity(0.7)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _heroPill(IconData icon, String label, VoidCallback onTap,
+      {bool locked = false}) {
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -272,21 +325,40 @@ class HomeScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
           decoration: BoxDecoration(
-            color: AppColors.glass,
+            color: locked
+                ? Colors.white.withOpacity(0.06)
+                : AppColors.glass,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.glassBorder, width: 1),
+            border: Border.all(
+                color: locked
+                    ? Colors.white.withOpacity(0.12)
+                    : AppColors.glassBorder,
+                width: 1),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: 26),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(icon,
+                      color: locked ? Colors.white38 : Colors.white, size: 26),
+                  if (locked)
+                    const Positioned(
+                      right: -6,
+                      top: -4,
+                      child: Icon(Icons.lock_rounded,
+                          size: 11, color: Colors.white54),
+                    ),
+                ],
+              ),
               const SizedBox(height: 6),
               Text(label,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: locked ? Colors.white38 : Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       height: 1.2)),
@@ -329,7 +401,11 @@ class HomeScreen extends StatelessWidget {
           crossAxisSpacing: 10,
           childAspectRatio: 2.6,
           children: tiles
-              .map((t) => _TileCard(tile: t, onTap: () => onNavigate(t.action)))
+              .map((t) => _TileCard(
+                    tile: t,
+                    locked: _locked(t.action),
+                    onTap: () => onNavigate(t.action),
+                  ))
               .toList(),
         ),
       ],
@@ -344,9 +420,7 @@ class _Tile {
   final String title;
   final String subtitle;
   final Color color;
-  final _HomeAction action;
-  /// Visually elevate this tile — used to highlight the free Post
-  /// Requirement entry. Renders with a primary gradient and a "FREE" badge.
+  final HomeAction action;
   final bool highlighted;
   const _Tile(this.icon, this.title, this.subtitle, this.color, this.action,
       {this.highlighted = false});
@@ -356,17 +430,25 @@ class _Tile {
 
 class _TileCard extends StatelessWidget {
   final _Tile tile;
+  final bool locked;
   final VoidCallback onTap;
 
-  const _TileCard({required this.tile, required this.onTap});
+  const _TileCard({required this.tile, required this.locked, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final hi = tile.highlighted;
-    final titleColor = hi ? Colors.white : AppColors.textPrimary;
-    final subtitleColor = hi ? AppColors.white70 : AppColors.textMuted;
-    final iconBg = hi ? Colors.white.withOpacity(0.22) : tile.color.withOpacity(0.10);
-    final iconColor = hi ? Colors.white : tile.color;
+    // locked tiles override highlighted: we never render the free-tier gradient
+    // as locked, since postRequirement is always free.
+    final hi = tile.highlighted && !locked;
+
+    final bg       = locked ? const Color(0xFFF0F0F0) : (hi ? null : AppColors.white);
+    final iconBg   = locked ? const Color(0xFFE0E0E0) : (hi ? Colors.white.withOpacity(0.22) : tile.color.withOpacity(0.10));
+    final iconColor = locked ? Colors.grey.shade400   : (hi ? Colors.white : tile.color);
+    final titleColor   = locked ? Colors.grey.shade400 : (hi ? Colors.white : AppColors.textPrimary);
+    final subtitleColor = locked ? Colors.grey.shade400 : (hi ? AppColors.white70 : AppColors.textMuted);
+    final borderColor  = locked
+        ? Colors.grey.shade300
+        : (hi ? Colors.transparent : tile.color.withOpacity(0.18));
 
     return InkWell(
       onTap: onTap,
@@ -374,7 +456,7 @@ class _TileCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: hi ? null : AppColors.white,
+          color: hi ? null : bg,
           gradient: hi
               ? const LinearGradient(
                   colors: [AppColors.primary, AppColors.primaryDark],
@@ -383,16 +465,17 @@ class _TileCard extends StatelessWidget {
                 )
               : null,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-              color: hi ? Colors.transparent : tile.color.withOpacity(0.18)),
-          boxShadow: [
-            BoxShadow(
-                color: hi
-                    ? AppColors.primary.withOpacity(0.30)
-                    : AppColors.shadowLight,
-                blurRadius: hi ? 10 : 6,
-                offset: const Offset(0, 2)),
-          ],
+          border: Border.all(color: borderColor),
+          boxShadow: locked
+              ? null
+              : [
+                  BoxShadow(
+                      color: hi
+                          ? AppColors.primary.withOpacity(0.30)
+                          : AppColors.shadowLight,
+                      blurRadius: hi ? 10 : 6,
+                      offset: const Offset(0, 2)),
+                ],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -444,11 +527,16 @@ class _TileCard extends StatelessWidget {
                           ),
                         ),
                       ],
+                      if (locked) ...[
+                        const SizedBox(width: 4),
+                        Icon(Icons.lock_rounded,
+                            size: 11, color: Colors.grey.shade400),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    tile.subtitle,
+                    locked ? 'Upgrade to unlock' : tile.subtitle,
                     style: TextStyle(
                         fontSize: 10,
                         color: subtitleColor,

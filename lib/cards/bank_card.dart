@@ -29,30 +29,30 @@ class BankCard extends StatelessWidget {
     final loanRange = _loanRange();
 
     return Card(
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.08),
+      elevation: 3,
+      shadowColor: Colors.black.withOpacity(0.10),
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         side: isSelected
             ? const BorderSide(color: AppColors.primary, width: 2)
             : const BorderSide(color: AppColors.border),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         onTap: () => showBankDetailSheet(context, bank,
             onNavigateToEmi: onNavigateToEmi),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Logo + Name + Checkbox ────────────────────────────
-              Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Logo + Name + Checkbox ──────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   _logo(),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,7 +62,7 @@ class BankCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
                           ),
@@ -71,7 +71,7 @@ class BankCard extends StatelessWidget {
                           Text(
                             bank.interestType!,
                             style: const TextStyle(
-                                fontSize: 11, color: AppColors.textMuted),
+                                fontSize: 12, color: AppColors.textMuted),
                           ),
                       ],
                     ),
@@ -89,12 +89,15 @@ class BankCard extends StatelessWidget {
                         color: AppColors.textMuted),
                 ],
               ),
+            ),
 
-              const SizedBox(height: 14),
+            const SizedBox(height: 16),
 
-              // ── Key stats row ─────────────────────────────────────
-              SizedBox(
-                height: 52,
+            // ── Key stats row ───────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: SizedBox(
+                height: 64,
                 child: Row(
                   children: [
                     _stat('${best?.toStringAsFixed(2) ?? '-'}%', 'Interest',
@@ -108,12 +111,15 @@ class BankCard extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
 
-              // ── Processing fee + CIBIL tags ───────────────────────
-              if (bank.processingFee != null || bank.minCibilScore != null) ...[
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 12,
+            // ── Processing fee + CIBIL tags ─────────────────────────
+            if (bank.processingFee != null || bank.minCibilScore != null) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: Wrap(
+                  spacing: 14,
                   runSpacing: 4,
                   children: [
                     if (bank.processingFee != null)
@@ -124,21 +130,40 @@ class BankCard extends StatelessWidget {
                           'CIBIL ${bank.minCibilScore!.toInt()}+'),
                   ],
                 ),
-              ],
+              ),
+            ],
 
-              const SizedBox(height: 14),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-              // ── Action buttons ────────────────────────────────────
-              Row(
+            // ── Translucent action strip ────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.primary.withOpacity(0.03),
+                    AppColors.primary.withOpacity(0.08),
+                  ],
+                ),
+                border: Border(
+                  top: BorderSide(
+                      color: AppColors.primary.withOpacity(0.12)),
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+              child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => showBankDetailSheet(context, bank,
                           onNavigateToEmi: onNavigateToEmi),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         side: const BorderSide(color: AppColors.primary),
                         foregroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(
@@ -155,7 +180,7 @@ class BankCard extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () => LoanApplySheet.show(context),
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         elevation: 0,
@@ -170,8 +195,8 @@ class BankCard extends StatelessWidget {
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -191,15 +216,15 @@ class BankCard extends StatelessWidget {
   Widget _logo() {
     final url = bank.bankLogoUrl;
     return Container(
-      width: 48,
-      height: 48,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         color: AppColors.surfaceSubtle,
         border: Border.all(color: AppColors.border),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: url != null && url.isNotEmpty
             ? Image.network(url,
                 fit: BoxFit.contain,
@@ -210,7 +235,7 @@ class BankCard extends StatelessWidget {
   }
 
   Widget _logoFallback() => const Icon(Icons.account_balance_rounded,
-      color: AppColors.textMuted, size: 24);
+      color: AppColors.textMuted, size: 28);
 
   Widget _stat(String value, String label, {bool highlight = false}) {
     return Expanded(
@@ -220,15 +245,15 @@ class BankCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 17,
               fontWeight: FontWeight.w700,
               color: highlight ? AppColors.primary : AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(label,
               style:
-                  const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  const TextStyle(fontSize: 12, color: AppColors.textMuted)),
         ],
       ),
     );
@@ -236,20 +261,20 @@ class BankCard extends StatelessWidget {
 
   Widget _vDivider() => Container(
         width: 1,
-        height: 36,
+        height: 40,
         color: AppColors.border,
-        margin: const EdgeInsets.symmetric(horizontal: 4),
+        margin: const EdgeInsets.symmetric(horizontal: 6),
       );
 
   Widget _tag(IconData icon, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: AppColors.textMuted),
-        const SizedBox(width: 4),
+        Icon(icon, size: 14, color: AppColors.textMuted),
+        const SizedBox(width: 5),
         Text(text,
             style:
-                const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                const TextStyle(fontSize: 12, color: AppColors.textMuted)),
       ],
     );
   }

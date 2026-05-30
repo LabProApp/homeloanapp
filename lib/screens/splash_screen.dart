@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../network/api_client.dart';
 import '../services/feature_flags.dart';
 import '../services/secure_token_service.dart';
+import '../services/user_service.dart';
 import 'dashboard_screen.dart';
 import 'user_login_screen.dart';
 
@@ -35,6 +36,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (hasValidSession) {
       ApiClient.setToken(token);
+      // Fetch the latest plan/feature data on every startup so a plan change
+      // done outside the app (admin upgrade, subscription expiry) is reflected
+      // immediately without waiting for the next login.
+      try {
+        final user = await UserApiService.getProfile(userId!);
+        await FeatureFlags.save(user);
+      } catch (_) {
+        // Network unavailable — the flags loaded from disk above remain in use.
+      }
     } else {
       // Clear any partial/stale state so the user lands on a clean login.
       ApiClient.setToken(null);

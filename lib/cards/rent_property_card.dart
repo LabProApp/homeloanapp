@@ -185,47 +185,145 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
   Widget build(BuildContext context) {
     final status =
         widget.property.constructionStatus ?? widget.property.propertyStatus ?? "-";
+
     return Card(
-      elevation: 3,
+      elevation: 5,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.border, width: 1),
+        borderRadius: BorderRadius.circular(20),
       ),
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: SizedBox(
+        height: 355,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
 
-          /// IMAGE SECTION
-          SizedBox(
-            height: 220,
-            width: double.infinity,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _images.isEmpty
-                    ? _typePlaceholder()
-                    : PageView.builder(
-                        controller: _imageCtrl,
-                        itemCount: _images.length,
-                        onPageChanged: (i) => setState(() => currentIndex = i),
-                        itemBuilder: (_, i) => CachedNetworkImage(
-                          cacheManager: AppCacheManager.instance,
-                          imageUrl: _images[i],
-                          fit: BoxFit.cover,
-                          fadeInDuration: const Duration(milliseconds: 250),
-                          placeholder: (_, __) => _loadingPlaceholder(),
-                          errorWidget: (_, __, ___) => _typePlaceholder(),
-                        ),
+            // ── Full-height image / placeholder ───────────────────────
+            _images.isEmpty
+                ? _typePlaceholder()
+                : PageView.builder(
+                    controller: _imageCtrl,
+                    itemCount: _images.length,
+                    onPageChanged: (i) => setState(() => currentIndex = i),
+                    itemBuilder: (_, i) => CachedNetworkImage(
+                      cacheManager: AppCacheManager.instance,
+                      imageUrl: _images[i],
+                      fit: BoxFit.cover,
+                      fadeInDuration: const Duration(milliseconds: 250),
+                      placeholder: (_, __) => _loadingPlaceholder(),
+                      errorWidget: (_, __, ___) => _typePlaceholder(),
+                    ),
+                  ),
+
+            // ── Translucent gradient details overlay at the bottom ─────
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.18),
+                      Colors.black.withOpacity(0.62),
+                      Colors.black.withOpacity(0.88),
+                    ],
+                    stops: const [0.0, 0.18, 0.55, 1.0],
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(14, 30, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+
+                    /// TITLE
+                    Text(
+                      widget.property.title ?? "-",
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        height: 1.2,
+                        shadows: [
+                          Shadow(offset: Offset(0, 1), blurRadius: 6, color: Colors.black54),
+                        ],
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
 
-                /// IMAGE COUNT
-                if (_images.length > 1)
-                  Positioned(
-                    bottom: 8,
-                    right: 12,
-                    child: Container(
+                    const SizedBox(height: 4),
+
+                    /// LOCATION
+                    Text(
+                      "${widget.property.location ?? ""}, ${widget.property.city ?? ""}",
+                      style: const TextStyle(fontSize: 12, color: AppColors.white70),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    /// META + RENT
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              _metaIcon(Icons.bed, "${widget.property.bedrooms ?? '-'}"),
+                              _metaIcon(Icons.bathtub, "${widget.property.bathrooms ?? '-'}"),
+                              _metaIcon(
+                                Icons.square_foot,
+                                widget.property.superArea != null
+                                    ? "${widget.property.superArea!.toInt()} sqft"
+                                    : "-",
+                              ),
+                              if (widget.property.floorNumber != null)
+                                _metaIcon(Icons.layers, "Fl ${widget.property.floorNumber}"),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          rent,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.goldAccent,
+                            shadows: [Shadow(offset: Offset(0, 1), blurRadius: 4, color: Colors.black45)],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    if (widget.showAmenitiesExpandable &&
+                        widget.property.amenitiesAsList != null &&
+                        widget.property.amenitiesAsList!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      _amenitiesRow(),
+                    ],
+
+                    const SizedBox(height: 10),
+                    Container(height: 0.5, color: const Color(0x55FFFFFF)),
+                    const SizedBox(height: 9),
+                    _actionRow(),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Status pill + image counter (top-left) ────────────────
+            Positioned(
+              top: 12,
+              left: 12,
+              child: Row(
+                children: [
+                  _pill(status),
+                  if (_images.length > 1) ...[
+                    const SizedBox(width: 6),
+                    Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: AppColors.imageOverlay,
@@ -236,115 +334,29 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                         style: const TextStyle(color: Colors.white, fontSize: 10),
                       ),
                     ),
-                  ),
-
-                /// STATUS
-                Positioned(top: 12, left: 12, child: _pill(status)),
-
-                /// ICONS (favorite + share only)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Column(
-                    children: [
-                      _iconCircle(
-                          _isFavourite ? Icons.favorite : Icons.favorite_border,
-                          _toggleFavorite),
-                      const SizedBox(height: 6),
-                      _iconCircle(Icons.share, _shareProperty),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          /// DETAILS SECTION — glass-dark with white text
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.navy.withOpacity(0.92),
-                  AppColors.slate.withOpacity(0.92),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: const Border(
-                top: BorderSide(color: Color(0x33FFFFFF), width: 0.5),
-              ),
-            ),
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-
-                /// TITLE
-                Text(
-                  widget.property.title ?? "-",
-                  style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white),
-                ),
-
-                const SizedBox(height: 2),
-
-                /// LOCATION
-                Text(
-                  "${widget.property.location ?? ""}, ${widget.property.city ?? ""}",
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.white70),
-                ),
-
-                const SizedBox(height: 4),
-
-                /// META
-                Row(
-                  children: [
-                    _metaIcon(Icons.bed,
-                        "${widget.property.bedrooms ?? '-'}"),
-                    _metaIcon(Icons.bathtub,
-                        "${widget.property.bathrooms ?? '-'}"),
-                    _metaIcon(
-                        Icons.square_foot,
-                        widget.property.superArea != null
-                            ? "${widget.property.superArea!.toInt()} sqft"
-                            : "-"),
-                    _metaIcon(
-                        Icons.layers,
-                        widget.property.floorNumber != null
-                            ? "Fl ${widget.property.floorNumber}"
-                            : "-"),
                   ],
-                ),
-
-                const SizedBox(height: 4),
-
-                /// RENT
-                Text(
-                  rent,
-                  style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.goldAccent),
-                ),
-
-                if (widget.showAmenitiesExpandable &&
-                    widget.property.amenitiesAsList != null &&
-                    widget.property.amenitiesAsList!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  _amenitiesRow(),
                 ],
-
-                const SizedBox(height: 10),
-                const Divider(height: 1, color: Color(0x33FFFFFF)),
-                const SizedBox(height: 8),
-                _actionRow(),
-              ],
+              ),
             ),
-          ),
-        ],
+
+            // ── Fav + Share icons (top-right) ─────────────────────────
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Column(
+                children: [
+                  _iconCircle(
+                    _isFavourite ? Icons.favorite : Icons.favorite_border,
+                    _toggleFavorite,
+                  ),
+                  const SizedBox(height: 6),
+                  _iconCircle(Icons.share, _shareProperty),
+                ],
+              ),
+            ),
+
+          ],
+        ),
       ),
     );
   }

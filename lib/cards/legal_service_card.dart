@@ -40,27 +40,27 @@ class LegalServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.08),
+      elevation: 3,
+      shadowColor: Colors.black.withOpacity(0.10),
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: AppColors.border),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         onTap: () => showLegalServiceDetailSheet(context, service),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Header row ──────────────────────────────────────────
-              Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header row ────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   _Avatar(name: service.legalName),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,28 +70,28 @@ class LegalServiceCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                              fontSize: 15,
+                              fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 3),
                         Text(
                           '${service.city}, ${service.state}',
                           style: const TextStyle(
-                              fontSize: 12, color: AppColors.textSecondary),
+                              fontSize: 13, color: AppColors.textSecondary),
                         ),
                         if ((service.contactName ?? '').isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(top: 2),
+                            padding: const EdgeInsets.only(top: 3),
                             child: Row(
                               children: [
                                 const Icon(Icons.person_outline_rounded,
-                                    size: 11, color: AppColors.textMuted),
-                                const SizedBox(width: 3),
+                                    size: 12, color: AppColors.textMuted),
+                                const SizedBox(width: 4),
                                 Text(
                                   service.contactName!,
                                   style: const TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 12,
                                       color: AppColors.textMuted),
                                 ),
                               ],
@@ -104,27 +104,49 @@ class LegalServiceCard extends StatelessWidget {
                       color: AppColors.textMuted),
                 ],
               ),
+            ),
 
-              // ── Service chips ────────────────────────────────────────
-              if (service.services.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
+            // ── Service chips ──────────────────────────────────────────
+            if (service.services.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: Wrap(
+                  spacing: 7,
+                  runSpacing: 6,
                   children: [
-                    ...service.services.take(3).map(_serviceChip),
-                    if (service.services.length > 3)
-                      _overflowChip(service.services.length - 3),
+                    ...service.services.take(4).map(_serviceChip),
+                    if (service.services.length > 4)
+                      _overflowChip(service.services.length - 4),
                   ],
                 ),
-              ],
+              ),
+            ],
 
-              const SizedBox(height: 14),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-              // ── Action row ───────────────────────────────────────────
-              Row(
+            // ── Translucent action strip ───────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.primary.withOpacity(0.03),
+                    AppColors.primary.withOpacity(0.08),
+                  ],
+                ),
+                border: Border(
+                  top: BorderSide(
+                      color: AppColors.primary.withOpacity(0.12)),
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+              child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
@@ -134,7 +156,7 @@ class LegalServiceCard extends StatelessWidget {
                           style: TextStyle(
                               fontSize: 13, fontWeight: FontWeight.w600)),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         side: const BorderSide(color: AppColors.whatsAppGreen),
                         foregroundColor: AppColors.whatsAppGreen,
                         shape: RoundedRectangleBorder(
@@ -161,7 +183,7 @@ class LegalServiceCard extends StatelessWidget {
                             style: TextStyle(
                                 fontSize: 13, fontWeight: FontWeight.w600)),
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
                           foregroundColor: AppColors.white,
@@ -174,8 +196,8 @@ class LegalServiceCard extends StatelessWidget {
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -722,11 +744,11 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 50,
-      height: 50,
+      width: 60,
+      height: 60,
       decoration: BoxDecoration(
         color: AppColors.primary.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.primary.withOpacity(0.3)),
       ),
       child: Center(
@@ -734,7 +756,7 @@ class _Avatar extends StatelessWidget {
           name[0].toUpperCase(),
           style: const TextStyle(
               color: AppColors.primary,
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: FontWeight.w700),
         ),
       ),
