@@ -20,4 +20,18 @@ class AppConfig {
     'SUPPORT_EMAIL',
     defaultValue: 'support@keybricks.com',
   );
+
+  /// Play Store listing URL — fallback when the server doesn't return a storeUrl.
+  /// Override at build time: --dart-define=PLAY_STORE_URL=https://play.google.com/...
+  static const String playStoreUrl = String.fromEnvironment(
+    'PLAY_STORE_URL',
+    defaultValue: 'https://play.google.com/store/apps/details?id=com.keybricks',
+  );
+
+  /// App Store listing URL — fallback when the server doesn't return a storeUrl.
+  /// Override at build time: --dart-define=APP_STORE_URL=https://apps.apple.com/...
+  static const String appStoreUrl = String.fromEnvironment(
+    'APP_STORE_URL',
+    defaultValue: 'https://apps.apple.com/app/keybricks/id0000000000',
+  );
 }

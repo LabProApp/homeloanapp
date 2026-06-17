@@ -266,11 +266,9 @@ class _PropertyLeadsScreenState extends State<PropertyLeadsScreen> {
               TextField(
                 controller: remarkCtrl,
                 maxLines: 2,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Note (optional)',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  contentPadding: const EdgeInsets.symmetric(
+                  contentPadding: EdgeInsets.symmetric(
                       horizontal: 12, vertical: 10),
                 ),
               ),

@@ -500,7 +500,6 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
         labelText: label,
         hintText: hint,
         prefixIcon: const Icon(Icons.currency_rupee, size: 18),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         isDense: true,
       ),

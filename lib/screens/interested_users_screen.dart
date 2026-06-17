@@ -331,10 +331,9 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
               TextField(
                 controller: remarkCtrl,
                 maxLines: 3,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Add a note…',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
               ),
               const SizedBox(height: 20),
@@ -501,11 +500,10 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
               TextField(
                 controller: remarkCtrl,
                 maxLines: 2,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Note for this follow-up (optional)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
               ),
               const SizedBox(height: 20),

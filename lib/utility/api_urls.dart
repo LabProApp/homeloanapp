@@ -75,4 +75,7 @@ class ApiUrls {
   static const String getMasterEnums = "$baseUrl/api/master/allenums";
   static const String getMasterValues =
       "$baseUrl/master/getMasterValues?type=1&status=ACTIVE";
+
+  // App version check (public endpoint — no auth)
+  static const String versionCheck = "$baseUrl/version/check";
 }

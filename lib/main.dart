@@ -235,7 +235,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.disabled,
           disabledForegroundColor: Colors.white60,
-          elevation: 0,
+          elevation: 2,
+          shadowColor: AppColors.primary.withOpacity(0.30),
           minimumSize: const Size.fromHeight(52),
           padding: const EdgeInsets.symmetric(horizontal: 24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -248,6 +249,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           side: const BorderSide(color: AppColors.primary, width: 1.5),
+          elevation: 0,
           minimumSize: const Size.fromHeight(52),
           padding: const EdgeInsets.symmetric(horizontal: 24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -269,14 +271,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       // ── Input fields ───────────────────────────────────────────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.textBoxbackground,
+        fillColor: AppColors.inputFill,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.error)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.error)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.error, width: 1.5)),
         hintStyle: const TextStyle(fontFamily: font, fontSize: 14, color: AppColors.textMuted),
         labelStyle: const TextStyle(fontFamily: font, fontSize: 14, color: AppColors.textSecondary),
+        floatingLabelStyle: const TextStyle(fontFamily: font, fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w500),
         errorStyle: const TextStyle(fontFamily: font, fontSize: 12, color: AppColors.error),
       ),
 
@@ -319,8 +323,80 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       // ── SnackBar ───────────────────────────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         contentTextStyle: const TextStyle(fontFamily: font, fontSize: 14),
+        elevation: 4,
+      ),
+
+      // ── Dialog ─────────────────────────────────────────────────────────────
+      dialogTheme: DialogTheme(
+        backgroundColor: AppColors.modalBg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 6,
+        shadowColor: AppColors.shadowDark,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titleTextStyle: const TextStyle(
+          fontFamily: font, fontSize: 17, fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
+        contentTextStyle: const TextStyle(
+          fontFamily: font, fontSize: 14, height: 1.5,
+          color: AppColors.textSecondary,
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      ),
+
+      // ── BottomSheet ─────────────────────────────────────────────────────────
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.modalBg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        showDragHandle: false,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+
+      // ── ListTile ─────────────────────────────────────────────────────────────
+      listTileTheme: const ListTileThemeData(
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        iconColor: AppColors.textSecondary,
+        textColor: AppColors.textPrimary,
+        minLeadingWidth: 24,
+      ),
+
+      // ── PopupMenu ────────────────────────────────────────────────────────────
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.modalBg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(
+          fontFamily: font, fontSize: 14, color: AppColors.textPrimary,
+        ),
+      ),
+
+      // ── Slider ───────────────────────────────────────────────────────────────
+      sliderTheme: SliderThemeData(
+        activeTrackColor: AppColors.primary,
+        inactiveTrackColor: AppColors.primary.withOpacity(0.18),
+        thumbColor: AppColors.primary,
+        overlayColor: AppColors.primary.withOpacity(0.12),
+        valueIndicatorColor: AppColors.primary,
+        valueIndicatorTextStyle: const TextStyle(
+          fontFamily: font, fontSize: 12, color: Colors.white,
+        ),
+        trackHeight: 4,
+        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+        overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+      ),
+
+      // ── FloatingActionButton ─────────────────────────────────────────────────
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shape: CircleBorder(),
       ),
     );
   }

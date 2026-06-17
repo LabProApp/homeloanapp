@@ -9,6 +9,7 @@ import '../models/plan_change_request_model.dart';
 import '../services/feature_flags.dart';
 import '../services/plan_request_service.dart';
 import '../theme/app_colors.dart';
+import 'plan_features_screen.dart';
 
 /// User-facing "Subscription & Plans" screen.
 ///
@@ -32,6 +33,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   List<PlanChangeRequestModel> _requests = const [];
   bool _loading = true;
   bool _submitting = false;
+
+  static const _planOrder = ['BASIC', 'DELUX', 'PREMIUM'];
+
+  /// Returns true when [targetPlan] is higher-tier than [_currentPlan].
+  bool _isUpgradePlan(String targetPlan) {
+    final ci = _planOrder.indexOf(_currentPlan.toUpperCase());
+    final ti = _planOrder.indexOf(targetPlan.toUpperCase());
+    return ti > ci;
+  }
 
   PlanChangeRequestModel? get _pendingRequest {
     for (final r in _requests) {
@@ -105,7 +115,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final submitted = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Request upgrade to $plan?'),
+        title: Text('${_isUpgradePlan(plan) ? "Request upgrade" : "Request change"} to $plan?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,7 +134,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               decoration: const InputDecoration(
                 labelText: 'Notes (optional)',
                 hintText: 'e.g. Paid via UPI ref. ABC123',
-                border: OutlineInputBorder(),
               ),
             ),
           ],
@@ -219,11 +228,43 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       _pendingRequestCard(),
                     ],
                     const SizedBox(height: 22),
-                    const Text('Choose a plan',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text('Choose a plan',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary)),
+                        TextButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    const PlanFeaturesScreen()),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Row(
+                            children: [
+                              Text('Compare features',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                              SizedBox(width: 2),
+                              Icon(Icons.chevron_right_rounded,
+                                  size: 14),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 12),
                     _planCard(
                       plan: 'BASIC',
@@ -523,8 +564,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                'Request Upgrade',
-                style: TextStyle(
+                _isUpgradePlan(plan) ? 'Request Upgrade' : 'Request Change',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,

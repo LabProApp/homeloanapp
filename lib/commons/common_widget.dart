@@ -3,9 +3,9 @@ import '../theme/app_colors.dart';
 
 /// Standardised search input used across all listing screens.
 ///
-/// Height: 44 px | radius: 12 px | white bg with subtle shadow.
+/// Height: 46 px | radius: 14 px | white bg with subtle shadow.
 /// Wrap with [Expanded] when placing inside a [Row].
-class AppSearchField extends StatelessWidget {
+class AppSearchField extends StatefulWidget {
   final TextEditingController? controller;
   final String hintText;
   final ValueChanged<String>? onChanged;
@@ -22,39 +22,71 @@ class AppSearchField extends StatelessWidget {
   });
 
   @override
+  State<AppSearchField> createState() => _AppSearchFieldState();
+}
+
+class _AppSearchFieldState extends State<AppSearchField> {
+  final _focus = FocusNode();
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(() => setState(() => _focused = _focus.hasFocus));
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: hintText,
+      label: widget.hintText,
       textField: true,
-      child: Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 8,
-            offset: Offset(0, 2),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 46,
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: _focused ? AppColors.primary : AppColors.border,
+            width: _focused ? 1.5 : 1.0,
           ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        onSubmitted: onSubmitted,
-        textAlignVertical: TextAlignVertical.center,
-        decoration: InputDecoration(
-          hintText: hintText,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          prefixIcon: Icon(prefixIcon, size: 20, color: AppColors.textMuted),
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-          isDense: true,
+          boxShadow: [
+            BoxShadow(
+              color: _focused
+                  ? AppColors.primary.withOpacity(0.10)
+                  : AppColors.shadowLight,
+              blurRadius: _focused ? 8 : 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: TextField(
+          controller: widget.controller,
+          focusNode: _focus,
+          onChanged: widget.onChanged,
+          onSubmitted: widget.onSubmitted,
+          textAlignVertical: TextAlignVertical.center,
+          decoration: InputDecoration(
+            hintText: widget.hintText,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            prefixIcon: Icon(widget.prefixIcon, size: 20,
+                color: _focused ? AppColors.primary : AppColors.textMuted),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+            isDense: true,
+            filled: false,
+          ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -84,19 +116,31 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final disabled = onTap == null && !isLoading;
     return SizedBox(
       width: width ?? double.infinity,
       height: height,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: onTap == null
-              ? const LinearGradient(colors: [AppColors.disabled, AppColors.disabled])
+          gradient: disabled
+              ? const LinearGradient(
+                  colors: [AppColors.disabled, AppColors.disabled])
               : const LinearGradient(
                   colors: [AppColors.primary, AppColors.secondary],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
           borderRadius: BorderRadius.circular(radius),
+          boxShadow: disabled
+              ? null
+              : [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.32),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 0,
+                  ),
+                ],
         ),
         child: ElevatedButton(
           onPressed: isLoading ? null : onTap,
@@ -104,6 +148,7 @@ class AppButton extends StatelessWidget {
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
             disabledBackgroundColor: Colors.transparent,
+            elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(radius),
             ),

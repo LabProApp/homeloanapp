@@ -151,11 +151,10 @@ class _StampDutyScreenState extends State<StampDutyScreen> {
           DropdownButtonFormField<String>(
             value: _selectedState,
             onChanged: (v) => setState(() => _selectedState = v!),
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'State',
-              prefixIcon: const Icon(Icons.location_on_outlined, size: 20),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              prefixIcon: Icon(Icons.location_on_outlined, size: 20),
+              contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               isDense: true,
             ),
             items: _rates.keys.map((s) => DropdownMenuItem(
@@ -169,12 +168,11 @@ class _StampDutyScreenState extends State<StampDutyScreen> {
             controller: _priceCtrl,
             keyboardType: TextInputType.number,
             inputFormatters: [MoneyInputFormatter()],
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Property Value (₹)',
               hintText: 'e.g. 50,00,000',
-              prefixIcon: const Icon(Icons.currency_rupee, size: 18),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              prefixIcon: Icon(Icons.currency_rupee, size: 18),
+              contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               isDense: true,
             ),
             validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,

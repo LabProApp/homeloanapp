@@ -18,16 +18,18 @@ class AppColors {
   // the heavy cream of the original palette. Scaffold/background stay cool
   // for screens that aren't photo-heavy (forms, calculators, profile).
   static const Color listingbackground = Color(0xFFFFF4E6); // mild peach
-  static const Color scaffoldBg = Color(0xFFF1F5F9);
+  static const Color scaffoldBg = Color(0xFFF5F5F5);        // clean light grey
   static const Color cardBg = Colors.white;
   static const Color background = Color(0xFFFFF4E6);
   static const Color white = Colors.white;
   static const Color surfaceSubtle = Color(0xFFF8FAFC);
   static const Color surfaceElevated = Color(0xFFFFFFFF);
   static const Color textBoxbackground = Color(0xFFFFFFFF);
+  static const Color inputFill = Color(0xFFF9FAFB);          // subtle off-white for inputs
   static const Color highlightBg = Color(0xFFFFF8F0);
-  static const Color glass = Color(0x26FFFFFF);       // frosted card on imagery
-  static const Color glassBorder = Color(0x4DFFFFFF); // border on glass cards
+  static const Color modalBg = Color(0xFFFFFFFF);             // dialog / bottom-sheet background
+  static const Color glass = Color(0x26FFFFFF);               // frosted card on imagery
+  static const Color glassBorder = Color(0x4DFFFFFF);         // border on glass cards
 
   // ===== Text =====
   static const Color textPrimary = Color(0xFF0F172A);

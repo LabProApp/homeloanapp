@@ -4,6 +4,20 @@ import '../theme/app_colors.dart';
 import '../services/state_api_service.dart';
 import '../commons/common_widget.dart';
 
+/// Filter bottom-sheet shared by both Buy/Sell and Rent/PG listing screens.
+///
+/// Sections are grouped by logical concern and adapt based on listing type:
+///   1  Listing      — Category + Property Type
+///   2  Location     — State → City → Locality
+///   3  Budget       — Price range
+///   4  Size & Rooms — Area range + Bedrooms + Bathrooms (Residential only)
+///   5  Property Details — Construction Status + Furnishing + Ownership
+///   6  Rental Terms — Preferred Tenants + Available From  (Rent only)
+///   7  Amenities    — multi-select chips (same options as Add Property screen)
+///
+/// Listing type (SALE / RENT) is NOT shown as a user-editable option — the
+/// calling screen owns that choice.  It is still forwarded in the filter map
+/// so the listing screen can include it in the API call unchanged.
 class PropertyFilterDialog extends StatefulWidget {
   final Function(Map<String, dynamic>) onApply;
   final Map<String, dynamic>? initialFilters;
@@ -39,21 +53,23 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
   final _locationCtrl = TextEditingController();
 
   RangeValues _priceRange = const RangeValues(1000.0, 100000000.0);
-  RangeValues _areaRange = const RangeValues(100.0, 10000.0);
+  RangeValues _areaRange  = const RangeValues(100.0,  10000.0);
   bool _priceChanged = false;
-  bool _areaChanged = false;
+  bool _areaChanged  = false;
 
-  int _bedrooms = 0;
+  int _bedrooms  = 0;
   int _bathrooms = 0;
 
-  String? _category;
+  // Listing type is read-only from the caller; not shown to the user.
   String? _listingType;
+
+  String? _category;
   String? _type;
-  String? _status;
+  String? _status;        // constructionStatus
   String? _furnishing;
-  String? _ownership;
+  String? _ownership;     // ownershipType
   String? _preferredTenants;
-  String? _availability;
+  String? _availability;  // noticePeriod
 
   MasterValue? _selectedState;
   MasterValue? _selectedCity;
@@ -64,6 +80,10 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
 
   final Set<String> _amenities = {};
 
+  // ── Derived ─────────────────────────────────────────────────────────────────
+  bool get _isRent => _listingType?.toUpperCase() == 'RENT';
+
+  // ── Option lists — kept in sync with property_add_screen.dart ───────────────
   static const _residentialTypes = [
     'APARTMENT', 'HOUSE', 'BUILDER FLOOR', 'PLOT', 'PG',
   ];
@@ -73,18 +93,20 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
   static const _statusList = [
     'Ready to Move', 'Under Construction', 'New Launch', 'Resale',
   ];
-  static const _furnishingList = ['Furnished', 'Semi-Furnished', 'Unfurnished'];
-  static const _ownershipList = ['Freehold', 'Leasehold'];
-  static const _tenantList = ['Family', 'Bachelors', 'Anyone'];
-  static const _availabilityList = ['Immediate', '15 Days', '30 Days'];
+  // Matches property_add_screen._furnishingOptions exactly (no hyphen in "Semi Furnished").
+  static const _furnishingList = ['Furnished', 'Semi Furnished', 'Unfurnished'];
+  static const _ownershipList  = ['Freehold', 'Leasehold'];
+  static const _tenantList     = ['Family', 'Bachelors', 'Anyone'];
+  // Matches property_add_screen._availableFromOptions exactly.
+  static const _availabilityList = ['Immediate', 'Within 15 Days', 'Within 30 Days'];
+  // Matches property_add_screen._amenityOptions exactly.
   static const _amenityList = [
-    'Parking', 'Lift', 'Gym', 'Garden', 'Security', 'Pool',
+    'Club House', 'Lift', 'Power Backup', 'Security',
+    'Gym', 'Swimming Pool', 'Garden', 'Parking', 'CCTV',
   ];
 
   static final _currencyFmt = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 0,
+    locale: 'en_IN', symbol: '₹', decimalDigits: 0,
   );
 
   String _fmtCurrency(double v) => _currencyFmt.format(v);
@@ -98,9 +120,11 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
 
   List<String> get _filteredTypes {
     if (_category == 'Residential') return _residentialTypes;
-    if (_category == 'Commercial') return _commercialTypes;
+    if (_category == 'Commercial')  return _commercialTypes;
     return [..._residentialTypes, ..._commercialTypes];
   }
+
+  // ── Lifecycle ────────────────────────────────────────────────────────────────
 
   @override
   void initState() {
@@ -108,15 +132,15 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
     _loadStates();
     final f = widget.initialFilters;
     if (f != null) {
-      _locationCtrl.text = f['location'] ?? '';
-      _type = f['type'];
-      _status = f['constructionStatus'];
-      _category = f['category'];
-      _listingType = f['rentOrSale'];
-      _furnishing = f['furnishing'];
-      _ownership = f['ownershipType'];
-      _preferredTenants = f['preferredTenants'];
-      _availability = f['availability'];
+      _listingType      = f['rentOrSale'] as String?;
+      _locationCtrl.text = f['location'] as String? ?? '';
+      _type             = f['type'] as String?;
+      _status           = f['constructionStatus'] as String?;
+      _category         = f['category'] as String?;
+      _furnishing       = f['furnishing'] as String?;
+      _ownership        = f['ownershipType'] as String?;
+      _preferredTenants = f['preferredTenants'] as String?;
+      _availability     = f['availability'] as String?;
       _priceRange = RangeValues(
         _toDouble(f['minPrice'], 1000.0),
         _toDouble(f['maxPrice'], 100000000.0),
@@ -126,11 +150,11 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
         _toDouble(f['maxArea'], 10000.0),
       );
       _priceChanged = f['minPrice'] != null || f['maxPrice'] != null;
-      _areaChanged = f['minArea'] != null || f['maxArea'] != null;
-      _bedrooms = (f['bedrooms'] as int?) ?? 0;
+      _areaChanged  = f['minArea']  != null || f['maxArea']  != null;
+      _bedrooms  = (f['bedrooms']  as int?) ?? 0;
       _bathrooms = (f['bathrooms'] as int?) ?? 0;
       if (f['amenity'] is String) {
-        _amenities.addAll((f['amenity'] as String).split(','));
+        _amenities.addAll((f['amenity'] as String).split(',').map((e) => e.trim()));
       }
     }
   }
@@ -140,6 +164,8 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
     _locationCtrl.dispose();
     super.dispose();
   }
+
+  // ── API helpers ──────────────────────────────────────────────────────────────
 
   Future<void> _loadStates() async {
     setState(() => _loadingStates = true);
@@ -159,19 +185,13 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
   }
 
   Future<void> _loadCities(int stateId, {bool applyInitial = false}) async {
-    setState(() {
-      _loadingCities = true;
-      _cities = [];
-      _selectedCity = null;
-    });
+    setState(() { _loadingCities = true; _cities = []; _selectedCity = null; });
     try {
       _cities = await MasterService.getCities(stateId);
       if (applyInitial && widget.initialFilters != null) {
-        final cityVal =
-            widget.initialFilters!['city']?.toString().toLowerCase().trim();
+        final cityVal = widget.initialFilters!['city']?.toString().toLowerCase().trim();
         if (cityVal != null) {
-          final match =
-              _cities.where((c) => c.value.toLowerCase().trim() == cityVal);
+          final match = _cities.where((c) => c.value.toLowerCase().trim() == cityVal);
           _selectedCity = match.isNotEmpty ? match.first : null;
         }
       }
@@ -180,25 +200,26 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
     }
   }
 
+  // ── Actions ──────────────────────────────────────────────────────────────────
+
   void _clearAll() {
     setState(() {
       _locationCtrl.clear();
-      _category = null;
-      _listingType = null;
-      _type = null;
-      _status = null;
-      _furnishing = null;
-      _ownership = null;
+      _category         = null;
+      _type             = null;
+      _status           = null;
+      _furnishing       = null;
+      _ownership        = null;
       _preferredTenants = null;
-      _availability = null;
-      _selectedState = null;
-      _selectedCity = null;
-      _cities = [];
+      _availability     = null;
+      _selectedState    = null;
+      _selectedCity     = null;
+      _cities           = [];
       _priceRange = const RangeValues(1000.0, 100000000.0);
-      _areaRange = const RangeValues(100.0, 10000.0);
+      _areaRange  = const RangeValues(100.0,  10000.0);
       _priceChanged = false;
-      _areaChanged = false;
-      _bedrooms = 0;
+      _areaChanged  = false;
+      _bedrooms  = 0;
       _bathrooms = 0;
       _amenities.clear();
     });
@@ -206,42 +227,39 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
 
   void _apply() {
     final raw = <String, dynamic>{
-      'state': _selectedState?.value,
-      'city': _selectedCity?.value,
-      'location':
-          _locationCtrl.text.trim().isEmpty ? null : _locationCtrl.text.trim(),
-      'type': _type,
-      'category': _category,
-      'rentOrSale': _listingType,
+      'rentOrSale':        _listingType,
+      'state':             _selectedState?.value,
+      'city':              _selectedCity?.value,
+      'location':          _locationCtrl.text.trim().isEmpty ? null : _locationCtrl.text.trim(),
+      'type':              _type,
+      'category':          _category,
       'constructionStatus': _status,
-      'minPrice': _priceChanged ? _priceRange.start : null,
-      'maxPrice': _priceChanged ? _priceRange.end : null,
-      'minArea': _areaChanged ? _areaRange.start : null,
-      'maxArea': _areaChanged ? _areaRange.end : null,
-      'bedrooms': _bedrooms == 0 ? null : _bedrooms,
-      'bathrooms': _bathrooms == 0 ? null : _bathrooms,
-      'furnishing': _furnishing,
-      'ownershipType': _ownership,
-      'preferredTenants': _preferredTenants,
-      'availability': _availability,
-      'amenity': _amenities.isNotEmpty ? _amenities.join(',') : null,
+      'furnishing':        _furnishing,
+      'ownershipType':     _ownership,
+      'preferredTenants':  _preferredTenants,
+      'availability':      _availability,
+      'minPrice':          _priceChanged ? _priceRange.start : null,
+      'maxPrice':          _priceChanged ? _priceRange.end   : null,
+      'minArea':           _areaChanged  ? _areaRange.start  : null,
+      'maxArea':           _areaChanged  ? _areaRange.end    : null,
+      'bedrooms':          _bedrooms  == 0 ? null : _bedrooms,
+      'bathrooms':         _bathrooms == 0 ? null : _bathrooms,
+      'amenity':           _amenities.isNotEmpty ? _amenities.join(',') : null,
     };
     raw.removeWhere((_, v) => v == null);
     widget.onApply(raw);
     Navigator.pop(context);
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
+  // ── UI helpers ───────────────────────────────────────────────────────────────
 
   InputDecoration _inputDeco(String label) => InputDecoration(
         labelText: label,
-        labelStyle:
-            const TextStyle(color: AppColors.textMuted, fontSize: 13),
+        labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
         filled: true,
         fillColor: AppColors.white,
         isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.border),
@@ -252,18 +270,16 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
       );
 
-  Widget _section(String title) => Padding(
-        padding: const EdgeInsets.only(top: 18, bottom: 8),
+  Widget _sectionHeader(String title) => Padding(
+        padding: const EdgeInsets.only(top: 20, bottom: 10),
         child: Row(
           children: [
             Container(
-              width: 3,
-              height: 16,
+              width: 3, height: 16,
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(2),
@@ -282,6 +298,7 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
         ),
       );
 
+  /// Single-select choice chips.  Tapping the selected chip deselects it.
   Widget _chipRow(
     List<String> options,
     String? selected,
@@ -305,8 +322,7 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
             labelStyle: TextStyle(
               fontSize: 13,
               color: isSelected ? AppColors.white : AppColors.textSecondary,
-              fontWeight:
-                  isSelected ? FontWeight.w600 : FontWeight.normal,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
             onSelected: (_) => onChanged(isSelected ? null : e),
           );
@@ -333,16 +349,13 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
             ? _inputDeco(label).copyWith(suffixIcon: suffixIcon)
             : _inputDeco(label),
         hint: Text(label,
-            style: const TextStyle(
-                color: AppColors.textMuted, fontSize: 13)),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
         items: items
             .map((e) => DropdownMenuItem<T>(
                   value: e,
-                  child: Text(
-                    itemLabel(e),
-                    style: const TextStyle(
-                        fontSize: 14, color: AppColors.textPrimary),
-                  ),
+                  child: Text(itemLabel(e),
+                      style: const TextStyle(
+                          fontSize: 14, color: AppColors.textPrimary)),
                 ))
             .toList(),
         onChanged: onChanged,
@@ -372,27 +385,18 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color:
-                      value == 0 ? AppColors.textMuted : AppColors.primary,
+                  color: value == 0 ? AppColors.textMuted : AppColors.primary,
                 ),
               ),
             ],
           ),
           Row(
             children: [
-              _stepBtn(
-                Icons.remove_rounded,
-                value <= 0
-                    ? null
-                    : () => setState(() => onChanged(value - 1)),
-              ),
+              _stepBtn(Icons.remove_rounded,
+                  value <= 0 ? null : () => setState(() => onChanged(value - 1))),
               const SizedBox(width: 12),
-              _stepBtn(
-                Icons.add_rounded,
-                value >= max
-                    ? null
-                    : () => setState(() => onChanged(value + 1)),
-              ),
+              _stepBtn(Icons.add_rounded,
+                  value >= max ? null : () => setState(() => onChanged(value + 1))),
             ],
           ),
         ],
@@ -406,8 +410,7 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        width: 34,
-        height: 34,
+        width: 34, height: 34,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
@@ -416,18 +419,15 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
               ? AppColors.primary.withOpacity(0.08)
               : AppColors.surfaceSubtle,
         ),
-        child: Icon(
-          icon,
-          size: 16,
-          color: active ? AppColors.primary : AppColors.textMuted,
-        ),
+        child: Icon(icon,
+            size: 16,
+            color: active ? AppColors.primary : AppColors.textMuted),
       ),
     );
   }
 
   Widget _loadingIndicator() => const SizedBox(
-        width: 20,
-        height: 20,
+        width: 20, height: 20,
         child: Padding(
           padding: EdgeInsets.all(12),
           child: CircularProgressIndicator(
@@ -452,8 +452,7 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
       ),
       child: RangeSlider(
         values: values,
-        min: min,
-        max: max,
+        min: min, max: max,
         divisions: divisions,
         labels: RangeLabels(labelFmt(values.start), labelFmt(values.end)),
         onChanged: onChanged,
@@ -474,16 +473,14 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
         return Container(
           decoration: const BoxDecoration(
             color: AppColors.white,
-            borderRadius:
-                BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
-              // ── Drag handle ─────────────────────────────────────────────
+              // ── Drag handle ──────────────────────────────────────────────
               const SizedBox(height: 8),
               Container(
-                width: 40,
-                height: 4,
+                width: 40, height: 4,
                 decoration: BoxDecoration(
                   color: AppColors.border,
                   borderRadius: BorderRadius.circular(2),
@@ -491,7 +488,7 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
               ),
               const SizedBox(height: 8),
 
-              // ── Header ──────────────────────────────────────────────────
+              // ── Header ───────────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -499,47 +496,38 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
                     const Text(
                       'Filters',
                       style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary),
                     ),
                     const Spacer(),
                     TextButton(
                       onPressed: _clearAll,
-                      child: const Text(
-                        'Clear All',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: const Text('Clear All',
+                          style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),
               ),
               const Divider(height: 1),
 
-              // ── Scrollable body ─────────────────────────────────────────
+              // ── Scrollable body ──────────────────────────────────────────
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
-                  padding:
-                      const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
 
-                      // ── 1. Listing Type ──────────────────────────────
-                      _section('Listing Type'),
-                      _chipRow(
-                        ['Sale', 'Rent'],
-                        _listingType,
-                        (v) => setState(() => _listingType = v),
-                      ),
-
-                      // ── 2. Category ──────────────────────────────────
-                      _section('Category'),
+                      // ── 1. LISTING ─────────────────────────────────────
+                      _sectionHeader('Listing'),
+                      const Text('Category',
+                          style: TextStyle(
+                              fontSize: 12, color: AppColors.textMuted)),
+                      const SizedBox(height: 6),
                       _chipRow(
                         ['Residential', 'Commercial'],
                         _category,
@@ -548,19 +536,17 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
                           _type = null;
                         }),
                       ),
-
-                      // ── 3. Property Type ─────────────────────────────
-                      _section('Property Type'),
+                      const SizedBox(height: 4),
                       _dropdown<String>(
-                        label: 'Select Type',
+                        label: 'Property Type',
                         items: _filteredTypes,
                         value: _type,
                         itemLabel: (e) => e,
                         onChanged: (v) => setState(() => _type = v),
                       ),
 
-                      // ── 4. Location ──────────────────────────────────
-                      _section('Location'),
+                      // ── 2. LOCATION ────────────────────────────────────
+                      _sectionHeader('Location'),
                       _dropdown<MasterValue>(
                         label: 'State',
                         items: _states,
@@ -574,8 +560,8 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
                             : (v) {
                                 setState(() {
                                   _selectedState = v;
-                                  _selectedCity = null;
-                                  _cities = [];
+                                  _selectedCity  = null;
+                                  _cities        = [];
                                   _locationCtrl.clear();
                                 });
                                 if (v != null) _loadCities(v.id);
@@ -589,8 +575,7 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
                         suffixIcon: _loadingCities
                             ? _loadingIndicator()
                             : null,
-                        onChanged: (_selectedState == null ||
-                                _loadingCities)
+                        onChanged: (_selectedState == null || _loadingCities)
                             ? null
                             : (v) => setState(() => _selectedCity = v),
                       ),
@@ -599,102 +584,102 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
                         child: TextField(
                           controller: _locationCtrl,
                           style: const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textPrimary),
+                              fontSize: 14, color: AppColors.textPrimary),
                           decoration: _inputDeco('Locality / Area'),
                         ),
                       ),
 
-                      // ── 5. Price ─────────────────────────────────────
-                      _section(_priceChanged
-                          ? 'Price: ${_fmtCurrency(_priceRange.start)} – ${_fmtCurrency(_priceRange.end)}'
-                          : 'Price: Any'),
+                      // ── 3. BUDGET ──────────────────────────────────────
+                      _sectionHeader(
+                        _priceChanged
+                            ? 'Budget: ${_fmtCurrency(_priceRange.start)} – ${_fmtCurrency(_priceRange.end)}'
+                            : 'Budget: Any',
+                      ),
                       _rangeSlider(
                         values: _priceRange,
-                        min: 0,
-                        max: 100000000,
-                        divisions: 1000,
+                        min: 0, max: 100000000, divisions: 1000,
                         labelFmt: _fmtCurrency,
                         onChanged: (v) => setState(() {
-                          _priceRange = v;
+                          _priceRange   = v;
                           _priceChanged = true;
                         }),
                       ),
 
-                      // ── 6. Area ──────────────────────────────────────
-                      _section(_areaChanged
-                          ? 'Area: ${_areaRange.start.toInt()} – ${_areaRange.end.toInt()} sqft'
-                          : 'Area: Any'),
+                      // ── 4. SIZE & ROOMS ────────────────────────────────
+                      _sectionHeader(
+                        _areaChanged
+                            ? 'Size & Rooms: ${_areaRange.start.toInt()}–${_areaRange.end.toInt()} sqft'
+                            : 'Size & Rooms',
+                      ),
                       _rangeSlider(
                         values: _areaRange,
-                        min: 0,
-                        max: 10000,
-                        divisions: 100,
+                        min: 0, max: 10000, divisions: 100,
                         labelFmt: (v) => '${v.toInt()} sqft',
                         onChanged: (v) => setState(() {
-                          _areaRange = v;
+                          _areaRange   = v;
                           _areaChanged = true;
                         }),
                       ),
-
-                      // ── 7. Rooms (Residential only) ──────────────────
-                      if (_category == null ||
-                          _category == 'Residential') ...[
-                        _section('Rooms'),
-                        _stepper('Bedrooms', _bedrooms,
-                            (v) => _bedrooms = v),
-                        _stepper('Bathrooms', _bathrooms,
-                            (v) => _bathrooms = v),
+                      if (_category == null || _category == 'Residential') ...[
+                        _stepper('Bedrooms',  _bedrooms,  (v) => setState(() => _bedrooms  = v)),
+                        _stepper('Bathrooms', _bathrooms, (v) => setState(() => _bathrooms = v)),
                       ],
 
-                      // ── 8. Construction Status ───────────────────────
-                      _section('Status'),
+                      // ── 5. PROPERTY DETAILS ────────────────────────────
+                      _sectionHeader('Property Details'),
+                      const Text('Construction Status',
+                          style: TextStyle(
+                              fontSize: 12, color: AppColors.textMuted)),
+                      const SizedBox(height: 6),
                       _chipRow(
-                        _statusList,
-                        _status,
+                        _statusList, _status,
                         (v) => setState(() => _status = v),
                       ),
-
-                      // ── 9. Property Details ──────────────────────────
-                      _section('Property Details'),
-                      if (_category == null ||
-                          _category == 'Residential')
-                        _dropdown<String>(
-                          label: 'Furnishing',
-                          items: _furnishingList,
-                          value: _furnishing,
-                          itemLabel: (e) => e,
-                          onChanged: (v) =>
-                              setState(() => _furnishing = v),
+                      const SizedBox(height: 8),
+                      if (_category == null || _category == 'Residential') ...[
+                        const Text('Furnishing',
+                            style: TextStyle(
+                                fontSize: 12, color: AppColors.textMuted)),
+                        const SizedBox(height: 6),
+                        _chipRow(
+                          _furnishingList, _furnishing,
+                          (v) => setState(() => _furnishing = v),
                         ),
-                      _dropdown<String>(
-                        label: 'Ownership',
-                        items: _ownershipList,
-                        value: _ownership,
-                        itemLabel: (e) => e,
-                        onChanged: (v) =>
-                            setState(() => _ownership = v),
-                      ),
-                      if (_listingType == 'Rent')
-                        _dropdown<String>(
-                          label: 'Preferred Tenants',
-                          items: _tenantList,
-                          value: _preferredTenants,
-                          itemLabel: (e) => e,
-                          onChanged: (v) =>
-                              setState(() => _preferredTenants = v),
-                        ),
-                      _dropdown<String>(
-                        label: 'Availability',
-                        items: _availabilityList,
-                        value: _availability,
-                        itemLabel: (e) => e,
-                        onChanged: (v) =>
-                            setState(() => _availability = v),
+                        const SizedBox(height: 8),
+                      ],
+                      const Text('Ownership',
+                          style: TextStyle(
+                              fontSize: 12, color: AppColors.textMuted)),
+                      const SizedBox(height: 6),
+                      _chipRow(
+                        _ownershipList, _ownership,
+                        (v) => setState(() => _ownership = v),
                       ),
 
-                      // ── 10. Amenities ────────────────────────────────
-                      _section('Amenities'),
+                      // ── 6. RENTAL TERMS (Rent listings only) ───────────
+                      if (_isRent) ...[
+                        _sectionHeader('Rental Terms'),
+                        const Text('Preferred Tenants',
+                            style: TextStyle(
+                                fontSize: 12, color: AppColors.textMuted)),
+                        const SizedBox(height: 6),
+                        _chipRow(
+                          _tenantList, _preferredTenants,
+                          (v) => setState(() => _preferredTenants = v),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('Available From',
+                            style: TextStyle(
+                                fontSize: 12, color: AppColors.textMuted)),
+                        const SizedBox(height: 6),
+                        _chipRow(
+                          _availabilityList, _availability,
+                          (v) => setState(() => _availability = v),
+                        ),
+                      ],
+
+                      // ── 7. AMENITIES ───────────────────────────────────
+                      _sectionHeader('Amenities'),
                       Wrap(
                         spacing: 8,
                         runSpacing: 6,
@@ -703,8 +688,7 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
                           return FilterChip(
                             label: Text(a),
                             selected: selected,
-                            selectedColor:
-                                AppColors.primary.withOpacity(0.15),
+                            selectedColor: AppColors.primary.withOpacity(0.15),
                             backgroundColor: AppColors.white,
                             checkmarkColor: AppColors.primary,
                             side: BorderSide(
@@ -722,9 +706,7 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
                                   : FontWeight.normal,
                             ),
                             onSelected: (v) => setState(() {
-                              v
-                                  ? _amenities.add(a)
-                                  : _amenities.remove(a);
+                              v ? _amenities.add(a) : _amenities.remove(a);
                             }),
                           );
                         }).toList(),
@@ -736,12 +718,10 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
                 ),
               ),
 
-              // ── Apply button ────────────────────────────────────────────
+              // ── Apply button ──────────────────────────────────────────────
               Container(
                 padding: EdgeInsets.fromLTRB(
-                    16,
-                    10,
-                    16,
+                    16, 10, 16,
                     MediaQuery.of(context).padding.bottom + 10),
                 decoration: BoxDecoration(
                   color: AppColors.white,

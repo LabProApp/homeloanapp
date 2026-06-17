@@ -26,7 +26,7 @@ class PlanRequestApiService {
       }),
     );
 
-    if (res.statusCode == 200) {
+    if (res.statusCode == 200 || res.statusCode == 201) {
       return PlanChangeRequestModel.fromJson(
           jsonDecode(res.body) as Map<String, dynamic>);
     }

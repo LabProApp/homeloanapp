@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'user_login_screen.dart';
 import 'property_listing_screen.dart';
@@ -53,6 +54,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int? _postedByUserId;
   Widget? _currentPage;
 
+  // Update badge — populated from SharedPreferences written by SplashScreen.
+  bool _updateAvailable = false;
+  String _latestVersionName = '';
+  String _updateStoreUrl = '';
+
   // Maps each home action to the feature flag that gates it.
   // Actions not in this map are free for all plans.
   static const _actionFeatureMap = {
@@ -98,6 +104,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _userEmail = prefs.getString('userEmail') ?? '';
       _isAdmin = (prefs.getString('userRole') ?? '').toUpperCase() == 'ADMIN';
       _planName = plan;
+      _updateAvailable    = prefs.getBool('updateAvailable') ?? false;
+      _latestVersionName  = prefs.getString('latestVersionName') ?? '';
+      _updateStoreUrl     = prefs.getString('updateStoreUrl') ?? '';
     });
   }
 
@@ -413,14 +422,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
 
                     const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        _appVersion,
-                        style: const TextStyle(
-                            fontSize: 11, color: AppColors.textMuted),
-                      ),
-                    ),
+                    _buildVersionRow(),
                     const SizedBox(height: 8),
                     _drawerActionItem(
                       Icons.logout_rounded,
@@ -653,6 +655,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// Version label + optional amber "Update available" chip at the bottom
+  /// of the drawer.  Tapping the chip opens the store.
+  Widget _buildVersionRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _appVersion,
+            style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+          ),
+          if (_updateAvailable) ...[
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTap: () async {
+                if (_updateStoreUrl.isNotEmpty) {
+                  try {
+                    await launchUrl(
+                      Uri.parse(_updateStoreUrl),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  } catch (_) {}
+                }
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.goldAccent.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                      color: AppColors.goldAccent.withOpacity(0.5)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.system_update_rounded,
+                        size: 12, color: AppColors.goldAccent),
+                    const SizedBox(width: 5),
+                    Text(
+                      _latestVersionName.isNotEmpty
+                          ? 'Update to v$_latestVersionName'
+                          : 'Update available',
+                      style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.goldAccent,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _drawerActionItem(
     IconData icon,
     String title, {
@@ -678,15 +739,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Logout'),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.logout_rounded,
+                  color: AppColors.error, size: 20),
+            ),
+            const SizedBox(width: 12),
+            const Text('Logout'),
+          ],
+        ),
         content: const Text('Are you sure you want to logout?'),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(
-              minimumSize: const Size(80, 40),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            ),
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
@@ -694,8 +764,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
-              minimumSize: const Size(88, 40),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              elevation: 0,
+              minimumSize: const Size(88, 44),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () async {
               Navigator.pop(context);

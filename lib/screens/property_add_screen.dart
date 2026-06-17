@@ -156,6 +156,9 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     parking = p.parkingCount ?? 'None';
     facing = p.facing ?? 'North';
     propertyAge = p.propertyAge ?? '0-1 Years';
+    if (p.noticePeriod != null && _availableFromOptions.contains(p.noticePeriod)) {
+      availableFrom = p.noticePeriod!;
+    }
 
     if (p.amenities != null && p.amenities!.isNotEmpty) {
       _selectedAmenities.addAll(
@@ -387,6 +390,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       propertyAge: propertyAge,
       parkingCount: parking,
       amenities: _selectedAmenities.isEmpty ? null : _selectedAmenities.join(','),
+      noticePeriod: _isRent ? availableFrom : null,
       contactNumber: _contactCtrl.text.trim(),
       currency: 'INR',
       postDate: widget.propertyToEdit?.postDate ?? DateTime.now().toIso8601String(),
