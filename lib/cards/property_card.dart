@@ -140,9 +140,10 @@ class _PropertyCardState extends State<PropertyCard> {
           ],
         ),
       ),
-      child: Center(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 48),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Container(
               width: 72,
@@ -165,8 +166,8 @@ class _PropertyCardState extends State<PropertyCard> {
             ),
             const SizedBox(height: 3),
             Text(
-              'Pictures will be available soon',
-              style: TextStyle(color: iconColor.withOpacity(0.55), fontSize: 11),
+              'No pictures available',
+              style: TextStyle(color: iconColor.withOpacity(0.65), fontSize: 11),
             ),
           ],
         ),
