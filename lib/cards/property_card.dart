@@ -585,6 +585,7 @@ class _PropertyCardState extends State<PropertyCard> {
   void _shareProperty() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

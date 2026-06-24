@@ -35,6 +35,7 @@ class PropertyFilterDialog extends StatefulWidget {
   }) {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       enableDrag: true,

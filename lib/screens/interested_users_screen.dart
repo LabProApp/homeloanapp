@@ -264,6 +264,7 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
 
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -392,6 +393,7 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
 
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),

@@ -907,6 +907,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   void _openFilterDialog() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -934,6 +935,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   void _openSortSheet() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),

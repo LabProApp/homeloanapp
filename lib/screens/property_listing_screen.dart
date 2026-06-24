@@ -875,6 +875,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   void _openFilterDialog() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -903,6 +904,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   void _openSortSheet() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),

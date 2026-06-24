@@ -11,6 +11,7 @@ import '../screens/legal_inquiry_dialog.dart';
 void showLegalServiceDetailSheet(BuildContext context, LegalService service) {
   showModalBottomSheet(
     context: context,
+    useSafeArea: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => DraggableScrollableSheet(
@@ -223,6 +224,7 @@ class LegalServiceDetailPage extends StatelessWidget {
         service.services.isNotEmpty ? service.services.first : null;
     showModalBottomSheet(
       context: sheetContext ?? context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => InquiryDialog(

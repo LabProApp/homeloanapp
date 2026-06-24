@@ -297,6 +297,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
             child: OutlinedButton.icon(
               onPressed: () => showModalBottomSheet(
                 context: context,
+                useSafeArea: true,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
                 builder: (_) => const InquiryDialog(),

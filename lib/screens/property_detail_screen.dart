@@ -1024,6 +1024,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   void _openEmiSheet() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => DraggableScrollableSheet(

@@ -157,6 +157,7 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.listingbackground,
+      appBar: GradientAppBar(title: 'EMI Calculator'),
       body: content,
     );
   }

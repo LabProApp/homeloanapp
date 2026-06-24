@@ -86,6 +86,7 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
   void _pickMedia() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
@@ -261,6 +262,7 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
   void _showCaptionPicker(int index) {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) {
         return Container(

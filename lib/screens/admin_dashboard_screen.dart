@@ -726,6 +726,7 @@ class _UsersTabState extends State<_UsersTab> {
   Future<void> _changePlan(UserModel u) async {
     final picked = await showModalBottomSheet<_PlanPick>(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       builder: (_) => _ChangePlanSheet(currentPlan: u.userPackage),
     );

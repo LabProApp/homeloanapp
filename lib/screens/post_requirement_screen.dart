@@ -118,28 +118,22 @@ class _PostRequirementScreenState extends State<PostRequirementScreen> {
                 ),
               );
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        ColoredBox(color: AppColors.listingbackground, child: body),
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: FloatingActionButton.extended(
-            heroTag: 'postReqFab',
-            onPressed: () async {
-              final posted = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(builder: (_) => _RequirementFormScreen(userId: widget.userId)),
-              );
-              if (posted == true) _load();
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Post Requirement'),
-            backgroundColor: AppColors.primary,
-          ),
-        ),
-      ],
+    return Scaffold(
+      backgroundColor: AppColors.listingbackground,
+      appBar: GradientAppBar(title: 'Post Requirements'),
+      body: body,
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'postReqFab',
+        onPressed: () async {
+          final posted = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(builder: (_) => _RequirementFormScreen(userId: widget.userId)),
+          );
+          if (posted == true) _load();
+        },
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 

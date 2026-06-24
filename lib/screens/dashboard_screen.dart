@@ -284,7 +284,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: AppColors.listingbackground,
 
       // ── AppBar ────────────────────────────────────────────────────────────
-      appBar: GradientAppBar(
+      appBar: _selectedIndex == -1 ? GradientAppBar(
         titleWidget: const Text(
           'KeyBricks',
           style: TextStyle(
@@ -317,7 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
-      ),
+      ) : null,
 
       // ── Drawer ────────────────────────────────────────────────────────────
       drawer: Drawer(
@@ -465,19 +465,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         notchMargin: 8,
         color: Colors.white,
         elevation: 8,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navItem(Icons.sell_outlined, Icons.sell_rounded, 'Buy/Sell', 0),
-              _navItem(Icons.apartment_outlined, Icons.apartment_rounded, 'Rent/PG', 1),
-              const SizedBox(width: 60), // space for FAB
-              _navItem(Icons.account_balance_wallet_outlined,
-                  Icons.account_balance_wallet_rounded, 'Loans', 2),
-              _navItem(Icons.assignment_outlined, Icons.assignment_rounded, 'Documentation', 3),
-            ],
-          ),
+        padding: EdgeInsets.zero,
+        height: 60,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _navItem(Icons.sell_outlined, Icons.sell_rounded, 'Buy/Sell', 0),
+            _navItem(Icons.apartment_outlined, Icons.apartment_rounded, 'Rent/PG', 1),
+            const SizedBox(width: 60),
+            _navItem(Icons.account_balance_wallet_outlined,
+                Icons.account_balance_wallet_rounded, 'Loans', 2),
+            _navItem(Icons.assignment_outlined, Icons.assignment_rounded, 'Documentation', 3),
+          ],
         ),
       ),
     );

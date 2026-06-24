@@ -10,6 +10,7 @@ void showBankDetailSheet(BuildContext context, Bank bank,
     {VoidCallback? onNavigateToEmi}) {
   showModalBottomSheet(
     context: context,
+    useSafeArea: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => DraggableScrollableSheet(
