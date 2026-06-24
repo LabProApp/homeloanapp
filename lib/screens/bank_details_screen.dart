@@ -456,6 +456,7 @@ class BankDetailPage extends StatelessWidget {
       return Container(
         width: 88,
         height: 88,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),

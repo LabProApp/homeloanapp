@@ -28,12 +28,14 @@ class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   int _tab = 0;
   bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
   bool _loading = false;
   bool _checkingLogin = true;
   String _selectedRole = 'CLIENT';
 
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
 
   late final AnimationController _entranceCtrl;
@@ -104,6 +106,7 @@ class _LoginScreenState extends State<LoginScreen>
     _entranceCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
     _nameCtrl.dispose();
     super.dispose();
   }
@@ -402,6 +405,20 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ] else ...[
           const SizedBox(height: 16),
+          _fieldLabel('Confirm Password'),
+          const SizedBox(height: 6),
+          _glassField(
+            controller: _confirmPasswordCtrl,
+            hint: 'Re-enter your password',
+            icon: _confirmPasswordVisible
+                ? Icons.visibility_rounded
+                : Icons.visibility_off_rounded,
+            obscure: !_confirmPasswordVisible,
+            keyboardType: TextInputType.visiblePassword,
+            onIconTap: () =>
+                setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
+          ),
+          const SizedBox(height: 16),
           _fieldLabel('I am a'),
           const SizedBox(height: 8),
           _roleSelector(),
@@ -627,6 +644,10 @@ class _LoginScreenState extends State<LoginScreen>
     }
     if (!pwd.contains(RegExp(r'[0-9]'))) {
       _showError('Password must contain at least one number');
+      return;
+    }
+    if (_confirmPasswordCtrl.text.trim() != pwd) {
+      _showError('Passwords do not match');
       return;
     }
 

@@ -247,40 +247,44 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             ? 'View Journey  ✓'
             : 'Continue Journey  •  ${j.completedCount}/6 done';
 
-    return GestureDetector(
-      onTap: _openJourney,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFF8F00), Color(0xFFE65100)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFE65100).withOpacity(0.30),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: GestureDetector(
+        onTap: _openJourney,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFF8F00), Color(0xFFE65100)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.route_rounded, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFE65100).withOpacity(0.28),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
-            ),
-          ],
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.route_rounded, color: Colors.white, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.arrow_forward_rounded, color: Colors.white70, size: 14),
+            ],
+          ),
         ),
       ),
     );
@@ -1002,19 +1006,20 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Widget _iconCircle(IconData icon, VoidCallback? onTap) {
+    final isFav = icon == Icons.favorite;
     return GestureDetector(
       onTap: onTap,
-      child: CircleAvatar(
-        radius: 18,
-        backgroundColor: AppColors.imageOverlay,
-        child: _sendingLead && icon == Icons.star_border_rounded
-            ? const SizedBox(
-                height: 12,
-                width: 12,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: AppColors.white),
-              )
-            : Icon(icon, size: 18, color: AppColors.white),
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isFav ? Colors.red.shade400 : Colors.black.withOpacity(0.45),
+          boxShadow: const [
+            BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
+          ],
+        ),
+        child: Icon(icon, size: 20, color: Colors.white),
       ),
     );
   }
@@ -1114,15 +1119,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           // ── Primary: Contact icons + Interested button ────────────────
           Row(
             children: [
-              _smallIconBtn(
-                  Icons.call,
-                  AppColors.primary,
-                  hasPhone ? _callOwner : null),
+              _smallIconBtn(Icons.call_rounded, AppColors.primary, 'Call', hasPhone ? _callOwner : null),
               const SizedBox(width: 8),
-              _smallIconBtn(
-                  Icons.chat_rounded,
-                  AppColors.whatsAppGreen,
-                  hasPhone ? _openWhatsApp : null),
+              _smallIconBtn(Icons.chat_rounded, AppColors.whatsAppGreen, 'Chat', hasPhone ? _openWhatsApp : null),
               const Spacer(),
               _interestedBtn(),
             ],
@@ -1154,22 +1153,33 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       );
   }
 
-  Widget _smallIconBtn(IconData icon, Color color, VoidCallback? onTap) {
+  Widget _smallIconBtn(IconData icon, Color color, String label, VoidCallback? onTap) {
+    final enabled = onTap != null;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        width: 44,
-        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
         decoration: BoxDecoration(
-          color: color.withOpacity(onTap == null ? 0.04 : 0.10),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: color.withOpacity(onTap == null ? 0.10 : 0.25)),
+          color: color.withOpacity(enabled ? 0.10 : 0.04),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(enabled ? 0.30 : 0.10)),
         ),
-        child: Icon(icon,
-            size: 22,
-            color: onTap == null ? color.withOpacity(0.4) : color),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22, color: enabled ? color : color.withOpacity(0.4)),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: enabled ? color : color.withOpacity(0.4),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1177,27 +1187,49 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   Widget _interestedBtn() {
     return InkWell(
       onTap: (isOwner || _sendingLead) ? null : _createLead,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
         decoration: BoxDecoration(
-          color: isOwner ? AppColors.disabled : AppColors.primary,
-          borderRadius: BorderRadius.circular(22),
+          gradient: isOwner
+              ? null
+              : const LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          color: isOwner ? AppColors.disabled : null,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: isOwner
+              ? null
+              : [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  )
+                ],
         ),
         child: _sendingLead
             ? const SizedBox(
                 width: 16,
                 height: 16,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
               )
-            : const Text(
-                'Interested',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.star_rounded, size: 16, color: Colors.white),
+                  SizedBox(width: 6),
+                  Text(
+                    'Interested',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
       ),
     );

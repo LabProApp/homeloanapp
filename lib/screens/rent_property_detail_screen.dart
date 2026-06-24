@@ -714,11 +714,18 @@ class _RentalPropertyDetailScreenState
   }
 
   Widget _iconCircle(IconData icon, VoidCallback? onTap) {
+    final isFav = icon == Icons.favorite;
     return GestureDetector(
       onTap: onTap,
-      child: CircleAvatar(
-        radius: 18,
-        backgroundColor: AppColors.imageOverlay,
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isFav
+              ? Colors.red
+              : AppColors.imageOverlay,
+        ),
         child: _sendingLead && icon == Icons.star_border_rounded
             ? const SizedBox(
                 height: 12,
@@ -726,7 +733,7 @@ class _RentalPropertyDetailScreenState
                 child: CircularProgressIndicator(
                     strokeWidth: 2, color: AppColors.white),
               )
-            : Icon(icon, size: 18, color: AppColors.white),
+            : Icon(icon, size: 20, color: AppColors.white),
       ),
     );
   }
@@ -782,10 +789,10 @@ class _RentalPropertyDetailScreenState
         child: Row(
           children: [
             _smallIconBtn(
-                Icons.call, AppColors.primary, hasPhone ? _callOwner : null),
+                Icons.call, AppColors.primary, hasPhone ? _callOwner : null, 'Call'),
             const SizedBox(width: 8),
             _smallIconBtn(Icons.chat_rounded, AppColors.whatsAppGreen,
-                hasPhone ? _openWhatsApp : null),
+                hasPhone ? _openWhatsApp : null, 'Chat'),
             const Spacer(),
             _interestedBtn(),
           ],
@@ -794,22 +801,36 @@ class _RentalPropertyDetailScreenState
     );
   }
 
-  Widget _smallIconBtn(IconData icon, Color color, VoidCallback? onTap) {
+  Widget _smallIconBtn(
+      IconData icon, Color color, VoidCallback? onTap, String label) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        width: 44,
-        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: color.withOpacity(onTap == null ? 0.04 : 0.10),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
               color: color.withOpacity(onTap == null ? 0.10 : 0.25)),
         ),
-        child: Icon(icon,
-            size: 22,
-            color: onTap == null ? color.withOpacity(0.4) : color),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 22,
+                color: onTap == null ? color.withOpacity(0.4) : color),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: onTap == null ? color.withOpacity(0.4) : color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -817,12 +838,19 @@ class _RentalPropertyDetailScreenState
   Widget _interestedBtn() {
     return InkWell(
       onTap: (_isOwner || _sendingLead) ? null : _createLead,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
-          color: _isOwner ? AppColors.disabled : AppColors.primary,
-          borderRadius: BorderRadius.circular(22),
+          gradient: _isOwner
+              ? null
+              : const LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+          color: _isOwner ? AppColors.disabled : null,
+          borderRadius: BorderRadius.circular(24),
         ),
         child: _sendingLead
             ? const SizedBox(
@@ -831,13 +859,20 @@ class _RentalPropertyDetailScreenState
                 child: CircularProgressIndicator(
                     strokeWidth: 2, color: Colors.white),
               )
-            : const Text(
-                'Interested',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
+            : const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.star_rounded, color: Colors.white, size: 16),
+                  SizedBox(width: 6),
+                  Text(
+                    'Interested',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
       ),
     );

@@ -117,64 +117,38 @@ class HomeScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () => onNavigate(HomeAction.startJourney),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFFFF8F00), Color(0xFFE65100)],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFE65100).withOpacity(0.28),
+              color: const Color(0xFFE65100).withOpacity(0.30),
               blurRadius: 8,
-              offset: const Offset(0, 2),
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.home_work_rounded,
-                  color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Start Your Home Buying Journey',
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Find. Finance. Finalize',
-                    style: TextStyle(fontSize: 11, color: Colors.white70),
-                  ),
-                ],
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.home_work_rounded, color: Colors.white, size: 16),
+            SizedBox(width: 8),
+            Text(
+              'Start Journey',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 0.3,
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.arrow_forward_rounded,
-                  color: Colors.white, size: 16),
-            ),
+            SizedBox(width: 6),
+            Icon(Icons.arrow_forward_rounded, color: Colors.white70, size: 14),
           ],
         ),
       ),

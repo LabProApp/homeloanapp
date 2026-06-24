@@ -364,10 +364,10 @@ class _PropertyCardState extends State<PropertyCard> {
   Widget _actionRow() {
     return Row(
       children: [
-        _smallIconBtn(Icons.call, AppColors.primary, _callOwner),
+        _smallIconBtn(Icons.call_rounded, 'Call', _callOwner),
         if (widget.showWhatsAppIcon) ...[
           const SizedBox(width: 8),
-          _smallIconBtn(Icons.chat, AppColors.whatsAppGreen, _openWhatsApp),
+          _smallIconBtn(Icons.chat_rounded, 'Chat', _openWhatsApp),
         ],
         const Spacer(),
         _interestedBtn(),
@@ -375,52 +375,68 @@ class _PropertyCardState extends State<PropertyCard> {
     );
   }
 
-  Widget _smallIconBtn(IconData icon, Color color, VoidCallback onTap) {
-    return InkWell(
+  Widget _smallIconBtn(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 36,
-        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.22),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.55)),
+          color: Colors.white.withOpacity(0.18),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withOpacity(0.35)),
         ),
-        child: Icon(icon, size: 18, color: Colors.white),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: Colors.white),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _interestedBtn() {
-    return InkWell(
+    return GestureDetector(
       onTap: _sendingLead ? null : _createLead,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primary, AppColors.primaryDark],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
+          ],
         ),
         child: _sendingLead
             ? const SizedBox(
                 width: 14,
                 height: 14,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
               )
-            : const Text(
-                'Interested',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.star_rounded, size: 14, color: AppColors.primary),
+                  SizedBox(width: 5),
+                  Text(
+                    'Interested',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
               ),
       ),
     );
@@ -618,19 +634,20 @@ class _PropertyCardState extends State<PropertyCard> {
   }
 
   Widget _iconCircle(IconData icon, VoidCallback? onTap) {
+    final isFav = icon == Icons.favorite;
     return GestureDetector(
       onTap: onTap,
-      child: CircleAvatar(
-        radius: 18,
-        backgroundColor: AppColors.imageOverlay,
-        child: _sendingLead && icon == Icons.star
-            ? const SizedBox(
-          height: 12,
-          width: 12,
-          child: CircularProgressIndicator(
-              strokeWidth: 2, color: Colors.white),
-        )
-            : Icon(icon, size: 18, color: Colors.white),
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isFav ? Colors.red.shade400 : Colors.black.withOpacity(0.45),
+          boxShadow: const [
+            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 1)),
+          ],
+        ),
+        child: Icon(icon, size: 19, color: Colors.white),
       ),
     );
   }
