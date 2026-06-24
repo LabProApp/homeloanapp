@@ -28,7 +28,6 @@ dependencies:
   intl: ^0.18.1
   sms_autofill: ^2.4.0
   package_info_plus: ^8.0.0
-  flutter_native_splash: ^2.3.10
   shared_preferences: ^2.2.2
   dropdown_button2: ^2.3.9
   image_picker: ^1.0.7
@@ -55,21 +54,7 @@ flutter:
     - assets/images/house1.jpg
     - assets/images/house2.jpg
     - assets/images/house3.jpg
-    - assets/images/splash_bg.jpg
     - assets/images/ic_launcher.png
-
-flutter_native_splash:
-  android: true
-  ios: true
-  background_image: assets/images/splash_bg_blur.jpg
-  image: assets/images/ic_launcher.png
-  android_gravity: center
-  ios_content_mode: center
-  fullscreen: true
-  android_12:
-    background_image: assets/images/splash_bg_blur.jpg
-    image: assets/images/ic_launcher.png
-    icon_background_color: "#0D0D0D"
 
 flutter_launcher_icons:
   android: true

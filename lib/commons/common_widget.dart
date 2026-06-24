@@ -143,7 +143,7 @@ class AppButton extends StatelessWidget {
                 ],
         ),
         child: ElevatedButton(
-          onPressed: isLoading ? null : onTap,
+          onPressed: isLoading ? () {} : onTap,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
@@ -172,6 +172,67 @@ class AppButton extends StatelessWidget {
                     letterSpacing: 0.2,
                   ),
                 ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Standardised error / no-connection state used across all listing screens
+/// and full-screen error scenarios.
+///
+/// Shows a wifi-off icon, an optional title and message, and a Retry button.
+/// For listing screens that need pull-to-refresh, wrap this inside a [ListView].
+class AppErrorState extends StatelessWidget {
+  final String? title;
+  final String message;
+  final VoidCallback? onRetry;
+  final IconData icon;
+
+  const AppErrorState({
+    super.key,
+    this.title,
+    required this.message,
+    this.onRetry,
+    this.icon = Icons.wifi_off_rounded,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 64, color: AppColors.textMuted),
+            const SizedBox(height: 16),
+            if (title != null) ...[
+              Text(
+                title!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+                onPressed: onRetry,
+              ),
+            ],
+          ],
         ),
       ),
     );

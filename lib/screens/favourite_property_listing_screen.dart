@@ -111,7 +111,7 @@ class _FavouritePropertyListingScreenState
 
   Widget _buildList() {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
-    if (_error.isNotEmpty) return Center(child: Text(_error));
+    if (_error.isNotEmpty) return AppErrorState(message: _error, onRetry: _loadProperties);
     if (_properties.isEmpty) {
       final isFiltered = _searchController.text.trim().isNotEmpty;
       return Center(

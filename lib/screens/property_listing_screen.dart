@@ -825,36 +825,11 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
-        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-        Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.wifi_off_rounded,
-                  size: 64, color: AppColors.textMuted),
-              const SizedBox(height: 16),
-              const Text(
-                "Couldn't load properties",
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "Check your connection and try again.",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 20),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text("Retry"),
-                onPressed: _refreshFromApi,
-              ),
-            ],
-          ),
+        SizedBox(height: MediaQuery.of(context).size.height * 0.15),
+        AppErrorState(
+          title: "Couldn't load properties",
+          message: "Check your connection and try again.",
+          onRetry: _refreshFromApi,
         ),
       ],
     );

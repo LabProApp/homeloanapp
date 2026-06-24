@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,14 +16,14 @@ import '../theme/app_colors.dart';
 import 'dashboard_screen.dart';
 import 'user_login_screen.dart';
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  State<AppInitializer> createState() => _AppInitializerState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _AppInitializerState extends State<AppInitializer> {
   @override
   void initState() {
     super.initState();
@@ -64,86 +63,60 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final versionStatus = await AppVersionApiService.check(versionCode: versionCode);
 
-    // Persist for the drawer update badge (doesn't require re-checking).
     await prefs.setBool('updateAvailable', versionStatus.updateAvailable);
     await prefs.setString('latestVersionName', versionStatus.latestVersionName ?? '');
     await prefs.setString(
         'updateStoreUrl',
         versionStatus.storeUrl ?? _fallbackStoreUrl());
 
-    // ── 4. Remove native splash now that all async work is done ─────────────
-    FlutterNativeSplash.remove();
-
     if (!mounted) return;
 
-    // ── 5. Handle forced update (blocks navigation) ──────────────────────────
+    // ── 4. Handle forced update (blocks navigation) ──────────────────────────
     if (versionStatus.forceUpdate) {
       await _showUpdateDialog(versionStatus, forced: true);
-      // After the dialog the user is redirected to the store.
-      // Do NOT navigate into the app — keep showing the dialog until the user
-      // has updated (i.e. the app is restarted with a higher versionCode).
       return;
     }
 
-    // ── 6. Handle optional update (dismissible) ──────────────────────────────
+    // ── 5. Handle optional update (dismissible) ──────────────────────────────
     if (versionStatus.updateAvailable) {
       final wantsUpdate = await _showUpdateDialog(versionStatus, forced: false);
       if (wantsUpdate == true) {
         await _openStore(versionStatus.storeUrl);
-        // After launching the store let the user navigate into the app normally
-        // so they can switch back without being blocked.
       }
     }
 
-    // ── 7. Navigate ──────────────────────────────────────────────────────────
+    // ── 6. Navigate ──────────────────────────────────────────────────────────
     if (!mounted) return;
     _navigate(hasValidSession, userId);
   }
-
-  // ── Navigation ─────────────────────────────────────────────────────────────
 
   void _navigate(bool hasValidSession, int? userId) {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 400),
         pageBuilder: (_, __, ___) => hasValidSession
             ? DashboardScreen(userId: userId!)
             : const LoginScreen(),
         transitionsBuilder: (_, animation, __, child) {
-          final curved = CurvedAnimation(
-              parent: animation, curve: Curves.easeOutCubic);
           return FadeTransition(
-            opacity: curved,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.06),
-                end: Offset.zero,
-              ).animate(curved),
-              child: child,
-            ),
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            child: child,
           );
         },
       ),
     );
   }
 
-  // ── Update dialog ──────────────────────────────────────────────────────────
-
-  /// Shows either a mandatory (non-dismissible) or optional update dialog.
-  ///
-  /// Returns `true` if the user tapped "Update Now", `false`/`null` otherwise.
-  Future<bool?> _showUpdateDialog(
-      AppVersionModel version, {required bool forced}) {
+  Future<bool?> _showUpdateDialog(AppVersionModel version, {required bool forced}) {
     final newVersion = version.latestVersionName != null
         ? 'v${version.latestVersionName}'
         : 'a new version';
 
     return showDialog<bool>(
       context: context,
-      barrierDismissible: false, // always prevent tap-outside dismiss
+      barrierDismissible: false,
       builder: (_) => PopScope(
-        // Hardware back button: allowed only for optional updates.
         canPop: !forced,
         child: AlertDialog(
           title: Row(
@@ -156,17 +129,13 @@ class _SplashScreenState extends State<SplashScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  forced
-                      ? Icons.system_update_rounded
-                      : Icons.new_releases_rounded,
+                  forced ? Icons.system_update_rounded : Icons.new_releases_rounded,
                   color: forced ? AppColors.error : AppColors.primary,
                   size: 22,
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                forced ? 'Update Required' : 'Update Available',
-              ),
+              Text(forced ? 'Update Required' : 'Update Available'),
             ],
           ),
           content: Column(
@@ -210,8 +179,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    forced ? AppColors.error : AppColors.primary,
+                backgroundColor: forced ? AppColors.error : AppColors.primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -227,14 +195,11 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 
-  // ── Store launch ───────────────────────────────────────────────────────────
-
   Future<void> _openStore(String? serverUrl) async {
     final url = serverUrl?.isNotEmpty == true ? serverUrl! : _fallbackStoreUrl();
     try {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } catch (_) {
-      // If the store URL can't be launched show a snackbar, but don't crash.
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -251,20 +216,11 @@ class _SplashScreenState extends State<SplashScreen> {
   static String _fallbackStoreUrl() =>
       Platform.isAndroid ? AppConfig.playStoreUrl : AppConfig.appStoreUrl;
 
-  // ── Scaffold ───────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Colors.black,
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/splash_bg.jpg'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: SizedBox.expand(),
+      body: Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }

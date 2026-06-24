@@ -123,7 +123,7 @@ class _OverviewTabState extends State<_OverviewTab> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
-      return _ErrorState(message: _error!, onRetry: _load);
+      return AppErrorState(message: _error!, onRetry: _load, icon: Icons.error_outline_rounded);
     }
     final s = _stats!;
     return RefreshIndicator(
@@ -404,7 +404,7 @@ class _RequestsTabState extends State<_RequestsTab> {
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
-                  ? _ErrorState(message: _error!, onRetry: _load)
+                  ? AppErrorState(message: _error!, onRetry: _load, icon: Icons.error_outline_rounded)
                   : _requests.isEmpty
                       ? _emptyState()
                       : RefreshIndicator(
@@ -753,7 +753,7 @@ class _UsersTabState extends State<_UsersTab> {
           child: _loading && _users.isEmpty
               ? const Center(child: CircularProgressIndicator())
               : _error != null && _users.isEmpty
-                  ? _ErrorState(message: _error!, onRetry: () => _load(reset: true))
+                  ? AppErrorState(message: _error!, onRetry: () => _load(reset: true), icon: Icons.error_outline_rounded)
                   : RefreshIndicator(
                       onRefresh: () => _load(reset: true),
                       child: ListView.separated(
@@ -1041,40 +1041,6 @@ class _ChangePlanSheetState extends State<_ChangePlanSheet> {
                 ),
                 child: const Text('Apply'),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Shared bits ───────────────────────────────────────────────────────────────
-
-class _ErrorState extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-  const _ErrorState({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline_rounded,
-                size: 48, color: AppColors.error),
-            const SizedBox(height: 10),
-            Text(message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary)),
-            const SizedBox(height: 14),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
-              onPressed: onRetry,
             ),
           ],
         ),

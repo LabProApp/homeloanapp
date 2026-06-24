@@ -5,6 +5,8 @@ import '../services/leads_service.dart';
 import '../commons/common_util.dart';
 import '../commons/common_widget.dart';
 
+final _numFmt = NumberFormat('#,##,###');
+
 /// Shows all users who have expressed interest in a specific property.
 /// Navigate to this from the property detail screen.
 class PropertyLeadsScreen extends StatefulWidget {
@@ -28,7 +30,6 @@ class _PropertyLeadsScreenState extends State<PropertyLeadsScreen> {
 
   static final _dateFmt     = DateFormat('dd MMM yyyy');
   static final _followUpFmt = DateFormat('dd MMM yyyy, hh:mm a');
-  static final _numFmt      = NumberFormat('#,##,###');
 
   static const _statusColors = <String, Color>{
     'NEW':            AppColors.info,

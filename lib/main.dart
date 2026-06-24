@@ -4,12 +4,11 @@ import 'dart:ui';
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'screens/app_initializer.dart';
 import 'screens/property_detail_screen.dart';
 import 'screens/rent_property_detail_screen.dart';
-import 'screens/splash_screen.dart';
 import 'screens/user_login_screen.dart';
 import 'network/api_client.dart';
 import 'network/service_locator.dart';
@@ -24,8 +23,7 @@ import 'theme/app_colors.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
-  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  WidgetsFlutterBinding.ensureInitialized();
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
@@ -174,7 +172,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       title: 'KeyBricks',
       theme: _buildTheme(),
-      home: const SplashScreen(),
+      home: const AppInitializer(),
     );
   }
 
@@ -297,9 +295,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.white,
         selectedColor: AppColors.primary,
-        disabledColor: AppColors.disabled.withOpacity(0.5),
         labelStyle: const TextStyle(fontFamily: font, fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
-        secondaryLabelStyle: const TextStyle(fontFamily: font, fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white),
         side: const BorderSide(color: AppColors.border),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -329,7 +325,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ),
 
       // ── Dialog ─────────────────────────────────────────────────────────────
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.modalBg,
         surfaceTintColor: Colors.transparent,
         elevation: 6,
