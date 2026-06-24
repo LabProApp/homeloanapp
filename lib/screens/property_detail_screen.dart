@@ -20,7 +20,6 @@ import 'emi_calculator_screen.dart';
 import '../screens/bank_apply_loan_dialog.dart';
 import '../screens/stamp_duty_screen.dart';
 import '../screens/rent_vs_buy_screen.dart';
-import '../screens/due_diligence_screen.dart';
 import '../models/property_journey_model.dart';
 import '../models/user_model.dart';
 import '../services/journey_service.dart';
@@ -242,7 +241,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   Widget _journeyButton() {
     final j = _journey;
     final label = j == null
-        ? 'Start Purchase Journey'
+        ? 'Start Property Journey'
         : j.isComplete
             ? 'View Journey  ✓'
             : 'Continue Journey  •  ${j.completedCount}/6 done';
@@ -546,22 +545,37 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     ),
                   ),
 
-                  // Action icons (top-right) — favourite + share only
+                  // Action icons (top-right) — call + chat + favourite + share
                   Positioned(
                     top: MediaQuery.of(context).padding.top +
                         kToolbarHeight +
                         8,
                     right: 12,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        _iconCircle(
-                          _isFavourite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          _toggleFavorite,
+                        Row(
+                          children: [
+                            _iconCircle(Icons.call_rounded,
+                                _ownerPhone.isNotEmpty ? _callOwner : null),
+                            const SizedBox(width: 6),
+                            _iconCircle(Icons.chat_rounded,
+                                _ownerPhone.isNotEmpty ? () => _openWhatsApp() : null),
+                          ],
                         ),
-                        const SizedBox(height: 6),
-                        _iconCircle(Icons.share, _shareProperty),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            _iconCircle(
+                              _isFavourite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              _toggleFavorite,
+                            ),
+                            const SizedBox(width: 6),
+                            _iconCircle(Icons.share, _shareProperty),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -578,13 +592,21 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
 
-                  // Title
-                  Text(
-                    widget.property.title ?? '-',
-                    style:
-                        Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                  // Title + Interested
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.property.title ?? '-',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      if (!isOwner) _interestedBtn(),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   Row(
@@ -815,11 +837,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Quick Tools
-                  _sectionTitle('Quick Tools'),
-                  const SizedBox(height: 12),
-                  _quickToolsRow(),
-                  const SizedBox(height: 20),
+                  // Quick Tools (sale only)
+                  if (!_isRent) ...[
+                    _sectionTitle('Quick Tools'),
+                    const SizedBox(height: 12),
+                    _quickToolsRow(),
+                    const SizedBox(height: 20),
+                  ],
 
                   // Owner Details
                   _sectionTitle('Owner Details'),
@@ -840,22 +864,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   Widget _quickToolsRow() {
     final price = widget.property.price?.toDouble();
     final tools = <_ToolItem>[
-      if (!_isRent) _ToolItem(
+      _ToolItem(
         Icons.calculate_outlined, 'Stamp Duty', const Color(0xFF1565C0),
         () => Navigator.push(context, MaterialPageRoute(
           builder: (_) => StampDutyScreen(initialAmount: price),
         )),
       ),
-      if (!_isRent) _ToolItem(
+      _ToolItem(
         Icons.balance_outlined, 'Rent vs Buy', const Color(0xFF2E7D32),
         () => Navigator.push(context, MaterialPageRoute(
           builder: (_) => RentVsBuyScreen(initialPropertyPrice: price),
-        )),
-      ),
-      _ToolItem(
-        Icons.checklist_outlined, 'Due Diligence', const Color(0xFF6A1B9A),
-        () => Navigator.push(context, MaterialPageRoute(
-          builder: (_) => const DueDiligenceScreen(),
         )),
       ),
     ];
@@ -1112,75 +1130,29 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       );
 
   Widget _buyerBar(String phone) {
-    final hasPhone = _ownerPhone.isNotEmpty;
     return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── Primary: Contact icons + Interested button ────────────────
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ── Journey button (sale only) ─────────────────────────────────
+        if (!_isRent) ...[
+          _journeyButton(),
+          const SizedBox(height: 8),
+        ],
+        // ── Rent: Interested CTA ───────────────────────────────────────
+        if (_isRent)
+          SizedBox(width: double.infinity, child: _interestedBtn()),
+        // ── Tool chips (sale only) ─────────────────────────────────────
+        if (!_isRent)
           Row(
             children: [
-              _smallIconBtn(Icons.call_rounded, AppColors.primary, 'Call', hasPhone ? _callOwner : null),
+              _toolChip(Icons.calculate_outlined, 'EMI Calc',
+                  AppColors.primary, _openEmiSheet),
               const SizedBox(width: 8),
-              _smallIconBtn(Icons.chat_rounded, AppColors.whatsAppGreen, 'Chat', hasPhone ? _openWhatsApp : null),
-              const Spacer(),
-              _interestedBtn(),
+              _toolChip(Icons.account_balance_outlined, 'Apply Loan',
+                  AppColors.secondary, () => LoanApplySheet.show(context)),
             ],
           ),
-          // ── Journey button (sale only) ────────────────────────────────
-          if (!_isRent) ...[
-            const SizedBox(height: 8),
-            _journeyButton(),
-          ],
-          // ── Secondary: Quick tool chips (sale only) ────────────────────
-          if (!_isRent) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _toolChip(Icons.calculate_outlined, 'EMI Calc',
-                    AppColors.primary, _openEmiSheet),
-                const SizedBox(width: 8),
-                _toolChip(Icons.account_balance_outlined, 'Apply Loan',
-                    AppColors.secondary, () => LoanApplySheet.show(context)),
-                const SizedBox(width: 8),
-                _toolChip(Icons.checklist_outlined, 'Due Diligence',
-                    const Color(0xFF6A1B9A),
-                    () => Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => const DueDiligenceScreen()))),
-              ],
-            ),
-          ],
-        ],
-      );
-  }
-
-  Widget _smallIconBtn(IconData icon, Color color, String label, VoidCallback? onTap) {
-    final enabled = onTap != null;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-        decoration: BoxDecoration(
-          color: color.withOpacity(enabled ? 0.10 : 0.04),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(enabled ? 0.30 : 0.10)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 22, color: enabled ? color : color.withOpacity(0.4)),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: enabled ? color : color.withOpacity(0.4),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 

@@ -151,7 +151,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
         content: Text('$featureLabel requires a higher plan to unlock.'),
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 2),
         backgroundColor: AppColors.slate,
         action: SnackBarAction(
           label: 'View Plans',
@@ -466,7 +466,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: Colors.white,
         elevation: 8,
         padding: EdgeInsets.zero,
-        height: 60,
+        height: 64,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -512,6 +512,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 2),
             Text(
               label,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 11,
                 color: color,
