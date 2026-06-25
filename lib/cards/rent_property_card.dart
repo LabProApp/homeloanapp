@@ -339,7 +339,8 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
               left: 12,
               child: Row(
                 children: [
-                  _pill(status),
+                  if (status.toLowerCase().contains('ready'))
+                    _pill(status, color: const Color(0xFF2E7D32)),
                   if (_images.length > 1) ...[
                     const SizedBox(width: 6),
                     Container(

@@ -373,7 +373,7 @@ class HomeScreen extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
-          childAspectRatio: 2.6,
+          childAspectRatio: 2.4,
           children: tiles
               .map((t) => _TileCard(
                     tile: t,
