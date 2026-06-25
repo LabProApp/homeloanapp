@@ -78,4 +78,9 @@ class ApiUrls {
 
   // App version check (public endpoint — no auth)
   static const String versionCheck = "$baseUrl/version/check";
+
+  // Agreement APIs
+  static const String rentAgreementTemplate = "$baseUrl/agreements/rent/template";
+  static const String saleAgreementTemplate = "$baseUrl/agreements/sale/template";
+  static const String agreementsGenerate = "$baseUrl/agreements/generate";
 }

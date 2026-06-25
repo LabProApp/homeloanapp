@@ -102,78 +102,131 @@ class _PropertyCardState extends State<PropertyCard> {
   }
 
   Widget _typePlaceholder() {
-    final type = widget.property.type?.toUpperCase() ?? '';
-    final category = widget.property.category?.toUpperCase() ?? '';
+    final property = widget.property;
+    final type = property.type?.toUpperCase() ?? '';
+    final category = property.category?.toUpperCase() ?? '';
     final isCommercial = ['SHOP', 'OFFICE', 'SHOWROOM', 'CO WORKING'].contains(type) || category == 'COMMERCIAL';
     final isPlot = type == 'PLOT';
 
-    final IconData icon;
-    final Color bg;
-    final Color iconColor;
-    final String label;
+    final IconData icon = isCommercial
+        ? Icons.business_outlined
+        : isPlot
+            ? Icons.landscape_outlined
+            : Icons.home_work_outlined;
+    final String label = isCommercial
+        ? (property.type ?? 'Commercial')
+        : isPlot
+            ? 'Plot'
+            : (property.type ?? 'Property');
 
-    if (isCommercial) {
-      icon = Icons.storefront_outlined;
-      bg = const Color(0xFFE8F5E9);
-      iconColor = const Color(0xFF2E7D32);
-      label = widget.property.type ?? 'Commercial';
-    } else if (isPlot) {
-      icon = Icons.landscape_outlined;
-      bg = const Color(0xFFFBE9E7);
-      iconColor = const Color(0xFF6D4C41);
-      label = 'Plot';
-    } else {
-      icon = Icons.home_outlined;
-      bg = const Color(0xFFFFF3E0);
-      iconColor = const Color(0xFFE65100);
-      label = widget.property.type ?? 'Property';
-    }
+    const neutralIcon = Color(0xFF78909C);
+    final area = property.superArea ?? property.carpetArea;
+    final cityParts = [property.city, property.state].where((s) => s != null && s.isNotEmpty);
+    final cityStr = cityParts.join(', ');
+    final isVerified = property.verified == true;
+    final message = isVerified
+        ? 'Verified listing. Photos will be uploaded shortly.'
+        : 'Property images will be available soon.';
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            bg,
-            Color.alphaBlend(iconColor.withOpacity(0.18), bg),
-          ],
+          colors: [Color(0xFFFFFFFF), Color(0xFFF8F9FB), Color(0xFFEFF1F5)],
+          stops: [0.0, 0.5, 1.0],
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.only(top: 48),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 36, color: iconColor),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (isVerified)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2E7D32).withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFF2E7D32).withOpacity(0.35)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.verified_rounded, size: 11, color: Color(0xFF2E7D32)),
+                        SizedBox(width: 4),
+                        Text('Verified Listing',
+                          style: TextStyle(fontSize: 9, color: Color(0xFF2E7D32),
+                              fontWeight: FontWeight.w700, letterSpacing: 0.2)),
+                      ],
+                    ),
+                  )
+                else
+                  const SizedBox(height: 18),
+              ],
             ),
             const SizedBox(height: 10),
-            Text(
-              label,
-              style: TextStyle(
-                color: iconColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: neutralIcon.withOpacity(0.10),
+                shape: BoxShape.circle,
+                border: Border.all(color: neutralIcon.withOpacity(0.20)),
+              ),
+              child: Icon(icon, size: 30, color: neutralIcon.withOpacity(0.75)),
+            ),
+            const SizedBox(height: 8),
+            Text(label,
+              style: const TextStyle(
+                color: Color(0xFF546E7A), fontSize: 13,
+                fontWeight: FontWeight.w600, letterSpacing: 0.2,
               ),
             ),
-            const SizedBox(height: 3),
-            Text(
-              'No pictures available',
-              style: TextStyle(color: iconColor.withOpacity(0.65), fontSize: 11),
+            const SizedBox(height: 10),
+            if (cityStr.isNotEmpty || area != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFDDE1E7)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (cityStr.isNotEmpty)
+                      _placeholderAttr(Icons.location_on_outlined, cityStr),
+                    if (cityStr.isNotEmpty && area != null) const SizedBox(height: 3),
+                    if (area != null)
+                      _placeholderAttr(Icons.square_foot, '${area.toStringAsFixed(0)} sqft'),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 10),
+            Text(message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF90A4AE), fontSize: 9, fontStyle: FontStyle.italic,
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _placeholderAttr(IconData icon, String text) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 11, color: const Color(0xFF78909C)),
+      const SizedBox(width: 4),
+      Text(text, style: const TextStyle(fontSize: 10, color: Color(0xFF546E7A))),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -506,22 +559,25 @@ class _PropertyCardState extends State<PropertyCard> {
 
   Widget _loadingPlaceholder() {
     return Container(
-      color: AppColors.surfaceSubtle,
-      child: Center(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFFFFF), Color(0xFFF8F9FB), Color(0xFFEFF1F5)],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
+      child: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(
-                color: AppColors.border,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.image_outlined, size: 28, color: AppColors.textMuted),
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF90A4AE)),
             ),
-            const SizedBox(height: 8),
-            const Text('Loading...', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+            SizedBox(height: 10),
+            Text('Loading...', style: TextStyle(fontSize: 10, color: Color(0xFF90A4AE))),
           ],
         ),
       ),

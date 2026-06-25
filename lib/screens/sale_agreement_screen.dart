@@ -9,6 +9,7 @@ import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
 import '../templates/sale_agreement_template.dart';
 import '../templates/agreement_helpers.dart';
+import '../services/agreement_api_service.dart';
 
 class SaleAgreementScreen extends StatefulWidget {
   const SaleAgreementScreen({super.key});
@@ -68,6 +69,19 @@ class _SaleAgreementScreenState extends State<SaleAgreementScreen> {
   static const _payModes  = ['Cash', 'NEFT/RTGS', 'Cheque', 'Demand Draft', 'UPI'];
 
   final List<String> _stepTitles = ['Property', 'Seller Details', 'Buyer Details', 'Financial Terms', 'Terms & Conditions'];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTemplate();
+  }
+
+  Future<void> _fetchTemplate() async {
+    final terms = await AgreementApiService.fetchTemplate('sale');
+    if (terms != null && mounted) {
+      setState(() => _termsCtrl.text = terms);
+    }
+  }
 
   @override
   void dispose() {

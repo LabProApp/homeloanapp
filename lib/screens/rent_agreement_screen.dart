@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../theme/app_colors.dart';
 import '../commons/common_widget.dart';
 import '../templates/rent_agreement_template.dart';
+import '../services/agreement_api_service.dart';
 
 // ── Main Form Screen ─────────────────────────────────────────────────────────
 
@@ -88,6 +89,19 @@ class _RentAgreementScreenState extends State<RentAgreementScreen> {
     'Furnishing',
     'Terms & Conditions',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTemplate();
+  }
+
+  Future<void> _fetchTemplate() async {
+    final terms = await AgreementApiService.fetchTemplate('rent');
+    if (terms != null && mounted) {
+      setState(() => _termsCtrl.text = terms);
+    }
+  }
 
   @override
   void dispose() {
