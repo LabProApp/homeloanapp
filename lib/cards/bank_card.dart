@@ -113,23 +113,13 @@ class BankCard extends StatelessWidget {
               ),
             ),
 
-            // ── Processing fee + CIBIL tags ─────────────────────────
-            if (bank.processingFee != null || bank.minCibilScore != null) ...[
+            // ── CIBIL tag ────────────────────────────────────────────
+            if (bank.minCibilScore != null) ...[
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Wrap(
-                  spacing: 14,
-                  runSpacing: 4,
-                  children: [
-                    if (bank.processingFee != null)
-                      _tag(Icons.receipt_long_outlined,
-                          '₹${_fmt.format(bank.processingFee)} fee'),
-                    if (bank.minCibilScore != null)
-                      _tag(Icons.credit_score_outlined,
-                          'CIBIL ${bank.minCibilScore!.toInt()}+'),
-                  ],
-                ),
+                child: _tag(Icons.credit_score_outlined,
+                    'CIBIL ${bank.minCibilScore!.toInt()}+'),
               ),
             ],
 

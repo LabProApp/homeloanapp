@@ -734,7 +734,7 @@ class _PropertyFilterDialogState extends State<PropertyFilterDialog> {
                     ),
                   ],
                 ),
-                child: AppButton(text: 'Apply Filters', onTap: _apply),
+                child: AppButton(text: 'Search', onTap: _apply),
               ),
             ],
           ),

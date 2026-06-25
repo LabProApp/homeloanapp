@@ -121,51 +121,15 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
     final area = property.superArea ?? property.carpetArea;
     final cityParts = [property.city, property.state].where((s) => s != null && s.isNotEmpty);
     final cityStr = cityParts.join(', ');
-    final isVerified = property.verified == true;
-    final message = isVerified
-        ? 'Verified listing. Photos will be uploaded shortly.'
-        : 'Rental images will be available soon.';
+    const message = 'Pictures will be available soon.';
 
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFFFFF), Color(0xFFF8F9FB), Color(0xFFEFF1F5)],
-          stops: [0.0, 0.5, 1.0],
-        ),
-      ),
+      color: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        padding: const EdgeInsets.fromLTRB(14, 20, 14, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (isVerified)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2E7D32).withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF2E7D32).withOpacity(0.35)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.verified_rounded, size: 11, color: Color(0xFF2E7D32)),
-                        SizedBox(width: 4),
-                        Text('Verified Listing',
-                          style: TextStyle(fontSize: 9, color: Color(0xFF2E7D32),
-                              fontWeight: FontWeight.w700, letterSpacing: 0.2)),
-                      ],
-                    ),
-                  )
-                else
-                  const SizedBox(height: 18),
-              ],
-            ),
             const SizedBox(height: 10),
             Container(
               width: 64,

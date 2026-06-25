@@ -180,7 +180,8 @@ class _LoanApplySheetState extends State<LoanApplySheet> {
 
             // ── Submit ───────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.fromLTRB(
+                  16, 8, 16, 8 + MediaQuery.of(context).viewPadding.bottom),
               child: AppButton(
                 text: 'Submit Inquiry',
                 isLoading: _loading,

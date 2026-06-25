@@ -151,14 +151,28 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     }
 
     return Container(
-      color: bg,
+      color: Colors.white,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: iconColor),
-          const SizedBox(height: 8),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: const Color(0xFF78909C).withOpacity(0.10),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFF78909C).withOpacity(0.20)),
+            ),
+            child: Icon(icon, size: 34, color: const Color(0xFF78909C).withOpacity(0.70)),
+          ),
+          const SizedBox(height: 10),
           Text(label,
-              style: TextStyle(color: iconColor.withOpacity(0.7), fontSize: 13)),
+              style: const TextStyle(color: Color(0xFF546E7A), fontSize: 13,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          const Text('Pictures will be available soon.',
+              style: TextStyle(color: Color(0xFF90A4AE), fontSize: 10,
+                  fontStyle: FontStyle.italic)),
         ],
       ),
     );
@@ -545,37 +559,35 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     ),
                   ),
 
-                  // Action icons (top-right) — call + chat + favourite + share
+                  // Fav + Share (top-right, vertical)
                   Positioned(
                     top: MediaQuery.of(context).padding.top +
                         kToolbarHeight +
                         8,
                     right: 12,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Row(
-                          children: [
-                            _iconCircle(Icons.call_rounded,
-                                _ownerPhone.isNotEmpty ? _callOwner : null),
-                            const SizedBox(width: 6),
-                            _iconCircle(Icons.chat_rounded,
-                                _ownerPhone.isNotEmpty ? () => _openWhatsApp() : null),
-                          ],
+                        _iconCircle(
+                          _isFavourite ? Icons.favorite : Icons.favorite_border,
+                          _toggleFavorite,
                         ),
                         const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            _iconCircle(
-                              _isFavourite
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              _toggleFavorite,
-                            ),
-                            const SizedBox(width: 6),
-                            _iconCircle(Icons.share, _shareProperty),
-                          ],
-                        ),
+                        _iconCircle(Icons.share, _shareProperty),
+                      ],
+                    ),
+                  ),
+
+                  // Call + Chat (bottom-right, small labeled buttons)
+                  Positioned(
+                    bottom: 48,
+                    right: 12,
+                    child: Row(
+                      children: [
+                        _callChatBtn(Icons.call_rounded, 'Call',
+                            _ownerPhone.isNotEmpty ? _callOwner : null),
+                        const SizedBox(width: 6),
+                        _callChatBtn(Icons.chat_rounded, 'Chat',
+                            _ownerPhone.isNotEmpty ? () => _openWhatsApp() : null),
                       ],
                     ),
                   ),
@@ -1038,6 +1050,34 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ],
         ),
         child: Icon(icon, size: 20, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _callChatBtn(IconData icon, String label, VoidCallback? onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.45),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 1)),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: Colors.white),
+            const SizedBox(width: 4),
+            Text(label,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600)),
+          ],
+        ),
       ),
     );
   }
