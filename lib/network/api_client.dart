@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
 const _kTimeout = Duration(seconds: 15);
 const _kMaxRetries = 3;
-const _kTag = 'API';
 const _kBodyPreviewLimit = 4000;
 const _kSep = '─────────────────────────────────────────────────────────────────';
 
@@ -101,30 +99,28 @@ class ApiClient {
       request.headers['Authorization'] = 'Bearer $_token';
     }
     final fileNames = request.files.map((f) => f.filename ?? f.field).join(', ');
-    dev.log(
+    print(
       '$_kSep\n'
       '→ ${request.method} ${request.url}\n'
       '   auth   : ${_token != null ? "Bearer [present]" : "none"}\n'
       '   files  : $fileNames',
-      name: _kTag,
     );
     final sw = Stopwatch()..start();
     try {
       final response = await request.send().timeout(_kTimeout);
       sw.stop();
-      dev.log(
+      print(
         '← ${request.method} ${response.statusCode}  ${sw.elapsedMilliseconds}ms\n'
         '   url    : ${request.url}',
-        name: _kTag,
       );
       return response;
     } on SocketException catch (e) {
       sw.stop();
-      dev.log('✗ NO INTERNET (${sw.elapsedMilliseconds}ms): $e', name: _kTag);
+      print('✗ NO INTERNET (${sw.elapsedMilliseconds}ms): $e');
       throw const NetworkException('No internet connection');
     } on TimeoutException catch (e) {
       sw.stop();
-      dev.log('✗ UPLOAD TIMEOUT (${sw.elapsedMilliseconds}ms): $e', name: _kTag);
+      print('✗ UPLOAD TIMEOUT (${sw.elapsedMilliseconds}ms): $e');
       throw const NetworkException('Upload timed out. Please try again.');
     }
   }
@@ -141,12 +137,11 @@ class ApiClient {
     final bodyLine = requestBody != null
         ? '\n   body   : ${_truncate(requestBody.toString(), _kBodyPreviewLimit)}'
         : '';
-    dev.log(
+    print(
       '$_kSep\n'
       '→ $method $uri\n'
       '   auth   : ${_token != null ? "Bearer [present]" : "none"}'
       '$bodyLine',
-      name: _kTag,
     );
 
     int tries = 0;
@@ -160,49 +155,42 @@ class ApiClient {
         sw.stop();
 
         // ── Response ──────────────────────────────────────────────────────────
-        dev.log(
+        print(
           '← $method ${response.statusCode}  ${sw.elapsedMilliseconds}ms\n'
           '   url    : $uri\n'
           '   body   : ${_truncate(response.body, _kBodyPreviewLimit)}',
-          name: _kTag,
         );
 
         if (response.statusCode == 503 && tries < _kMaxRetries) {
-          dev.log('⚠ 503 — retry $tries/$_kMaxRetries after backoff', name: _kTag);
+          print('⚠ 503 — retry $tries/$_kMaxRetries after backoff');
           await _backoff(tries);
           continue;
         }
 
         if ((response.statusCode == 401 || response.statusCode == 403) &&
             _token != null) {
-          dev.log('⚠ ${response.statusCode} Unauthorized — clearing session', name: _kTag);
+          print('⚠ ${response.statusCode} Unauthorized — clearing session');
           onUnauthorized?.call();
         }
 
         return response;
       } on SocketException catch (e) {
         sw.stop();
-        dev.log(
-          '✗ NO INTERNET [$tries/$_kMaxRetries] ${sw.elapsedMilliseconds}ms\n   $e',
-          name: _kTag,
-        );
+        print('✗ NO INTERNET [$tries/$_kMaxRetries] ${sw.elapsedMilliseconds}ms\n   $e');
         if (tries >= _kMaxRetries) {
           throw const NetworkException('No internet connection. Please check your network.');
         }
         await _backoff(tries);
       } on TimeoutException catch (e) {
         sw.stop();
-        dev.log(
-          '✗ TIMEOUT [$tries/$_kMaxRetries] ${sw.elapsedMilliseconds}ms\n   $e',
-          name: _kTag,
-        );
+        print('✗ TIMEOUT [$tries/$_kMaxRetries] ${sw.elapsedMilliseconds}ms\n   $e');
         if (tries >= _kMaxRetries) {
           throw const NetworkException('Request timed out. Please try again.');
         }
         await _backoff(tries);
       } on HandshakeException catch (e) {
         sw.stop();
-        dev.log('✗ SSL/TLS ${sw.elapsedMilliseconds}ms\n   $e', name: _kTag);
+        print('✗ SSL/TLS ${sw.elapsedMilliseconds}ms\n   $e');
         throw NetworkException('Secure connection failed: ${e.message}');
       }
     }

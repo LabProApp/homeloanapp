@@ -370,7 +370,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       id: widget.propertyToEdit?.id,
       title: _titleCtrl.text.trim(),
       description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
-      price: _isRent ? null : price,
+      price: price,
       monthlyRent: _isRent ? price : null,
       securityDeposit: _isRent ? MoneyInputFormatter.parse(_depositCtrl.text) : null,
       superArea: double.tryParse(_superAreaCtrl.text.trim()),
