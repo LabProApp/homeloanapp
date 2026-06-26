@@ -43,6 +43,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   // -1 = Home services page (center FAB)
   // 0 = Buy/Sell, 1 = Rent/PG, 2 = Loans, 3 = Docs
   int _selectedIndex = -1;
@@ -281,6 +283,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.listingbackground,
 
       // ── AppBar ────────────────────────────────────────────────────────────
@@ -439,7 +442,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
 
       // ── Body ──────────────────────────────────────────────────────────────
-      body: _currentPage ?? _buildHome(),
+      body: DrawerScope(
+        openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+        child: _currentPage ?? _buildHome(),
+      ),
 
       // ── Center raised Home FAB ────────────────────────────────────────────
       floatingActionButton: FloatingActionButton(

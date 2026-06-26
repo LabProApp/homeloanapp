@@ -836,30 +836,35 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   }
 
   Widget _buildEmptyState() {
+    final isMyPostings = widget.postedbyuserId != null;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-        const Padding(
-          padding: EdgeInsets.all(32),
+        Padding(
+          padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.home_work_outlined,
-                  size: 72, color: AppColors.textMuted),
-              SizedBox(height: 16),
+              Icon(
+                isMyPostings ? Icons.post_add_outlined : Icons.home_work_outlined,
+                size: 72, color: AppColors.textMuted,
+              ),
+              const SizedBox(height: 16),
               Text(
-                "No properties found",
-                style: TextStyle(
+                isMyPostings ? "No properties posted yet" : "No properties found",
+                style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
-                "Try adjusting your filters or search term.",
+                isMyPostings
+                    ? "Your posted properties will appear here.\nTap + to add a new property."
+                    : "Try adjusting your filters or search term.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary),
+                style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
               ),
             ],
           ),

@@ -1,6 +1,25 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
+/// Provides a callback that any descendant [GradientAppBar] can call to open
+/// the dashboard's drawer. The dashboard wraps its body with this widget so
+/// all nested screens automatically get a hamburger leading icon.
+class DrawerScope extends InheritedWidget {
+  final VoidCallback openDrawer;
+
+  const DrawerScope({
+    super.key,
+    required this.openDrawer,
+    required super.child,
+  });
+
+  static DrawerScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<DrawerScope>();
+
+  @override
+  bool updateShouldNotify(DrawerScope old) => false;
+}
+
 /// Standardised search input used across all listing screens.
 ///
 /// Height: 46 px | radius: 14 px | white bg with subtle shadow.
@@ -268,15 +287,31 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    // If no explicit leading is set, check whether we're inside the dashboard
+    // shell (DrawerScope present). If so, show a hamburger that opens the drawer.
+    Widget? effectiveLeading = leading;
+    bool effectiveImplyLeading = automaticallyImplyLeading;
+    if (effectiveLeading == null) {
+      final scope = DrawerScope.maybeOf(context);
+      if (scope != null) {
+        effectiveLeading = IconButton(
+          icon: const Icon(Icons.menu_rounded, color: Colors.white),
+          tooltip: 'Menu',
+          onPressed: scope.openDrawer,
+        );
+        effectiveImplyLeading = false;
+      }
+    }
+
     return DecoratedBox(
       decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
       child: AppBar(
         title: titleWidget ?? (title != null ? Text(title!) : null),
         actions: actions,
-        leading: leading,
+        leading: effectiveLeading,
         bottom: bottom,
         centerTitle: centerTitle,
-        automaticallyImplyLeading: automaticallyImplyLeading,
+        automaticallyImplyLeading: effectiveImplyLeading,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,

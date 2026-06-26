@@ -115,11 +115,38 @@ class _FavouritePropertyListingScreenState
     if (_properties.isEmpty) {
       final isFiltered = _searchController.text.trim().isNotEmpty;
       return Center(
-        child: Text(
-          isFiltered
-              ? "No favourites match your search"
-              : "No favourite properties yet",
-          style: const TextStyle(fontSize: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80, height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.favorite_border_rounded,
+                    size: 40, color: AppColors.primary),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isFiltered ? 'No favourites match your search' : 'No favourites yet',
+                style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isFiltered
+                    ? 'Try a different search term'
+                    : 'Tap the heart icon on any property to save it here',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: AppColors.textMuted, height: 1.5),
+              ),
+            ],
+          ),
         ),
       );
     }
