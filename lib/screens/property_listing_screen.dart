@@ -788,6 +788,7 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
                             parent: AlwaysScrollableScrollPhysics()),
                         cacheExtent: 800,
                         addAutomaticKeepAlives: false,
+                        padding: EdgeInsets.only(bottom: 80 + MediaQuery.viewPaddingOf(context).bottom),
                         itemCount: _properties.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (_, i) {
                           if (i == _properties.length) {

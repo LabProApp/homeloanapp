@@ -24,6 +24,7 @@ class PropertyCard extends StatefulWidget {
   final bool showWhatsAppIcon;
   final int? userId;
   final bool showAmenitiesExpandable;
+  final bool initialIsFavourite;
 
   const PropertyCard({
     super.key,
@@ -31,6 +32,7 @@ class PropertyCard extends StatefulWidget {
     this.userId,
     this.showWhatsAppIcon = true,
     this.showAmenitiesExpandable = true,
+    this.initialIsFavourite = false,
   });
 
   @override
@@ -51,6 +53,7 @@ class _PropertyCardState extends State<PropertyCard> {
   @override
   void initState() {
     super.initState();
+    _isFavourite = widget.initialIsFavourite;
     WidgetsBinding.instance.addPostFrameCallback((_) => _startSlideshow());
   }
 

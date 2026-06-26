@@ -239,7 +239,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
       physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       cacheExtent: 800,
       addAutomaticKeepAlives: false,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 80 + MediaQuery.viewPaddingOf(context).bottom),
       itemCount: _filteredProviders.length + (_isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (index >= _filteredProviders.length) {

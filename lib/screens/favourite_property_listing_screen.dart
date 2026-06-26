@@ -154,7 +154,7 @@ class _FavouritePropertyListingScreenState
     return RefreshIndicator(
       onRefresh: _loadProperties,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: EdgeInsets.fromLTRB(8, 4, 8, 80 + MediaQuery.viewPaddingOf(context).bottom),
         itemCount: _properties.length,
         itemBuilder: (context, index) {
           final property = _properties[index];
@@ -213,6 +213,7 @@ class _FavouritePropertyListingScreenState
               child: PropertyCard(
                 property: property,
                 userId: widget.userId,
+                initialIsFavourite: true,
               ),
             ),
           );

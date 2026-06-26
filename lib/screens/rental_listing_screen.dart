@@ -812,8 +812,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
                             parent: AlwaysScrollableScrollPhysics()),
                         cacheExtent: 800,
                         addAutomaticKeepAlives: false,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                        padding: EdgeInsets.fromLTRB(8, 4, 8, 80 + MediaQuery.viewPaddingOf(context).bottom),
                         itemCount: _properties.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == _properties.length) {

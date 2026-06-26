@@ -63,7 +63,7 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
       'leadSource': 'APP',
     },
     {
-      'id': -1,
+      'id': 0,
       'clientName': 'Priya Mehta',
       'mobile': '9123456780',
       'email': 'priya.mehta@email.com',
@@ -193,7 +193,7 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
     return RefreshIndicator(
       onRefresh: _loadLeads,
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 80 + MediaQuery.viewPaddingOf(context).bottom),
         itemCount: _filteredLeads.length,
         itemBuilder: (_, i) => LeadCard(
           lead: _filteredLeads[i],
@@ -346,6 +346,11 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
                       ? null
                       : () async {
                           setSheet(() => saving = true);
+                          if ((lead['id'] as int) <= 0) {
+                            setSheet(() => saving = false);
+                            if (ctx.mounted) Navigator.pop(ctx);
+                            return;
+                          }
                           try {
                             final updated = await LeadApiService.updateLeadStatus(
                               leadId: lead['id'] as int,
@@ -519,6 +524,11 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
                       ? null
                       : () async {
                           setSheet(() => saving = true);
+                          if ((lead['id'] as int) <= 0) {
+                            setSheet(() => saving = false);
+                            if (ctx.mounted) Navigator.pop(ctx);
+                            return;
+                          }
                           try {
                             final updated = await LeadApiService.scheduleFollowUp(
                               leadId: lead['id'] as int,
@@ -594,15 +604,13 @@ class _BrokerLeadsScreenState extends State<BrokerLeadsScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (!_loading && _leads.isNotEmpty) _buildStats(),
-            _buildSearchBar(),
-            _buildStatusChips(),
-            Expanded(child: _buildList()),
-          ],
-        ),
+      body: Column(
+        children: [
+          if (!_loading && _leads.isNotEmpty) _buildStats(),
+          _buildSearchBar(),
+          _buildStatusChips(),
+          Expanded(child: _buildList()),
+        ],
       ),
     );
   }

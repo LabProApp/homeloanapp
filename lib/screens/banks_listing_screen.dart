@@ -229,7 +229,7 @@ class _BankPageState extends State<BankPage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 80),
+      padding: EdgeInsets.fromLTRB(8, 12, 8, 80 + MediaQuery.viewPaddingOf(context).bottom),
       physics:
           const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       itemCount: _filteredBanks.length,

@@ -281,6 +281,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
+      extendBody: true,
       backgroundColor: AppColors.listingbackground,
 
       // ── AppBar ────────────────────────────────────────────────────────────
@@ -341,11 +342,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                     const Divider(height: 20),
                     _sectionLabel('MY ACCOUNT'),
-                    _drawerActionItem(
-                      Icons.person_outline_rounded,
-                      'My Profile',
-                      onTap: () => _setPage(ProfileScreen(userId: widget.userId)),
-                    ),
                     _drawerActionItem(
                       Icons.workspace_premium_outlined,
                       'Subscription & Plans',
