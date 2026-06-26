@@ -711,9 +711,6 @@ class _RentalPropertyDetailScreenState
           if (ownerName.isNotEmpty) _DetailRow('Name', ownerName),
           if (ownerEmail.isNotEmpty) _DetailRow('Email', ownerEmail),
           if (ownerMobile.isNotEmpty) _DetailRow('Phone', ownerMobile),
-          if (widget.property.verified != null)
-            _DetailRow(
-                'Verified', widget.property.verified! ? 'Yes' : 'No'),
           if (widget.property.postDate != null)
             _DetailRow(
               'Posted On',

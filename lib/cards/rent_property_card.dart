@@ -247,9 +247,9 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.18),
-                      Colors.black.withOpacity(0.62),
-                      Colors.black.withOpacity(0.88),
+                      Colors.white.withOpacity(0.55),
+                      Colors.white.withOpacity(0.90),
+                      Colors.white,
                     ],
                     stops: const [0.0, 0.18, 0.55, 1.0],
                   ),
@@ -266,11 +266,8 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                       style: const TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                         height: 1.2,
-                        shadows: [
-                          Shadow(offset: Offset(0, 1), blurRadius: 6, color: Colors.black54),
-                        ],
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -281,7 +278,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                     /// LOCATION
                     Text(
                       "${widget.property.location ?? ""}, ${widget.property.city ?? ""}",
-                      style: const TextStyle(fontSize: 12, color: AppColors.white70),
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
 
                     const SizedBox(height: 6),
@@ -310,8 +307,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.goldAccent,
-                            shadows: [Shadow(offset: Offset(0, 1), blurRadius: 4, color: Colors.black45)],
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
@@ -325,7 +321,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
                     ],
 
                     const SizedBox(height: 10),
-                    Container(height: 0.5, color: const Color(0x55FFFFFF)),
+                    Container(height: 0.5, color: AppColors.border),
                     const SizedBox(height: 9),
                     _actionRow(),
                   ],
@@ -402,19 +398,19 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
+          color: AppColors.primary.withOpacity(0.08),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.35)),
+          border: Border.all(color: AppColors.primary.withOpacity(0.35)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: Colors.white),
+            Icon(icon, size: 14, color: AppColors.primary),
             const SizedBox(width: 5),
             Text(
               label,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.primary,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -476,11 +472,11 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
             padding: const EdgeInsets.only(right: 6),
             child: Row(
               children: [
-                Icon(a.icon, size: 12, color: AppColors.white70),
+                Icon(a.icon, size: 12, color: AppColors.textMuted),
                 const SizedBox(width: 3),
                 Text(a.label,
                     style: const TextStyle(
-                        fontSize: 10, color: AppColors.white70)),
+                        fontSize: 10, color: AppColors.textSecondary)),
               ],
             ),
           );
@@ -488,7 +484,7 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
         if (amenities.length > 4)
           Text("+${amenities.length - 4} more",
               style: const TextStyle(
-                  fontSize: 10, color: AppColors.white70)),
+                  fontSize: 10, color: AppColors.textMuted)),
       ],
     );
   }
@@ -498,11 +494,11 @@ class _RentPropertyCardState extends State<RentPropertyCard> {
       padding: const EdgeInsets.only(right: 8),
       child: Row(
         children: [
-          Icon(icon, size: 12, color: AppColors.white70),
+          Icon(icon, size: 12, color: AppColors.textMuted),
           const SizedBox(width: 3),
           Text(text,
               style:
-                  const TextStyle(fontSize: 11, color: Colors.white)),
+                  const TextStyle(fontSize: 11, color: AppColors.textPrimary)),
         ],
       ),
     );

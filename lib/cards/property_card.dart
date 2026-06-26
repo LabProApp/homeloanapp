@@ -239,9 +239,9 @@ class _PropertyCardState extends State<PropertyCard> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.18),
-                      Colors.black.withOpacity(0.62),
-                      Colors.black.withOpacity(0.88),
+                      Colors.white.withOpacity(0.55),
+                      Colors.white.withOpacity(0.90),
+                      Colors.white,
                     ],
                     stops: const [0.0, 0.18, 0.55, 1.0],
                   ),
@@ -257,12 +257,9 @@ class _PropertyCardState extends State<PropertyCard> {
                       property.title ?? "-",
                       style: const TextStyle(
                         fontSize: 19,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                         height: 1.2,
-                        shadows: [
-                          Shadow(offset: Offset(0, 1), blurRadius: 6, color: Colors.black54),
-                        ],
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -273,7 +270,7 @@ class _PropertyCardState extends State<PropertyCard> {
                     /// LOCATION
                     Text(
                       property.location ?? "-",
-                      style: const TextStyle(color: AppColors.white70, fontSize: 12),
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                     ),
 
                     const SizedBox(height: 5),
@@ -284,7 +281,7 @@ class _PropertyCardState extends State<PropertyCard> {
                         Expanded(
                           child: Text(
                             "${property.city ?? "-"} | ${property.state ?? "-"}",
-                            style: const TextStyle(color: AppColors.white60, fontSize: 11),
+                            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
                           ),
                         ),
                         Text(
@@ -292,10 +289,9 @@ class _PropertyCardState extends State<PropertyCard> {
                               ? "₹ ${_fmt.format(property.price)}"
                               : "-",
                           style: const TextStyle(
-                            color: AppColors.goldAccent,
+                            color: AppColors.primary,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            shadows: [Shadow(offset: Offset(0, 1), blurRadius: 4, color: Colors.black45)],
                           ),
                         ),
                       ],
@@ -322,7 +318,7 @@ class _PropertyCardState extends State<PropertyCard> {
                     ],
 
                     const SizedBox(height: 10),
-                    Container(height: 0.5, color: const Color(0x55FFFFFF)),
+                    Container(height: 0.5, color: AppColors.border),
                     const SizedBox(height: 9),
                     _actionRow(),
                   ],
@@ -399,19 +395,19 @@ class _PropertyCardState extends State<PropertyCard> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
+          color: AppColors.primary.withOpacity(0.08),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.35)),
+          border: Border.all(color: AppColors.primary.withOpacity(0.35)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: Colors.white),
+            Icon(icon, size: 14, color: AppColors.primary),
             const SizedBox(width: 5),
             Text(
               label,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.primary,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -473,11 +469,11 @@ class _PropertyCardState extends State<PropertyCard> {
             padding: const EdgeInsets.only(right: 6),
             child: Row(
               children: [
-                Icon(a.icon, size: 12, color: AppColors.white70),
+                Icon(a.icon, size: 12, color: AppColors.textMuted),
                 const SizedBox(width: 3),
                 Text(a.label,
                     style: const TextStyle(
-                        fontSize: 10, color: AppColors.white70)),
+                        fontSize: 10, color: AppColors.textSecondary)),
               ],
             ),
           );
@@ -485,7 +481,7 @@ class _PropertyCardState extends State<PropertyCard> {
         if (amenities.length > 4)
           Text("+${amenities.length - 4} more",
               style: const TextStyle(
-                  fontSize: 10, color: AppColors.white70)),
+                  fontSize: 10, color: AppColors.textMuted)),
       ],
     );
   }
@@ -493,13 +489,13 @@ class _PropertyCardState extends State<PropertyCard> {
   Widget _feature(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 12, color: AppColors.white70),
+        Icon(icon, size: 12, color: AppColors.textMuted),
         const SizedBox(width: 4),
         Text(
           text,
           style: const TextStyle(
               fontSize: 10,
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w500),
         ),
       ],

@@ -151,7 +151,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
         content: Text('$featureLabel requires a higher plan to unlock.'),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
         backgroundColor: AppColors.slate,
         action: SnackBarAction(
           label: 'View Plans',
