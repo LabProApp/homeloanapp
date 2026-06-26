@@ -1,12 +1,7 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:video_compress/video_compress.dart';
-import 'package:image/image.dart' as img;
 import 'package:video_player/video_player.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 import '../models/property_model.dart';
 import '../theme/app_colors.dart';
@@ -15,28 +10,6 @@ import '../commons/common_widget.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/property_poster_screen.dart';
 
-// Top-level function so compute() can spawn it in a separate isolate.
-// Receives raw bytes + watermark text; returns compressed+watermarked JPEG bytes.
-Uint8List _processImageInIsolate(Map<String, dynamic> args) {
-  final bytes   = args['bytes']   as Uint8List;
-  final appName = args['appName'] as String;
-
-  final original = img.decodeImage(bytes);
-  if (original == null) return bytes;
-
-  final resized = original.width > 1920
-      ? img.copyResize(original, width: 1920)
-      : original;
-
-  img.drawString(
-    resized, appName, font: img.arial24,
-    x: resized.width - (appName.length * 14),
-    y: resized.height - 40,
-    color: img.ColorUint8.rgb(255, 255, 255),
-  );
-
-  return Uint8List.fromList(img.encodeJpg(resized, quality: 90));
-}
 
 class PropertyMediaScreen extends StatefulWidget {
   final int propertyId;
@@ -59,10 +32,8 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
 
   bool _uploading = false;
   bool _picking   = false;
-  int  _pickCurrent = 0;
-  int  _pickTotal   = 0;
-
-  String _appName = 'App';
+  int  _uploadCurrent = 0;
+  int  _uploadTotal   = 0;
 
   final List<_MediaItem> _mediaList = [];
 
@@ -78,12 +49,6 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAppName();
-  }
-
-  Future<void> _loadAppName() async {
-    final info = await PackageInfo.fromPlatform();
-    if (mounted) setState(() => _appName = info.appName);
   }
 
   // ── Pick sheet ─────────────────────────────────────────────────────────────
@@ -148,7 +113,7 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
   Future<void> _pickImages() async {
     final List<XFile> files;
     try {
-      files = await _picker.pickMultiImage(imageQuality: 95);
+      files = await _picker.pickMultiImage();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -159,34 +124,24 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
     }
     if (files.isEmpty) return;
 
-    final valid    = <XFile>[];
-    int   skipped  = 0;
+    setState(() => _picking = true);
+    int skipped = 0;
     for (final f in files) {
-      if (await f.length() > _maxImageBytes) { skipped++; } else { valid.add(f); }
+      if (await f.length() > _maxImageBytes) {
+        skipped++;
+      } else {
+        _mediaList.add(_MediaItem(file: File(f.path), caption: _captions.first, isVideo: false));
+      }
     }
     if (skipped > 0 && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('$skipped photo${skipped > 1 ? 's' : ''} skipped (over 30 MB)'),
       ));
     }
-    if (valid.isEmpty) return;
-
-    setState(() { _picking = true; _pickCurrent = 0; _pickTotal = valid.length; });
-    for (int i = 0; i < valid.length; i++) {
-      final bytes     = await File(valid[i].path).readAsBytes();
-      final processed = await compute(_processImageInIsolate, {
-        'bytes':   bytes,
-        'appName': _appName,
-      });
-      final outFile = File('${valid[i].path}_processed.jpg');
-      await outFile.writeAsBytes(processed);
-      _mediaList.add(_MediaItem(file: outFile, caption: _captions.first, isVideo: false));
-      setState(() => _pickCurrent = i + 1);
-    }
     setState(() => _picking = false);
   }
 
-  // ── Video pick + process ───────────────────────────────────────────────────
+  // ── Video pick ─────────────────────────────────────────────────────────────
   Future<void> _pickVideo() async {
     final XFile? file;
     try {
@@ -208,18 +163,9 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
       }
       return;
     }
-    setState(() { _picking = true; _pickCurrent = 0; _pickTotal = 1; });
-    final compressed = await _compressVideo(File(file.path));
-    _mediaList.add(_MediaItem(file: compressed, caption: _captions.first, isVideo: true));
+    setState(() => _picking = true);
+    _mediaList.add(_MediaItem(file: File(file.path), caption: _captions.first, isVideo: true));
     setState(() => _picking = false);
-  }
-
-  Future<File> _compressVideo(File file) async {
-    final info = await VideoCompress.compressVideo(
-        file.path, quality: VideoQuality.MediumQuality);
-    if (info == null || info.path == null) return file;
-    await VideoCompress.deleteAllCache();
-    return File(info.path!);
   }
 
   // ── Upload ─────────────────────────────────────────────────────────────────
@@ -229,17 +175,20 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
           const SnackBar(content: Text('Please add at least one photo or video')));
       return;
     }
-    setState(() => _uploading = true);
+    setState(() {
+      _uploading = true;
+      _uploadCurrent = 0;
+      _uploadTotal = _mediaList.length;
+    });
     try {
-      await DocumentApiService.uploadDocuments(
-        objectType: 'PROPERTY',
-        objectId:    widget.propertyId,
-        files:    _mediaList.map((e) => e.file).toList(),
-        captions: _mediaList.map((e) => e.caption).toList(),
-      );
-      // Clean up temp compressed files after successful upload
-      for (final item in _mediaList) {
-        try { await item.file.delete(); } catch (_) {}
+      for (int i = 0; i < _mediaList.length; i++) {
+        setState(() => _uploadCurrent = i + 1);
+        await DocumentApiService.uploadSingleDocument(
+          objectType: 'PROPERTY',
+          objectId: widget.propertyId,
+          file: _mediaList[i].file,
+          caption: _mediaList[i].caption,
+        );
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -419,35 +368,32 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
     );
   }
 
-  // ── Processing state ───────────────────────────────────────────────────────
+  // ── Picking state ──────────────────────────────────────────────────────────
   Widget _buildProcessingState() {
-    return Center(
+    return const Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
               width: 64, height: 64,
               child: CircularProgressIndicator(
-                value: _pickTotal > 0 ? _pickCurrent / _pickTotal : null,
                 strokeWidth: 5,
                 backgroundColor: AppColors.border,
                 color: AppColors.primary,
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Text(
-              _pickTotal > 1
-                  ? 'Processing $_pickCurrent of $_pickTotal...'
-                  : 'Processing media...',
-              style: const TextStyle(
+              'Preparing media...',
+              style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary),
             ),
-            const SizedBox(height: 6),
-            const Text('Compressing & watermarking',
+            SizedBox(height: 6),
+            Text('Adding to your listing',
                 style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
           ],
         ),
@@ -629,16 +575,28 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
             if (_uploading) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text('Uploading photos...',
-                      style: TextStyle(
-                          fontSize: 12, color: AppColors.textMuted)),
+                children: [
+                  Text(
+                    _uploadTotal > 0
+                        ? 'Uploading $_uploadCurrent of $_uploadTotal...'
+                        : 'Uploading...',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textMuted),
+                  ),
+                  Text(
+                    '$_uploadTotal file${_uploadTotal != 1 ? 's' : ''}',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textMuted),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
-                child: const LinearProgressIndicator(minHeight: 4),
+                child: LinearProgressIndicator(
+                  value: _uploadTotal > 0 ? _uploadCurrent / _uploadTotal : null,
+                  minHeight: 4,
+                ),
               ),
               const SizedBox(height: 10),
             ],
