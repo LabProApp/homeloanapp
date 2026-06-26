@@ -1740,7 +1740,7 @@ class _SplitPoster extends StatelessWidget {
 
           const Spacer(),
 
-          Container(height: 1, color: Colors.white15),
+          Container(height: 1, color: AppColors.white15),
           const SizedBox(height: 14),
 
           Text('PRICE',
