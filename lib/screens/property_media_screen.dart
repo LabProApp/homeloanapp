@@ -8,10 +8,12 @@ import 'package:image/image.dart' as img;
 import 'package:video_player/video_player.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../models/property_model.dart';
 import '../theme/app_colors.dart';
 import '../services/document_service.dart';
 import '../commons/common_widget.dart';
 import '../screens/dashboard_screen.dart';
+import '../screens/property_poster_screen.dart';
 
 // Top-level function so compute() can spawn it in a separate isolate.
 // Receives raw bytes + watermark text; returns compressed+watermarked JPEG bytes.
@@ -39,11 +41,13 @@ Uint8List _processImageInIsolate(Map<String, dynamic> args) {
 class PropertyMediaScreen extends StatefulWidget {
   final int propertyId;
   final int userId;
+  final PropertyModel? property;
 
   const PropertyMediaScreen({
     super.key,
     required this.propertyId,
     required this.userId,
+    this.property,
   });
 
   @override
@@ -668,16 +672,41 @@ class _PropertyMediaScreenState extends State<PropertyMediaScreen> {
                 ),
               ],
             ),
-            if (hasMedia) ...[
+            if (hasMedia || widget.property != null) ...[
               const SizedBox(height: 6),
-              TextButton(
-                onPressed: _uploading ? null : _goHome,
-                style: TextButton.styleFrom(
-                    minimumSize: const Size(0, 32),
-                    padding: EdgeInsets.zero),
-                child: const Text('Skip photos for now',
-                    style: TextStyle(
-                        fontSize: 12, color: AppColors.textMuted)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (hasMedia)
+                    TextButton(
+                      onPressed: _uploading ? null : _goHome,
+                      style: TextButton.styleFrom(
+                          minimumSize: const Size(0, 32),
+                          padding: EdgeInsets.zero),
+                      child: const Text('Skip photos for now',
+                          style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  if (widget.property != null)
+                    TextButton.icon(
+                      onPressed: _uploading
+                          ? null
+                          : () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PropertyPosterScreen(property: widget.property!),
+                                ),
+                              ),
+                      icon: const Icon(Icons.auto_awesome_outlined, size: 15),
+                      label: const Text('Generate Poster',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          minimumSize: const Size(0, 32),
+                          padding: const EdgeInsets.symmetric(horizontal: 4)),
+                    ),
+                ],
               ),
             ],
           ],

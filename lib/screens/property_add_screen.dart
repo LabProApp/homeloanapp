@@ -413,7 +413,11 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PropertyMediaScreen(propertyId: id, userId: widget.userId),
+          builder: (_) => PropertyMediaScreen(
+            propertyId: id,
+            userId: widget.userId,
+            property: property,
+          ),
         ),
       );
     } catch (e) {
