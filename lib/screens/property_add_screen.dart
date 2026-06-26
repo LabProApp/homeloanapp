@@ -2,6 +2,7 @@
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/property_model.dart';
+import '../network/api_client.dart';
 import '../services/property_api_service.dart';
 import '../services/state_api_service.dart';
 import '../theme/app_colors.dart';
@@ -422,12 +423,10 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      final isNetwork = e.toString().contains('SocketException') ||
-          e.toString().contains('TimeoutException') ||
-          e.toString().contains('Connection refused');
-      _showError(isNetwork
-          ? 'Network error. Please check your connection and try again.'
-          : 'Could not save the property. Please try again.');
+      final msg = e is NetworkException
+          ? e.message
+          : e.toString().replaceFirst('Exception: ', '');
+      _showError(msg);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

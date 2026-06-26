@@ -6,8 +6,9 @@ import 'package:http/http.dart' as http;
 
 const _kTimeout = Duration(seconds: 15);
 const _kMaxRetries = 3;
-const _kTag = 'ApiClient';
-const _kBodyPreviewLimit = 600;
+const _kTag = 'API';
+const _kBodyPreviewLimit = 4000;
+const _kSep = '─────────────────────────────────────────────────────────────────';
 
 /// Centralized HTTP wrapper — 15 s timeout, up to 3 retries on transient errors.
 ///
@@ -101,7 +102,10 @@ class ApiClient {
     }
     final fileNames = request.files.map((f) => f.filename ?? f.field).join(', ');
     dev.log(
-      '→ ${request.method} ${request.url}  [multipart | files: $fileNames]',
+      '$_kSep\n'
+      '→ ${request.method} ${request.url}\n'
+      '   auth   : ${_token != null ? "Bearer [present]" : "none"}\n'
+      '   files  : $fileNames',
       name: _kTag,
     );
     final sw = Stopwatch()..start();
@@ -109,17 +113,18 @@ class ApiClient {
       final response = await request.send().timeout(_kTimeout);
       sw.stop();
       dev.log(
-        '← ${request.method} ${request.url}  [${response.statusCode}] ${sw.elapsedMilliseconds}ms',
+        '← ${request.method} ${response.statusCode}  ${sw.elapsedMilliseconds}ms\n'
+        '   url    : ${request.url}',
         name: _kTag,
       );
       return response;
     } on SocketException catch (e) {
       sw.stop();
-      dev.log('✗ No internet (${sw.elapsedMilliseconds}ms): $e', name: _kTag);
+      dev.log('✗ NO INTERNET (${sw.elapsedMilliseconds}ms): $e', name: _kTag);
       throw const NetworkException('No internet connection');
     } on TimeoutException catch (e) {
       sw.stop();
-      dev.log('✗ Upload timed out (${sw.elapsedMilliseconds}ms): $e', name: _kTag);
+      dev.log('✗ UPLOAD TIMEOUT (${sw.elapsedMilliseconds}ms): $e', name: _kTag);
       throw const NetworkException('Upload timed out. Please try again.');
     }
   }
@@ -132,12 +137,15 @@ class ApiClient {
     Future<http.Response> Function() attempt, {
     Object? requestBody,
   }) async {
-    final bodySnippet = requestBody != null
-        ? _truncate(requestBody.toString(), 300)
-        : null;
-
+    // ── Request ───────────────────────────────────────────────────────────────
+    final bodyLine = requestBody != null
+        ? '\n   body   : ${_truncate(requestBody.toString(), _kBodyPreviewLimit)}'
+        : '';
     dev.log(
-      '→ $method $uri${bodySnippet != null ? '\n  body: $bodySnippet' : ''}',
+      '$_kSep\n'
+      '→ $method $uri\n'
+      '   auth   : ${_token != null ? "Bearer [present]" : "none"}'
+      '$bodyLine',
       name: _kTag,
     );
 
@@ -151,29 +159,23 @@ class ApiClient {
         final response = await attempt().timeout(_kTimeout);
         sw.stop();
 
-        final preview = _truncate(response.body, _kBodyPreviewLimit);
+        // ── Response ──────────────────────────────────────────────────────────
         dev.log(
-          '← $method $uri  [${response.statusCode}] ${sw.elapsedMilliseconds}ms\n'
-          '  body: $preview',
+          '← $method ${response.statusCode}  ${sw.elapsedMilliseconds}ms\n'
+          '   url    : $uri\n'
+          '   body   : ${_truncate(response.body, _kBodyPreviewLimit)}',
           name: _kTag,
         );
 
         if (response.statusCode == 503 && tries < _kMaxRetries) {
-          dev.log(
-            '⚠ 503 — retry $tries/$_kMaxRetries after backoff',
-            name: _kTag,
-          );
+          dev.log('⚠ 503 — retry $tries/$_kMaxRetries after backoff', name: _kTag);
           await _backoff(tries);
           continue;
         }
 
-        // Token expired or revoked — only fire when a token was actually sent.
         if ((response.statusCode == 401 || response.statusCode == 403) &&
             _token != null) {
-          dev.log(
-            '⚠ ${response.statusCode} Unauthorized — clearing session',
-            name: _kTag,
-          );
+          dev.log('⚠ ${response.statusCode} Unauthorized — clearing session', name: _kTag);
           onUnauthorized?.call();
         }
 
@@ -181,7 +183,7 @@ class ApiClient {
       } on SocketException catch (e) {
         sw.stop();
         dev.log(
-          '✗ No internet [$tries/$_kMaxRetries] ${sw.elapsedMilliseconds}ms: $e',
+          '✗ NO INTERNET [$tries/$_kMaxRetries] ${sw.elapsedMilliseconds}ms\n   $e',
           name: _kTag,
         );
         if (tries >= _kMaxRetries) {
@@ -191,7 +193,7 @@ class ApiClient {
       } on TimeoutException catch (e) {
         sw.stop();
         dev.log(
-          '✗ Timeout [$tries/$_kMaxRetries] ${sw.elapsedMilliseconds}ms: $e',
+          '✗ TIMEOUT [$tries/$_kMaxRetries] ${sw.elapsedMilliseconds}ms\n   $e',
           name: _kTag,
         );
         if (tries >= _kMaxRetries) {
@@ -200,7 +202,7 @@ class ApiClient {
         await _backoff(tries);
       } on HandshakeException catch (e) {
         sw.stop();
-        dev.log('✗ SSL/TLS error ${sw.elapsedMilliseconds}ms: $e', name: _kTag);
+        dev.log('✗ SSL/TLS ${sw.elapsedMilliseconds}ms\n   $e', name: _kTag);
         throw NetworkException('Secure connection failed: ${e.message}');
       }
     }

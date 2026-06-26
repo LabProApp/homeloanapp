@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer' as developer;
 
 import '../models/property_model.dart';
 import '../network/api_client.dart';
@@ -78,8 +77,6 @@ class PropertyApiService {
     final uri = Uri.parse(ApiUrls.propertySearch)
         .replace(queryParameters: params.isEmpty ? null : params);
 
-    developer.log('Fetch properties: $uri');
-
     final response = await ApiClient.get(uri);
 
     if (response.statusCode == 200) {
@@ -94,8 +91,6 @@ class PropertyApiService {
 
   static Future<int> addProperty(PropertyModel property) async {
     final uri = Uri.parse(ApiUrls.post_property);
-
-    developer.log('Add property: $uri');
 
     final response = await ApiClient.post(
       uri,
@@ -131,7 +126,6 @@ class PropertyApiService {
 
   static Future<bool> deleteProperty(int id) async {
     final uri = Uri.parse('${ApiUrls.delete_property}/$id');
-    developer.log('Delete property: $uri');
     final response = await ApiClient.delete(uri);
     if (response.statusCode == 200 || response.statusCode == 204) return true;
     throw Exception('Delete property failed (${response.statusCode}): ${response.body}');
@@ -141,8 +135,6 @@ class PropertyApiService {
     if (property.id == null) throw Exception('Property ID required for update');
 
     final uri = Uri.parse('${ApiUrls.update_property}/${property.id}');
-
-    developer.log('Update property: $uri');
 
     final response = await ApiClient.put(
       uri,
@@ -155,8 +147,6 @@ class PropertyApiService {
 
   Future<List<PropertyModel>> fetchFavouriteProperties(int userId) async {
     final uri = Uri.parse('${ApiUrls.baseUrl}/user/$userId/favourites');
-
-    developer.log('Fetch favourites: $uri');
 
     final response = await ApiClient.get(uri);
 
@@ -178,8 +168,6 @@ class PropertyApiService {
         .replaceFirst('{userId}', userId.toString())
         .replaceFirst('{propertyId}', propertyId.toString());
 
-    developer.log('Toggle favourite: $url');
-
     final response = await ApiClient.post(Uri.parse(url));
 
     if (response.statusCode == 200 || response.statusCode == 204) return true;
@@ -188,7 +176,6 @@ class PropertyApiService {
 
   static Future<PropertyModel?> fetchById(int id) async {
     final uri = Uri.parse(ApiUrls.propertyById(id));
-    developer.log('Fetch property by id: $uri');
     try {
       final response = await ApiClient.get(uri);
       if (response.statusCode == 200) {

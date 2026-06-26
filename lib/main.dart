@@ -25,6 +25,9 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Suppress all Flutter debugPrint noise — only dev.log API calls remain visible.
+  debugPrint = (_, {wrapWidth}) {};
+
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     developer.log(
