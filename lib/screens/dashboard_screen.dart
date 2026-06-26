@@ -140,10 +140,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _openSubscriptionScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-    );
+    _setPage(const SubscriptionScreen());
   }
 
   /// Shows a polite "upgrade your plan" snack with a direct link to the
@@ -287,7 +284,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: AppColors.listingbackground,
 
       // ── AppBar ────────────────────────────────────────────────────────────
-      appBar: _selectedIndex == -1 ? GradientAppBar(
+      appBar: GradientAppBar(
         titleWidget: const Text(
           'KeyBricks',
           style: TextStyle(
@@ -301,11 +298,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => ProfileScreen(userId: widget.userId)),
-              ),
+              onTap: () => _setPage(ProfileScreen(userId: widget.userId)),
               child: CircleAvatar(
                 radius: 17,
                 backgroundColor: Colors.white.withOpacity(0.25),
@@ -320,7 +313,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
-      ) : null,
+      ),
 
       // ── Drawer ────────────────────────────────────────────────────────────
       drawer: Drawer(
@@ -338,11 +331,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       _drawerActionItem(
                         Icons.admin_panel_settings_rounded,
                         'Admin Dashboard',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const AdminDashboardScreen()),
-                        ),
+                        onTap: () => _setPage(const AdminDashboardScreen()),
                         color: AppColors.primary,
                       ),
                     _drawerNavItem(Icons.sell_outlined, 'Buy / Sell', 0),
@@ -355,52 +344,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _drawerActionItem(
                       Icons.person_outline_rounded,
                       'My Profile',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  ProfileScreen(userId: widget.userId)),
-                        );
-                      },
+                      onTap: () => _setPage(ProfileScreen(userId: widget.userId)),
                     ),
                     _drawerActionItem(
                       Icons.workspace_premium_outlined,
                       'Subscription & Plans',
-                      onTap: () {
-                        Navigator.pop(context);
-                        _openSubscriptionScreen();
-                      },
+                      onTap: _openSubscriptionScreen,
                     ),
                     _drawerActionItem(
                       Icons.business_center_rounded,
                       'My Property Postings',
-                      onTap: () {
-                        Navigator.pop(context);
-                        setState(() {
-                          _postedByUserId = widget.userId;
-                          _selectedIndex = 0;
-                          _currentPage = _buildTabPage(0);
-                        });
-                      },
+                      onTap: () => setState(() {
+                        _postedByUserId = widget.userId;
+                        _selectedIndex = 0;
+                        _currentPage = _buildTabPage(0);
+                      }),
                     ),
                     _drawerActionItem(
                       Icons.favorite_rounded,
                       'My Favourite Properties',
-                      onTap: () {
-                        Navigator.pop(context);
-                        _setPage(FavouritePropertyListingScreen(
-                            userId: widget.userId));
-                      },
+                      onTap: () => _setPage(FavouritePropertyListingScreen(userId: widget.userId)),
                     ),
                     _drawerActionItem(
                       Icons.groups_rounded,
                       'Customer Inquiries',
-                      onTap: () {
-                        Navigator.pop(context);
-                        _setPage(BrokerLeadsScreen(brokerId: widget.userId));
-                      },
+                      onTap: () => _setPage(BrokerLeadsScreen(brokerId: widget.userId)),
                     ),
 
                     const Divider(height: 20),
@@ -408,10 +376,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _drawerActionItem(
                       Icons.calculate_outlined,
                       'EMI Calculator',
-                      onTap: () {
-                        Navigator.pop(context);
-                        _setPage(const EmiCalculatorScreen());
-                      },
+                      onTap: () => _setPage(const EmiCalculatorScreen()),
                     ),
                     _drawerActionItem(
                       Icons.receipt_long_outlined,
@@ -539,11 +504,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (_) => ProfileScreen(userId: widget.userId)),
-        );
+        _setPage(ProfileScreen(userId: widget.userId));
       },
       child: SizedBox(
         width: double.infinity,
