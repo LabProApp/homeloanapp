@@ -53,6 +53,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _userEmail = '';
   String _planName = '';
   bool _isAdmin = false;
+  bool _isAgent = false;
   int? _postedByUserId;
   Widget? _currentPage;
 
@@ -72,6 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     HomeAction.rentAgreement: FeatureFlags.documentation,
     HomeAction.saleAgreement: FeatureFlags.documentation,
     HomeAction.myPostings:   FeatureFlags.postProperty,
+    HomeAction.myRentals:    FeatureFlags.postProperty,
     HomeAction.myJourneys:   FeatureFlags.journey,
   };
 
@@ -104,7 +106,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _userName = prefs.getString('userName') ?? 'User';
       _userEmail = prefs.getString('userEmail') ?? '';
-      _isAdmin = (prefs.getString('userRole') ?? '').toUpperCase() == 'ADMIN';
+      final role = (prefs.getString('userRole') ?? '').toUpperCase();
+      _isAdmin = role == 'ADMIN';
+      _isAgent = role == 'AGENT';
       _planName = plan;
       _updateAvailable    = prefs.getBool('updateAvailable') ?? false;
       _latestVersionName  = prefs.getString('latestVersionName') ?? '';
@@ -116,6 +120,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         userId: widget.userId,
         userName: _userName,
         planName: _planName,
+        isAgent: _isAgent,
+        isAdmin: _isAdmin,
         onNavigate: _handleHomeAction,
         isLocked: _isActionLocked,
         onViewPlans: _openSubscriptionScreen,
@@ -172,6 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         HomeAction.rentAgreement: 'Rent Agreement',
         HomeAction.saleAgreement: 'Sale Agreement',
         HomeAction.myPostings:    'My Postings',
+        HomeAction.myRentals:     'My Rental & PG Listings',
         HomeAction.myJourneys:    'My Journeys',
       };
       _showUpgradeSnack(labels[action] ?? 'This feature');
@@ -202,6 +209,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _postedByUserId = widget.userId;
           _selectedIndex = 0;
           _currentPage = _buildTabPage(0);
+        });
+      case HomeAction.myRentals:
+        setState(() {
+          _postedByUserId = widget.userId;
+          _selectedIndex = 1;
+          _currentPage = _buildTabPage(1);
         });
       case HomeAction.myInquiries:
         _setPage(BrokerLeadsScreen(brokerId: widget.userId));
@@ -234,6 +247,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return RentalListingScreen(
           key: const PageStorageKey('rentals'),
           userId: widget.userId,
+          postedbyuserId: _postedByUserId,
         );
       case 2:
         return BankPage(
@@ -335,8 +349,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         onTap: () => _setPage(const AdminDashboardScreen()),
                         color: AppColors.primary,
                       ),
-                    _drawerNavItem(Icons.sell_outlined, 'Buy / Sell', 0),
-                    _drawerNavItem(Icons.apartment_rounded, 'Rent / PG', 1),
+                    if (!_isAgent)
+                      _drawerNavItem(Icons.sell_outlined, 'Buy / Sell', 0),
+                    if (!_isAgent)
+                      _drawerNavItem(Icons.apartment_rounded, 'Rent / PG', 1),
                     _drawerNavItem(Icons.account_balance_wallet_rounded, 'Bank Loans', 2),
                     _drawerNavItem(Icons.assignment_rounded, 'Documentation', 3),
 
@@ -347,25 +363,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       'Subscription & Plans',
                       onTap: _openSubscriptionScreen,
                     ),
-                    _drawerActionItem(
-                      Icons.business_center_rounded,
-                      'My Property Postings',
-                      onTap: () => setState(() {
-                        _postedByUserId = widget.userId;
-                        _selectedIndex = 0;
-                        _currentPage = _buildTabPage(0);
-                      }),
-                    ),
-                    _drawerActionItem(
-                      Icons.favorite_rounded,
-                      'My Favourite Properties',
-                      onTap: () => _setPage(FavouritePropertyListingScreen(userId: widget.userId)),
-                    ),
-                    _drawerActionItem(
-                      Icons.groups_rounded,
-                      'Customer Inquiries',
-                      onTap: () => _setPage(BrokerLeadsScreen(brokerId: widget.userId)),
-                    ),
+                    if (_isAgent || _isAdmin) ...[
+                      _drawerActionItem(
+                        Icons.business_center_rounded,
+                        'My Sale Listings',
+                        onTap: () => setState(() {
+                          _postedByUserId = widget.userId;
+                          _selectedIndex = 0;
+                          _currentPage = _buildTabPage(0);
+                        }),
+                      ),
+                      _drawerActionItem(
+                        Icons.apartment_rounded,
+                        'My Rental & PG Listings',
+                        onTap: () => setState(() {
+                          _postedByUserId = widget.userId;
+                          _selectedIndex = 1;
+                          _currentPage = _buildTabPage(1);
+                        }),
+                      ),
+                      _drawerActionItem(
+                        Icons.groups_rounded,
+                        'Customer Inquiries',
+                        onTap: () => _setPage(BrokerLeadsScreen(brokerId: widget.userId)),
+                      ),
+                    ],
+                    if (!_isAgent)
+                      _drawerActionItem(
+                        Icons.favorite_rounded,
+                        'My Favourite Properties',
+                        onTap: () => _setPage(FavouritePropertyListingScreen(userId: widget.userId)),
+                      ),
 
                     const Divider(height: 20),
                     _sectionLabel('TOOLS'),
@@ -437,8 +465,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _navItem(Icons.sell_outlined, Icons.sell_rounded, 'Buy/Sell', 0),
-            _navItem(Icons.apartment_outlined, Icons.apartment_rounded, 'Rent/PG', 1),
+            if (!_isAgent) ...[
+              _navItem(Icons.sell_outlined, Icons.sell_rounded, 'Buy/Sell', 0),
+              _navItem(Icons.apartment_outlined, Icons.apartment_rounded, 'Rent/PG', 1),
+            ],
             const SizedBox(width: 60),
             _navItem(Icons.account_balance_wallet_outlined,
                 Icons.account_balance_wallet_rounded, 'Loans', 2),

@@ -43,6 +43,9 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   List<Map<String, dynamic>> _savedSearches = [];
   bool _savedSearchesExpanded = false;
 
+  // Only agents (and admins) may post new listings; customers browse only.
+  bool _canAddProperty = false;
+
   // pagination
   int _currentPage = 0;
   static const int _pageSize = 20;
@@ -71,7 +74,15 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _loadSavedSearches();
+    _loadRole();
     _refreshFromApi();
+  }
+
+  Future<void> _loadRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final role = (prefs.getString('userRole') ?? '').toUpperCase();
+    setState(() => _canAddProperty = role == 'AGENT' || role == 'ADMIN');
   }
 
   @override
@@ -398,13 +409,15 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
           _buildList(),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'rentalListingPostFab',
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        onPressed: _openPostProperty,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _canAddProperty
+          ? FloatingActionButton(
+              heroTag: 'rentalListingPostFab',
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              onPressed: _openPostProperty,
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
@@ -867,30 +880,35 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   }
 
   Widget _buildEmptyState() {
+    final isMyPostings = widget.postedbyuserId != null;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-        const Padding(
-          padding: EdgeInsets.all(32),
+        Padding(
+          padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.apartment_outlined,
-                  size: 72, color: AppColors.textMuted),
-              SizedBox(height: 16),
+              Icon(
+                isMyPostings ? Icons.post_add_outlined : Icons.apartment_outlined,
+                size: 72, color: AppColors.textMuted,
+              ),
+              const SizedBox(height: 16),
               Text(
-                "No rental properties found",
-                style: TextStyle(
+                isMyPostings ? "No rental / PG properties posted yet" : "No rental properties found",
+                style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
-                "Try adjusting your filters or search for a different area.",
+                isMyPostings
+                    ? "Your posted rental/PG properties will appear here.\nTap + to add a new listing."
+                    : "Try adjusting your filters or search for a different area.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary),
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
             ],
           ),

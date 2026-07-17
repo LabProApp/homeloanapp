@@ -43,6 +43,9 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
   List<Map<String, dynamic>> _savedSearches = [];
   bool _savedSearchesExpanded = false;
 
+  // Only agents (and admins) may post new listings; customers browse only.
+  bool _canAddProperty = false;
+
   // pagination
   int _currentPage = 0;
   static const int _pageSize = 20;
@@ -71,7 +74,15 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _loadSavedSearches();
+    _loadRole();
     _refreshFromApi();
+  }
+
+  Future<void> _loadRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final role = (prefs.getString('userRole') ?? '').toUpperCase();
+    setState(() => _canAddProperty = role == 'AGENT' || role == 'ADMIN');
   }
 
   @override
@@ -388,13 +399,15 @@ class _PropertyListingScreenState extends State<PropertyListingScreen> {
           _buildList(),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'propertyListingPostFab',
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        onPressed: _openPostProperty,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _canAddProperty
+          ? FloatingActionButton(
+              heroTag: 'propertyListingPostFab',
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              onPressed: _openPostProperty,
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 

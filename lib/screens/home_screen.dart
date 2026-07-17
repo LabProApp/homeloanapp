@@ -9,6 +9,7 @@ enum HomeAction {
   rentPg,
   myFavourites,
   myPostings,
+  myRentals,
   myInquiries,
   myJourneys,
   homeLoan,
@@ -29,6 +30,8 @@ class HomeScreen extends StatelessWidget {
   final int userId;
   final String userName;
   final String planName;
+  final bool isAgent;
+  final bool isAdmin;
   final HomeNavigate onNavigate;
   /// Returns true if the given action is locked for the current plan.
   /// Null means all actions are unlocked (safe default).
@@ -40,6 +43,8 @@ class HomeScreen extends StatelessWidget {
     required this.userId,
     required this.userName,
     this.planName = '',
+    this.isAgent = false,
+    this.isAdmin = false,
     required this.onNavigate,
     this.isLocked,
     this.onViewPlans,
@@ -59,51 +64,7 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Journey banner ──────────────────────────────────────
-                  _journeyBanner(),
-                  const SizedBox(height: 20),
-
-                  // ── Properties ──────────────────────────────────────────
-                  _section(context, 'Properties', Icons.home_rounded,
-                      AppColors.primary, [
-                    _Tile(Icons.sell_outlined,      'Buy / Sell',       'Find & list sale properties',              const Color(0xFF1565C0), HomeAction.buySell),
-                    _Tile(Icons.apartment_outlined, 'Rent / PG',        'PG & Rental properties',                   const Color(0xFF00838F), HomeAction.rentPg),
-                    _Tile(Icons.favorite_outlined,  'My Favourites',    'Your favourite properties',                AppColors.error,        HomeAction.myFavourites),
-                    _Tile(Icons.post_add_outlined,  'Post Requirement', 'Free — share what you\'re looking for',    AppColors.primary,      HomeAction.postRequirement, highlighted: true),
-                  ]),
-                  const SizedBox(height: 24),
-
-                  // ── Finance & Loans ─────────────────────────────────────
-                  _section(context, 'Finance & Loans', Icons.account_balance_rounded,
-                      const Color(0xFF1B5E20), [
-                    _Tile(Icons.corporate_fare_outlined,  'Banks & Rates',          'Compare bank interest rates',        const Color(0xFF4527A0), HomeAction.banks),
-                    _Tile(Icons.account_balance_outlined, 'Inquire Home Loan',      'Explore bank loan offers',           const Color(0xFF1565C0), HomeAction.homeLoan),
-                    _Tile(Icons.calculate_outlined,       'EMI Calculator',         'Estimate monthly installment',       const Color(0xFF2E7D32), HomeAction.emiCalculator),
-                    _Tile(Icons.verified_outlined,        'Home Loan Eligibility',  'Check your Home loan eligibility',   const Color(0xFF00796B), HomeAction.loanEligibility),
-                    _Tile(Icons.balance_outlined,         'Rent vs Buy Calculator', 'Compare renting vs buying',          const Color(0xFF00838F), HomeAction.rentVsBuy),
-                  ]),
-                  const SizedBox(height: 24),
-
-                  // ── Legal & Documentation ───────────────────────────────
-                  _section(context, 'Legal & Documentation', Icons.gavel_rounded,
-                      const Color(0xFF6A1B9A), [
-                    _Tile(Icons.assignment_rounded,    'Legal Services',     'Reach out to Verified legal vendors',  const Color(0xFF6A1B9A), HomeAction.legalServices),
-                    _Tile(Icons.description_outlined,  'Rent Agreement',     'Generate rental agreement',            const Color(0xFF00838F), HomeAction.rentAgreement),
-                    _Tile(Icons.handshake_outlined,    'Sale Agreement',     'Generate sale deed agreement',         const Color(0xFF4E342E), HomeAction.saleAgreement),
-                    _Tile(Icons.checklist_outlined,    'Property Checklist', 'Property verification checklist',      const Color(0xFFE65100), HomeAction.dueDiligence),
-                    _Tile(Icons.receipt_long_outlined, 'Stamp Duty Charges', 'Calculate stamp duty charges',         const Color(0xFF1565C0), HomeAction.stampDuty),
-                  ]),
-                  const SizedBox(height: 24),
-
-                  // ── My Activity ─────────────────────────────────────────
-                  _section(context, 'My Activity', Icons.person_rounded,
-                      const Color(0xFF4527A0), [
-                    _Tile(Icons.route,                    'My Journeys',     'Track your purchase journeys', const Color(0xFF0277BD), HomeAction.myJourneys),
-                    _Tile(Icons.business_center_outlined, 'My Postings',     'Properties you have listed',   const Color(0xFF4527A0), HomeAction.myPostings),
-                    _Tile(Icons.groups_outlined,          'Client Inquiries', 'Leads, follow-ups & status',  AppColors.primary,      HomeAction.myInquiries),
-                  ]),
-                ],
+                children: isAgent ? _agentSections(context) : _defaultSections(context),
               ),
             ),
           ),
@@ -111,6 +72,73 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+
+  // ── Sections (role-based) ───────────────────────────────────────────────────
+
+  List<Widget> _defaultSections(BuildContext context) {
+    // Owner tools (My Postings / Client Inquiries) are only relevant to
+    // sellers/brokers — admins see them too, but pure customers do not.
+    final showOwnerTools = isAdmin;
+    return [
+      _journeyBanner(),
+      const SizedBox(height: 20),
+      _section(context, 'Properties', Icons.home_rounded,
+          AppColors.primary, [
+        _Tile(Icons.sell_outlined,      'Buy / Sell',       'Find & list sale properties',              const Color(0xFF1565C0), HomeAction.buySell),
+        _Tile(Icons.apartment_outlined, 'Rent / PG',        'PG & Rental properties',                   const Color(0xFF00838F), HomeAction.rentPg),
+        _Tile(Icons.favorite_outlined,  'My Favourites',    'Your favourite properties',                AppColors.error,        HomeAction.myFavourites),
+        _Tile(Icons.post_add_outlined,  'Post Requirement', 'Free — share what you\'re looking for',    AppColors.primary,      HomeAction.postRequirement, highlighted: true),
+      ]),
+      const SizedBox(height: 24),
+      _section(context, 'Finance & Loans', Icons.account_balance_rounded,
+          const Color(0xFF1B5E20), _financeTiles()),
+      const SizedBox(height: 24),
+      _section(context, 'Legal & Documentation', Icons.gavel_rounded,
+          const Color(0xFF6A1B9A), _legalTiles()),
+      const SizedBox(height: 24),
+      _section(context, 'My Activity', Icons.person_rounded,
+          const Color(0xFF4527A0), [
+        _Tile(Icons.route, 'My Journeys', 'Track your purchase journeys', const Color(0xFF0277BD), HomeAction.myJourneys),
+        if (showOwnerTools)
+          _Tile(Icons.business_center_outlined, 'My Postings', 'Properties you have listed', const Color(0xFF4527A0), HomeAction.myPostings),
+        if (showOwnerTools)
+          _Tile(Icons.groups_outlined, 'Client Inquiries', 'Leads, follow-ups & status', AppColors.primary, HomeAction.myInquiries),
+      ]),
+    ];
+  }
+
+  List<Widget> _agentSections(BuildContext context) {
+    return [
+      _section(context, 'My Business', Icons.business_center_rounded,
+          AppColors.primary, [
+        _Tile(Icons.sell_outlined,       'My Sale Listings',        'Manage & add properties for sale', const Color(0xFF1565C0), HomeAction.myPostings),
+        _Tile(Icons.apartment_outlined,  'My Rental & PG Listings', 'Manage & add rental / PG listings', const Color(0xFF00838F), HomeAction.myRentals),
+        _Tile(Icons.groups_outlined,     'Customer Inquiries',      'Leads & inquiries on your listings', AppColors.error,       HomeAction.myInquiries),
+      ]),
+      const SizedBox(height: 24),
+      _section(context, 'Finance & Loans', Icons.account_balance_rounded,
+          const Color(0xFF1B5E20), _financeTiles()),
+      const SizedBox(height: 24),
+      _section(context, 'Legal & Documentation', Icons.gavel_rounded,
+          const Color(0xFF6A1B9A), _legalTiles()),
+    ];
+  }
+
+  List<_Tile> _financeTiles() => [
+        _Tile(Icons.corporate_fare_outlined,  'Banks & Rates',          'Compare bank interest rates',        const Color(0xFF4527A0), HomeAction.banks),
+        _Tile(Icons.account_balance_outlined, 'Inquire Home Loan',      'Explore bank loan offers',           const Color(0xFF1565C0), HomeAction.homeLoan),
+        _Tile(Icons.calculate_outlined,       'EMI Calculator',         'Estimate monthly installment',       const Color(0xFF2E7D32), HomeAction.emiCalculator),
+        _Tile(Icons.verified_outlined,        'Home Loan Eligibility',  'Check your Home loan eligibility',   const Color(0xFF00796B), HomeAction.loanEligibility),
+        _Tile(Icons.balance_outlined,         'Rent vs Buy Calculator', 'Compare renting vs buying',          const Color(0xFF00838F), HomeAction.rentVsBuy),
+      ];
+
+  List<_Tile> _legalTiles() => [
+        _Tile(Icons.assignment_rounded,    'Legal Services',     'Reach out to Verified legal vendors',  const Color(0xFF6A1B9A), HomeAction.legalServices),
+        _Tile(Icons.description_outlined,  'Rent Agreement',     'Generate rental agreement',            const Color(0xFF00838F), HomeAction.rentAgreement),
+        _Tile(Icons.handshake_outlined,    'Sale Agreement',     'Generate sale deed agreement',         const Color(0xFF4E342E), HomeAction.saleAgreement),
+        _Tile(Icons.checklist_outlined,    'Property Checklist', 'Property verification checklist',      const Color(0xFFE65100), HomeAction.dueDiligence),
+        _Tile(Icons.receipt_long_outlined, 'Stamp Duty Charges', 'Calculate stamp duty charges',         const Color(0xFF1565C0), HomeAction.stampDuty),
+      ];
 
   // ── Journey banner ─────────────────────────────────────────────────────────
   Widget _journeyBanner() {
@@ -230,19 +258,32 @@ class HomeScreen extends StatelessWidget {
                   IntrinsicHeight(
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _heroPill(Icons.home_rounded, 'Buy/Sell',
-                            () => onNavigate(HomeAction.buySell),
-                            locked: _locked(HomeAction.buySell)),
-                        const SizedBox(width: 8),
-                        _heroPill(Icons.apartment_rounded, 'Rent/PG',
-                            () => onNavigate(HomeAction.rentPg),
-                            locked: _locked(HomeAction.rentPg)),
-                        const SizedBox(width: 8),
-                        _heroPill(Icons.post_add_outlined,
-                            'Post Home/\nOffice Req.',
-                            () => onNavigate(HomeAction.postRequirement)),
-                      ],
+                      children: isAgent
+                          ? [
+                              _heroPill(Icons.sell_outlined, 'My Sale\nListings',
+                                  () => onNavigate(HomeAction.myPostings),
+                                  locked: _locked(HomeAction.myPostings)),
+                              const SizedBox(width: 8),
+                              _heroPill(Icons.apartment_rounded, 'My Rental/\nPG Listings',
+                                  () => onNavigate(HomeAction.myRentals),
+                                  locked: _locked(HomeAction.myRentals)),
+                              const SizedBox(width: 8),
+                              _heroPill(Icons.groups_rounded, 'Customer\nInquiries',
+                                  () => onNavigate(HomeAction.myInquiries)),
+                            ]
+                          : [
+                              _heroPill(Icons.home_rounded, 'Buy/Sell',
+                                  () => onNavigate(HomeAction.buySell),
+                                  locked: _locked(HomeAction.buySell)),
+                              const SizedBox(width: 8),
+                              _heroPill(Icons.apartment_rounded, 'Rent/PG',
+                                  () => onNavigate(HomeAction.rentPg),
+                                  locked: _locked(HomeAction.rentPg)),
+                              const SizedBox(width: 8),
+                              _heroPill(Icons.post_add_outlined,
+                                  'Post Home/\nOffice Req.',
+                                  () => onNavigate(HomeAction.postRequirement)),
+                            ],
                     ),
                   ),
                 ],

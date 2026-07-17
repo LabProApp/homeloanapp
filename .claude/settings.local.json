@@ -13,7 +13,8 @@
       "Bash(git add *)",
       "Bash(xargs grep *)",
       "Bash(flutter analyze *)",
-      "Bash(grep -E \"\\\\.dart$\")"
+      "Bash(grep -E \"\\\\.dart$\")",
+      "PowerShell(flutter analyze lib/screens/dashboard_screen.dart lib/screens/home_screen.dart lib/screens/property_listing_screen.dart lib/screens/rental_listing_screen.dart)"
     ]
   }
 }
