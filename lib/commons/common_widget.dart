@@ -270,6 +270,10 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool centerTitle;
   final bool automaticallyImplyLeading;
 
+  /// Slimmer than Material's default 56 px toolbar so listing/search
+  /// screens keep more vertical space for results.
+  static const double toolbarHeight = 46;
+
   const GradientAppBar({
     super.key,
     this.title,
@@ -283,7 +287,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(
-      kToolbarHeight + (bottom?.preferredSize.height ?? 0));
+      toolbarHeight + (bottom?.preferredSize.height ?? 0));
 
   @override
   Widget build(BuildContext context) {
@@ -291,6 +295,12 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
       decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
       child: AppBar(
         title: titleWidget ?? (title != null ? Text(title!) : null),
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+        ),
+        toolbarHeight: toolbarHeight,
         actions: actions,
         leading: leading,
         bottom: bottom,
@@ -301,6 +311,37 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+      ),
+    );
+  }
+}
+
+/// Wraps a listing screen's search/filter chrome so it can collapse out of
+/// view as the user scrolls the list, freeing up space for results. Expand
+/// again by scrolling up (see each screen's `_onScroll`).
+class CollapsibleHeader extends StatelessWidget {
+  final bool collapsed;
+  final Widget child;
+
+  const CollapsibleHeader({
+    super.key,
+    required this.collapsed,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: AnimatedAlign(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        alignment: Alignment.topCenter,
+        heightFactor: collapsed ? 0 : 1,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 160),
+          opacity: collapsed ? 0 : 1,
+          child: child,
+        ),
       ),
     );
   }

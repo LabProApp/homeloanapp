@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import '../theme/app_colors.dart';
 import '../models/legal_service_model.dart';
 import '../services/legal_service_api.dart';
@@ -26,6 +27,7 @@ class _LegalServicePageState extends State<LegalServicePage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   bool _fabExpanded = false;
+  bool _headerCollapsed = false;
 
   final List<LegalService> _providers = [];
   bool _isLoading = false;
@@ -48,11 +50,20 @@ class _LegalServicePageState extends State<LegalServicePage> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200 &&
+    final pixels = _scrollController.position.pixels;
+    if (pixels >= _scrollController.position.maxScrollExtent - 200 &&
         !_isLoading &&
         !_isLastPage) {
       _fetchProviders();
+    }
+
+    final direction = _scrollController.position.userScrollDirection;
+    if (pixels <= 0 && _headerCollapsed) {
+      setState(() => _headerCollapsed = false);
+    } else if (direction == ScrollDirection.reverse && !_headerCollapsed) {
+      setState(() => _headerCollapsed = true);
+    } else if (direction == ScrollDirection.forward && _headerCollapsed) {
+      setState(() => _headerCollapsed = false);
     }
   }
 
@@ -317,43 +328,50 @@ class _LegalServicePageState extends State<LegalServicePage> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: AppSearchField(
-              controller: _searchController,
-              hintText: "Search by name, city or service",
-              onChanged: (_) => setState(() {}),
-            ),
-          ),
-
-          // ── Category filter chips ──────────────────────────────────
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-            child: Row(
+          CollapsibleHeader(
+            collapsed: _headerCollapsed,
+            child: Column(
               children: [
-                _buildFilterChip(null, 'All'),
-                ..._categoryLabels.entries
-                    .map((e) => _buildFilterChip(e.key, e.value)),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                  child: AppSearchField(
+                    controller: _searchController,
+                    hintText: "Search by name, city or service",
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+
+                // ── Category filter chips ──────────────────────────────
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                  child: Row(
+                    children: [
+                      _buildFilterChip(null, 'All'),
+                      ..._categoryLabels.entries
+                          .map((e) => _buildFilterChip(e.key, e.value)),
+                    ],
+                  ),
+                ),
+
+                // ── Result count ────────────────────────────────────────
+                if (!_isLoading || _providers.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '${_filteredProviders.length} provider${_filteredProviders.length == 1 ? '' : 's'} found',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-
-          // ── Result count ──────────────────────────────────────────
-          if (!_isLoading || _providers.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '${_filteredProviders.length} provider${_filteredProviders.length == 1 ? '' : 's'} found',
-                  style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
-                      fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
 
           Expanded(
             child: RefreshIndicator(

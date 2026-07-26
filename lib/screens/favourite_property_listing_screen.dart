@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import '../models/property_model.dart';
 import '../services/property_api_service.dart';
 import '../theme/app_colors.dart';
@@ -22,22 +23,38 @@ class FavouritePropertyListingScreen extends StatefulWidget {
 class _FavouritePropertyListingScreenState
     extends State<FavouritePropertyListingScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   List<PropertyModel> _allProperties = [];
   List<PropertyModel> _properties = [];
   bool _isLoading = true;
   String _error = "";
+  bool _headerCollapsed = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _loadProperties();
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final pixels = _scrollController.position.pixels;
+    final direction = _scrollController.position.userScrollDirection;
+    if (pixels <= 0 && _headerCollapsed) {
+      setState(() => _headerCollapsed = false);
+    } else if (direction == ScrollDirection.reverse && !_headerCollapsed) {
+      setState(() => _headerCollapsed = true);
+    } else if (direction == ScrollDirection.forward && _headerCollapsed) {
+      setState(() => _headerCollapsed = false);
+    }
   }
 
   Future<void> _loadProperties() async {
@@ -90,7 +107,10 @@ class _FavouritePropertyListingScreenState
       ),
       body: Column(
         children: [
-          _buildSearchBar(),
+          CollapsibleHeader(
+            collapsed: _headerCollapsed,
+            child: _buildSearchBar(),
+          ),
           Expanded(child: _buildList()),
         ],
       ),
@@ -154,6 +174,7 @@ class _FavouritePropertyListingScreenState
     return RefreshIndicator(
       onRefresh: _loadProperties,
       child: ListView.builder(
+        controller: _scrollController,
         padding: EdgeInsets.fromLTRB(8, 4, 8, 80 + MediaQuery.viewPaddingOf(context).bottom),
         itemCount: _properties.length,
         itemBuilder: (context, index) {

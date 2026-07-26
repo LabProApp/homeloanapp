@@ -1,5 +1,6 @@
 ﻿import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,6 +43,7 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
 
   List<Map<String, dynamic>> _savedSearches = [];
   bool _savedSearchesExpanded = false;
+  bool _headerCollapsed = false;
 
   // Only agents (and admins) may post new listings; customers browse only.
   bool _canAddProperty = false;
@@ -248,9 +250,18 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+    final pixels = _scrollController.position.pixels;
+    if (pixels >= _scrollController.position.maxScrollExtent - 200) {
       _loadMore();
+    }
+
+    final direction = _scrollController.position.userScrollDirection;
+    if (pixels <= 0 && _headerCollapsed) {
+      setState(() => _headerCollapsed = false);
+    } else if (direction == ScrollDirection.reverse && !_headerCollapsed) {
+      setState(() => _headerCollapsed = true);
+    } else if (direction == ScrollDirection.forward && _headerCollapsed) {
+      setState(() => _headerCollapsed = false);
     }
   }
 
@@ -401,11 +412,18 @@ class _RentalListingScreenState extends State<RentalListingScreen> {
       appBar: GradientAppBar(title: 'Leasing : Commercial, Rental & PG'),
       body: Column(
         children: [
-          _buildSearchBar(),
-          _buildActiveFilterChips(),
-          _buildSavedSearchPanel(),
-          _buildToggles(),
-          _buildResultsBar(),
+          CollapsibleHeader(
+            collapsed: _headerCollapsed,
+            child: Column(
+              children: [
+                _buildSearchBar(),
+                _buildActiveFilterChips(),
+                _buildSavedSearchPanel(),
+                _buildToggles(),
+                _buildResultsBar(),
+              ],
+            ),
+          ),
           _buildList(),
         ],
       ),

@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import '../models/bank_model.dart';
 import '../services/bank_service.dart';
 import '../theme/app_colors.dart';
@@ -26,6 +27,7 @@ class BankPage extends StatefulWidget {
 class _BankPageState extends State<BankPage> {
   final TextEditingController _searchController = TextEditingController();
   final BankApiService _bankService = BankApiService();
+  final ScrollController _scrollController = ScrollController();
 
   List<Bank> _allBanks = [];
   List<Bank> _filteredBanks = [];
@@ -33,17 +35,32 @@ class _BankPageState extends State<BankPage> {
 
   bool _isLoading = true;
   String? _error;
+  bool _headerCollapsed = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _loadBanks();
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final pixels = _scrollController.position.pixels;
+    final direction = _scrollController.position.userScrollDirection;
+    if (pixels <= 0 && _headerCollapsed) {
+      setState(() => _headerCollapsed = false);
+    } else if (direction == ScrollDirection.reverse && !_headerCollapsed) {
+      setState(() => _headerCollapsed = true);
+    } else if (direction == ScrollDirection.forward && _headerCollapsed) {
+      setState(() => _headerCollapsed = false);
+    }
   }
 
   Future<void> _loadBanks() async {
@@ -139,12 +156,15 @@ class _BankPageState extends State<BankPage> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: AppSearchField(
-                controller: _searchController,
-                hintText: 'Search bank',
-                onChanged: _search,
+            CollapsibleHeader(
+              collapsed: _headerCollapsed,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: AppSearchField(
+                  controller: _searchController,
+                  hintText: 'Search bank',
+                  onChanged: _search,
+                ),
               ),
             ),
             Expanded(
@@ -229,6 +249,7 @@ class _BankPageState extends State<BankPage> {
     }
 
     return ListView.builder(
+      controller: _scrollController,
       padding: EdgeInsets.fromLTRB(8, 12, 8, 80 + MediaQuery.viewPaddingOf(context).bottom),
       physics:
           const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
