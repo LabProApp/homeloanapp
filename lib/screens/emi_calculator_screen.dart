@@ -112,7 +112,12 @@ class _EmiCalculatorScreenState extends State<EmiCalculatorScreen> {
 
     final content = SingleChildScrollView(
       controller: widget.scrollController,
-      padding: EdgeInsets.fromLTRB(16, isSheet ? 0 : 16, 16, 24),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        isSheet ? 0 : 16,
+        16,
+        isSheet ? 24 : 80 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

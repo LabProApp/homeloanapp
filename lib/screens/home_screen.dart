@@ -87,7 +87,7 @@ class HomeScreen extends StatelessWidget {
         _Tile(Icons.sell_outlined,      'Buy / Sell',       'Find & list sale properties',              const Color(0xFF1565C0), HomeAction.buySell),
         _Tile(Icons.apartment_outlined, 'Rent / PG',        'PG & Rental properties',                   const Color(0xFF00838F), HomeAction.rentPg),
         _Tile(Icons.favorite_outlined,  'My Favourites',    'Your favourite properties',                AppColors.error,        HomeAction.myFavourites),
-        _Tile(Icons.post_add_outlined,  'Post Requirement', 'Free — share what you\'re looking for',    AppColors.primary,      HomeAction.postRequirement, highlighted: true),
+        _Tile(Icons.post_add_outlined,  'Post Requirement', 'Share what you\'re looking for',    AppColors.primary,      HomeAction.postRequirement, highlighted: true),
       ]),
       const SizedBox(height: 24),
       _section(context, 'Finance & Loans', Icons.account_balance_rounded,
@@ -387,6 +387,7 @@ class HomeScreen extends StatelessWidget {
   // ── Category section ───────────────────────────────────────────────────────
   Widget _section(BuildContext context, String title, IconData icon,
       Color accent, List<_Tile> tiles) {
+    if (tiles.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -408,23 +409,52 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 2.4,
-          children: tiles
-              .map((t) => _TileCard(
-                    tile: t,
-                    locked: _locked(t.action),
-                    onTap: () => onNavigate(t.action),
-                  ))
-              .toList(),
-        ),
+        ..._tileRows(tiles),
       ],
     );
+  }
+
+  // Lays tiles out two-per-row; a trailing odd tile spans the full row
+  // width instead of leaving an empty cell beside it.
+  List<Widget> _tileRows(List<_Tile> tiles) {
+    const spacing = 10.0;
+    const aspectRatio = 2.4;
+    final rows = <Widget>[];
+    for (var i = 0; i < tiles.length; i += 2) {
+      final hasPair = i + 1 < tiles.length;
+      final isLastRow = i + 2 >= tiles.length;
+      rows.add(Padding(
+        padding: EdgeInsets.only(bottom: isLastRow ? 0 : spacing),
+        child: Row(
+          children: [
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: hasPair ? aspectRatio : aspectRatio * 2,
+                child: _TileCard(
+                  tile: tiles[i],
+                  locked: _locked(tiles[i].action),
+                  onTap: () => onNavigate(tiles[i].action),
+                ),
+              ),
+            ),
+            if (hasPair) ...[
+              const SizedBox(width: spacing),
+              Expanded(
+                child: AspectRatio(
+                  aspectRatio: aspectRatio,
+                  child: _TileCard(
+                    tile: tiles[i + 1],
+                    locked: _locked(tiles[i + 1].action),
+                    onTap: () => onNavigate(tiles[i + 1].action),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ));
+    }
+    return rows;
   }
 }
 
@@ -522,26 +552,6 @@ class _TileCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (hi) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 5, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Text(
-                            'FREE',
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.primaryDark,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                        ),
-                      ],
                       if (locked) ...[
                         const SizedBox(width: 4),
                         Icon(Icons.lock_rounded,

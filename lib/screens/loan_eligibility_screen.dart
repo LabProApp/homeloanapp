@@ -95,7 +95,8 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
         title: 'Loan Eligibility Check',
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(
+            16, 16, 16, 80 + MediaQuery.viewPaddingOf(context).bottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -110,7 +111,6 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
               const SizedBox(height: 24),
               _resultSection(_result!),
             ],
-            const SizedBox(height: 32),
           ],
         ),
       ),
